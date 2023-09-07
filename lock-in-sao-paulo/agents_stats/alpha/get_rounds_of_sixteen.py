@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 import re
 
 url = f"https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16339.16333.16334.16335.16336.16337"
@@ -30,7 +30,28 @@ for file_name in agents_img:
     match = re.search(pattern, file_name)
     if match:
         agents_name.append(match.group(1))
+map_stats = {}
 
+print(agents_name)
+
+print(soup.select('td.mod-right, td:not([class]), td[style*="white-space: nowrap; padding-top: 0; padding-bottom: 0;"]'))
+
+for tr in table_rows[1:]:
+        map_name = tr.find("td", style="white-space: nowrap; padding-top: 0; padding-bottom: 0;").text
+        stats = tr.find_all("td", class_=["mod-right"]).text
+        if map_name == "":
+             map_name = "all_maps"
+        
+        # if isinstance(td, Tag) and not td.find_all():
+        #     stats.append(td.text)
+    #     if isinstance(data, Tag) and not data.find_all():
+    #         stats.append(data.getText())
+    # map_stats.append(stats)
+
+# print(map_stats)
+    # print(f'{index}: {tr}')
+
+# print(table_rows[1])
 
 # agents_img = [th.find("img").get("src") for th in table_rows[0] if th.find("img") and th.find("img") != -1]
 
@@ -38,6 +59,6 @@ for file_name in agents_img:
 
 
 
-print(agents_name)
+# print(agents_name)
 
 # print(table_rows[0])
