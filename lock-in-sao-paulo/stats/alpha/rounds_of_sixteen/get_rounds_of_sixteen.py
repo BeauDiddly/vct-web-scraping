@@ -7,9 +7,11 @@ page = requests.get(url)
 
 soup = BeautifulSoup(page.content, "html.parser")
 
-map_stats = soup.find("table", class_="wf-table mod-pr-global").select('td.mod-right, td:not([class]), td[style*="white-space: nowrap; padding-top: 0; padding-bottom: 0;"]')
-
 agent_pictures = soup.find("table", class_="wf-table mod-pr-global").find_all("th", style=" vertical-align: middle; padding-top: 0; padding-bottom: 0; width: 65px;")
+
+maps_name = soup.find("table", class_="wf-table mod-pr-global").find_all("td", style="white-space: nowrap; padding-top: 0; padding-bottom: 0;")
+
+print(maps_name)
 
 agents_names = []
 pattern = r'/(\w+)\.png'
@@ -19,7 +21,7 @@ for th in agent_pictures:
     agent_name = match.group(1)
     agents_names.append(agent_name)
 
-# print(agents_names)
+print(agents_names)
     
 
 

@@ -19,10 +19,10 @@ for th in maps_stats:
         has_span.extract()
 
 if not maps_stats[0].string.get_text(strip=True):
-    maps_stats[0].string = "all_maps"
+    maps_stats[0].string = "All Maps"
 
-for i in maps_stats:
-    print(i.text.strip())
+# for i in maps_stats:
+#     print(i.text.strip())
 
 # print(maps_stats)
 
