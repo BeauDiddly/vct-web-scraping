@@ -18,16 +18,33 @@ agent_pictures = soup.find("table", class_="wf-table mod-pr-global").find_all("t
 
 # max_rows = len(soup.find("table", class_="wf-table mod-pr-global").find_all("tr", class_="pr-global-row"))
 
-individual_map_tables = soup.find_all(map_tables)
+first_map_tables = soup.find(map_tables)
 
-all_teams = individual_map_tables[0].find_all("span", class_="text-of")
+all_teams = first_map_tables.find_all("span", class_="text-of")
+
+all_maps = soup.find_all('th', style="padding: 0; padding-left: 15px; line-height: 0; vertical-align: middle;")
+
+all_pr_matrix_rows = soup.find_all("tr", class_="pr-matrix-row")
+
+for row in all_pr_matrix_rows:
+    children_to_remove = row.find_all("td")[:2]
+    for child in children_to_remove:
+        child.extract()
+
+print(all_pr_matrix_rows)
 
 maps_names = []
 
-for table in individual_map_tables:
-    map_name = table.find('th', style="padding: 0; padding-left: 15px; line-height: 0; vertical-align: middle;") \
-                    .find_all(string=True, recursive=False)[-1].strip()
+for map in all_maps:
+    map_name = map.find_all(string=True, recursive=False)[-1].strip()
     maps_names.append(map_name)
+
+print(maps_names)
+
+# for table in individual_map_tables:
+#     map_name = table.find('th', style="padding: 0; padding-left: 15px; line-height: 0; vertical-align: middle;") \
+#                     .find_all(string=True, recursive=False)[-1].strip()
+#     maps_names.append(map_name)
 
 
 # print(maps_names)
@@ -42,13 +59,15 @@ teams_names = []
 for team in all_teams:
     teams_names.append(team.text.strip())
 
-agents_names = []
-pattern = r'/(\w+)\.png'
-for th in agent_pictures:
-    file_name = th.find("img").get("src")
-    match = re.search(pattern, file_name)
-    agent_name = match.group(1)
-    agents_names.append(agent_name)
+print(teams_names)
+
+# agents_names = []
+# pattern = r'/(\w+)\.png'
+# for th in agent_pictures:
+#     file_name = th.find("img").get("src")
+#     match = re.search(pattern, file_name)
+#     agent_name = match.group(1)
+#     agents_names.append(agent_name)
 
 # print(teams_names)
 # print(len(individual_map_tables))
@@ -56,10 +75,11 @@ for th in agent_pictures:
 team_pick_rates = {}
 
 
-for table in individual_map_tables[1:]:
-    for team in table:
-        for data in team[2:]:
-            print(data)
+# for table in individual_map_tables[1:2]:
+#     for team in table:
+        # print(team)
+        # for data in team[2:]:
+        #     print(data)
 
 
 # for index, table in enumerate(individual_map_tables):
