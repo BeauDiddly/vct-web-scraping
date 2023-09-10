@@ -44,23 +44,33 @@ for th in agent_pictures:
 
 # print(agents_names)
 
+for i in range(len(pick_rates)):
+    pick_rates[i] = pick_rates[i].text.strip()
+
+steps = len(agents_names)
+
 agents_pick_rates = []
 
-for pick_rate in pick_rates:
-    agents_pick_rates.append(pick_rate.text.strip())
+for i in range(0, len(pick_rates), steps):
+    start = i
+    end = i + steps
+    sub_list = pick_rates[start: end]
+    agents_pick_rates.append(sub_list)
+# for pick_rate in pick_rates:
+#     agents_pick_rates.append(pick_rate.text.strip())
 
 # print(agents_pick_rates)
 
 max_agents = len(agents_names)
 pick_rate_index = 0
-map_pick_rates = {}
+agents_pick_rates_with_maps = {}
 
 for i in range(0, max_rows):
     map_name = maps_name[i]
-    map_pick_rates[map_name] = {}
+    agents_pick_rates_with_maps[map_name] = {}
     for index, name in enumerate(agents_names):
-        pick_rate = agents_pick_rates[pick_rate_index + index] 
-        map_pick_rates[map_name][name] = pick_rate
+        pick_rate = agents_pick_rates[i][index] 
+        agents_pick_rates_with_maps[map_name][name] = pick_rate
     pick_rate_index += max_agents
     # map_name = maps_stats[index].text.strip()
     # map_counts = maps_stats[index + 1].text.strip()
@@ -69,4 +79,4 @@ for i in range(0, max_rows):
     # maps_stats_dict[map_name] = {"map_counts": map_counts, "atk_win": atk_win_percentage, "def_win": def_win_percentage}
     # index += 4
 
-print(map_pick_rates)
+# print(agents_pick_rates_with_maps)
