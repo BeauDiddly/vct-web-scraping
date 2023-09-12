@@ -24,14 +24,11 @@ all_teams = first_map_tables.find_all("span", class_="text-of")
 
 all_maps = soup.find_all('th', style="padding: 0; padding-left: 15px; line-height: 0; vertical-align: middle;")
 
-all_pr_matrix_rows = soup.find_all("tr", class_="pr-matrix-row")
+all_pr_matrix_rows = soup.select('tr.pr-matrix-row:not([class*=" "])')
 
-for row in all_pr_matrix_rows:
-    children_to_remove = row.find_all("td")[:2]
-    for child in children_to_remove:
-        child.extract()
-
-print(all_pr_matrix_rows)
+teams_names = []
+for team in all_teams:
+    teams_names.append(team.text.strip())
 
 maps_names = []
 
@@ -39,7 +36,31 @@ for map in all_maps:
     map_name = map.find_all(string=True, recursive=False)[-1].strip()
     maps_names.append(map_name)
 
-print(maps_names)
+for row in all_pr_matrix_rows:
+    children_to_remove = row.find_all("td")[:2]
+    for child in children_to_remove:
+        child.extract()
+
+steps = len(teams_names)
+
+# print(len(all_pr_matrix_rows))
+
+grouping_pr_matrix_rows = []
+
+for i in range(0, len(all_pr_matrix_rows), steps):
+    start = i
+    end = i + steps
+    sub_list = all_pr_matrix_rows[start: end]
+    grouping_pr_matrix_rows.append(sub_list)
+
+# for item in grouping_pr_matrix_rows:
+#     print(item, )
+
+# print(all_pr_matrix_rows)
+
+
+
+# print(maps_names)
 
 # for table in individual_map_tables:
 #     map_name = table.find('th', style="padding: 0; padding-left: 15px; line-height: 0; vertical-align: middle;") \
@@ -55,11 +76,8 @@ print(maps_names)
 
 # print(all_teams)
 
-teams_names = []
-for team in all_teams:
-    teams_names.append(team.text.strip())
 
-print(teams_names)
+# print(teams_names)
 
 # agents_names = []
 # pattern = r'/(\w+)\.png'
@@ -94,3 +112,29 @@ team_pick_rates = {}
 #             if isinstance(data, Tag) and data.find('a').find('img'):
 #                 print(data.text)
 
+for index, list_of_tr in enumerate(grouping_pr_matrix_rows):
+    for tr in list_of_tr:
+        for td in tr:
+            try:
+                classes = td.get("class", [])
+                if "mod-picked" in classes:
+                    print(f'Purple, {td}')
+                else:
+                    print(f'Empty, {td}')
+            except AttributeError:
+                print(f'Empty, {td}')
+#             try:
+#                 mod_picked = td['class']
+#                 print(f'1')
+#             except:
+#                 print(f'0')
+        print(f'\n')
+# # for index, tr in enumerate(all_pr_matrix_rows):
+#     print(f'{index}')
+#     for td in tr:
+#         try:
+#             mod_picked = td['class']
+#             print(f'1')
+#         except:
+#             print(f'0')
+#     print(f'\n')
