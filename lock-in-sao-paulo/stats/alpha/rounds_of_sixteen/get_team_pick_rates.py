@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, Tag, NavigableString
 import re
 
 def map_tables(tag):
@@ -26,6 +26,15 @@ all_maps = soup.find_all('th', style="padding: 0; padding-left: 15px; line-heigh
 
 all_pr_matrix_rows = soup.select('tr.pr-matrix-row:not([class*=" "])')
 
+agents_names = []
+pattern = r'/(\w+)\.png'
+for th in agent_pictures:
+    file_name = th.find("img").get("src")
+    match = re.search(pattern, file_name)
+    agent_name = match.group(1)
+    agents_names.append(agent_name)
+
+
 teams_names = []
 for team in all_teams:
     teams_names.append(team.text.strip())
@@ -40,6 +49,18 @@ for row in all_pr_matrix_rows:
     children_to_remove = row.find_all("td")[:2]
     for child in children_to_remove:
         child.extract()
+
+for row in all_pr_matrix_rows:
+    for td in row:
+        # if not isinstance(td, Tag) and isinstance(td, NavigableString):
+        #     td.extract()
+        if not isinstance(td, Tag) or td.name != "td":
+            td.extract()
+
+for row in all_pr_matrix_rows:
+    for td in row:
+        if not isinstance(td, Tag) and isinstance(td, NavigableString):
+            td.extract()
 
 steps = len(teams_names)
 
@@ -90,7 +111,7 @@ for i in range(0, len(all_pr_matrix_rows), steps):
 # print(teams_names)
 # print(len(individual_map_tables))
 
-team_pick_rates = {}
+teams_pick_rates = {}
 
 
 # for table in individual_map_tables[1:2]:
@@ -112,29 +133,52 @@ team_pick_rates = {}
 #             if isinstance(data, Tag) and data.find('a').find('img'):
 #                 print(data.text)
 
-for index, list_of_tr in enumerate(grouping_pr_matrix_rows):
-    for tr in list_of_tr:
-        for td in tr:
+for map_index, list_of_tr in enumerate(grouping_pr_matrix_rows):
+    map = maps_names[map_index]
+    teams_pick_rates[map] = {}
+    for team_index, tr in enumerate(list_of_tr):
+        team = teams_names[team_index]
+        team_pick_rate = {}
+        for agent_index, td in enumerate(tr):
             try:
                 classes = td.get("class", [])
+                agent = agents_names[agent_index]
                 if "mod-picked" in classes:
-                    print(f'Purple, {td}')
+                    picked = 1
                 else:
-                    print(f'Empty, {td}')
+                    picked = 0
+                team_pick_rate[agent] = picked
             except AttributeError:
-                print(f'Empty, {td}')
-#             try:
-#                 mod_picked = td['class']
-#                 print(f'1')
-#             except:
-#                 print(f'0')
-        print(f'\n')
-# # for index, tr in enumerate(all_pr_matrix_rows):
-#     print(f'{index}')
-#     for td in tr:
-#         try:
-#             mod_picked = td['class']
-#             print(f'1')
-#         except:
-#             print(f'0')
-#     print(f'\n')
+                continue
+# #             try:
+# #                 mod_picked = td['class']
+# #                 print(f'1')
+# #             except:
+# #                 print(f'0')
+        teams_pick_rates[map][team] = team_pick_rate
+
+print(teams_pick_rates["Icebox"])
+
+# for key, value in teams_pick_rates.items():
+#     for key1, value1 in value.items():
+#         print(f'{key1}: {value1}')
+# for index, tr in enumerate(all_pr_matrix_rows[0]):
+# #     print(tr.prettify())
+#     if not isinstance(tr, Tag):
+#         if isinstance(tr, NavigableString):
+#             tr.extract()
+
+    # else:
+    #     print(tr)
+    # for td in tr:
+    #     try:
+    #         mod_picked = td['class']
+    #         print(f'1')
+    #     except:
+    #         print(f'0')
+    # print(f'\n')
+
+# for row in all_pr_matrix_rows:
+#     print(len(row))
+
+# print(len(all_pr_matrix_rows))
