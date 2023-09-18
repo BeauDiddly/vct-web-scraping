@@ -157,7 +157,7 @@ for map_index, list_of_tr in enumerate(grouping_pr_matrix_rows):
 # #                 print(f'0')
         teams_pick_rates[map][team] = team_pick_rate
 
-print(teams_pick_rates["Icebox"])
+print(teams_pick_rates["Ascent"])
 
 # for key, value in teams_pick_rates.items():
 #     for key1, value1 in value.items():
