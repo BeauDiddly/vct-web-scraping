@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup, Tag, NavigableString
 import re
 
 def remove_special_characters(input_string):
-    pattern = r'[^a-zA-Z0-9]+'
+    pattern = r'[^a-zA-Z0-9_/]+'
     
     # Use the sub() method to replace all matched characters with an empty string
     cleaned_string = re.sub(pattern, '', input_string)
@@ -62,33 +62,59 @@ for tr in all_trs:
 
 # print(len(all_trs[0:2]))
 
+players_stats = {}
+
+players_with_one_agents_played = set()
+
 pattern = r'/(\w+)\.png'
 
-for index,td in enumerate(all_trs[0]):
-    try:
-        td_class = td.get('class') or ""
-        class_name = " ".join(td_class)
-        if class_name == "mod-player mod-a":
-            player_info = td.find("div").find_all("div")
-            name = player_info[0].text
-            team = player_info[1].text 
-            print(name, team, index)
-        elif class_name == "mod-agents":
-            file_name = td.find("div").find("img").get("src")
-            match = re.search(pattern, file_name)
-            agent_name = match.group(1)
-            print(agent_name, index)
-        elif class_name == "mod-rnd" or class_name == "mod-cl" or class_name == "":
-            stat = remove_special_characters(td.text)
-            print(stat, index)
-        elif class_name == "mod-color-sq mod-acs" or class_name ==  "mod-color-sq":
-            stat = td.find("div").find("span").text
-            print(stat, index)
-        elif class_name == "mod-a mod-kmax":
-            stat = remove_special_characters(td.find("a").text)
-            print(stat, index)
-    except AttributeError:
-        continue
+for tr in all_trs:
+    player = ""
+    team = ""
+    agents_played = ""
+    for index, td in enumerate(tr):
+        # print(index)
+        try:
+            td_class = td.get('class') or ""
+            class_name = " ".join(td_class)
+            # print(class_name)
+            if class_name == "mod-player mod-a":
+                 player_info = td.find("div").find_all("div")
+                 player = player_info[0].text
+                 team = player_info[1].text
+                 players_stats[player] = {} 
+            elif class_name == "mod-agents":
+                imgs = td.find("div").find_all("img")
+                agents = []
+                for img in imgs:
+                    file_name = img.get("src")
+                    match = re.search(pattern, file_name)
+                    agent_name = match.group(1)
+                    agents.append(agent_name)
+                if len(agents) == 1:
+                    agents_played = agents[0]
+                    players_with_one_agents_played.add(player)
+                    players_stats[player][agents_played] = {}
+                    players_stats[player][agents_played]["team"] = team
+                else:
+                    agents_played = ", ".join(agents)
+                    players_stats[player][agents_played] = {}
+                    players_stats[player][agents_played]["team"] = team
+            elif class_name == "mod-rnd" or class_name == "mod-cl" or class_name == "":
+                 stat = remove_special_characters(td.text)
+                 stat_name = stats_titles[index]
+                 players_stats[player][agents_played][stat_name] = stat
+                 print(stat)
+            elif class_name == "mod-color-sq mod-acs" or class_name ==  "mod-color-sq":
+                 stat = td.find("div").find("span").text
+                 stat_name = stats_titles[index]
+                 players_stats[player][agents_played][stat_name] = stat
+            elif class_name == "mod-a mod-kmax":
+                 stat = remove_special_characters(td.find("a").text)
+                 stat_name = stats_titles[index]
+                 players_stats[player][agents_played][stat_name] = stat
+        except AttributeError:
+            continue
     # for index,td in enumerate(tr):
     #     # print(td)
     #     if isinstance(td, Tag) and td.name == 'a':
@@ -112,3 +138,4 @@ for index,td in enumerate(all_trs[0]):
         # except AttributeError:
         #     continue
 
+print(players_stats["Cloud"])
