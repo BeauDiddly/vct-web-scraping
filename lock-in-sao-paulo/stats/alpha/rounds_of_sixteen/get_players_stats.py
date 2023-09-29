@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup, Tag, NavigableString
 import re
+import time
 
 def remove_special_characters(input_string):
     pattern = r'[^a-zA-Z0-9_/]+'
@@ -64,9 +65,8 @@ for tr in all_trs:
 
 players_stats = {}
 
-players_with_one_agents_played = set()
+players_with_one_agent_played = set()
 
-pattern = r'/(\w+)\.png'
 
 for tr in all_trs:
     player = ""
@@ -93,7 +93,7 @@ for tr in all_trs:
                     agents.append(agent_name)
                 if len(agents) == 1:
                     agents_played = agents[0]
-                    players_with_one_agents_played.add(player)
+                    players_with_one_agent_played.add(player)
                     players_stats[player][agents_played] = {}
                     players_stats[player][agents_played]["team"] = team
                 else:
@@ -104,7 +104,6 @@ for tr in all_trs:
                  stat = remove_special_characters(td.text)
                  stat_name = stats_titles[index]
                  players_stats[player][agents_played][stat_name] = stat
-                 print(stat)
             elif class_name == "mod-color-sq mod-acs" or class_name ==  "mod-color-sq":
                  stat = td.find("div").find("span").text
                  stat_name = stats_titles[index]
@@ -138,4 +137,65 @@ for tr in all_trs:
         # except AttributeError:
         #     continue
 
-print(players_stats["Cloud"])
+# print(players_stats["Cloud"])
+# print(players_with_one_agents_played)
+
+# print(all_agents)
+
+all_trs = []
+
+URL = "https://www.vlr.gg/event/stats/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16339.16333.16334.16335.16336.16337&min_rounds=0&agent="
+
+for agent in all_agents:
+    page = requests.get(f'{URL}{agent}')
+    soup = BeautifulSoup(page.content, "html.parser")
+    trs = soup.find_all("tr")[1:]
+    for tr in trs:
+        player = tr.find("td").find("div").find("div").text
+        if player not in players_with_one_agent_played:
+            all_trs.append(tr)
+
+for tr in all_trs:
+    for td in tr:
+        if not isinstance(td, Tag) and isinstance(td, NavigableString):
+            td.extract()
+
+
+for tr in all_trs:
+    player = ""
+    team = ""
+    agent = ""
+    for index, td in enumerate(tr):
+        # print(index)
+        try:
+            td_class = td.get('class') or ""
+            class_name = " ".join(td_class)
+            # print(class_name)
+            if class_name == "mod-player mod-a":
+                 player_info = td.find("div").find_all("div")
+                 player = player_info[0].text
+                 team = player_info[1].text
+            elif class_name == "mod-agents":
+                img = td.find("div").find("img")
+                file_name = img.get("src")
+                match = re.search(pattern, file_name)
+                agent = match.group(1)
+                # print(f'{td}\n{agent} {class_name}')
+                players_stats[player][agent] = {}
+                players_stats[player][agent]["team"] = team
+            elif class_name == "mod-rnd" or class_name == "mod-cl" or class_name == "":
+                 stat = remove_special_characters(td.text)
+                 stat_name = stats_titles[index]
+                 players_stats[player][agent][stat_name] = stat
+            elif class_name == "mod-color-sq mod-acs" or class_name ==  "mod-color-sq":
+                 stat = td.find("div").find("span").text
+                 stat_name = stats_titles[index]
+                 players_stats[player][agent][stat_name] = stat
+            elif class_name == "mod-a mod-kmax":
+                 stat = remove_special_characters(td.find("a").text)
+                 stat_name = stats_titles[index]
+                 players_stats[player][agent][stat_name] = stat
+        except AttributeError:
+            continue
+
+print(players_stats["rhyme"])
