@@ -71,7 +71,7 @@ players_with_one_agent_played = set()
 for tr in all_trs:
     player = ""
     team = ""
-    agents_played = ""
+    agents = ""
     for index, td in enumerate(tr):
         # print(index)
         try:
@@ -85,33 +85,33 @@ for tr in all_trs:
                  players_stats[player] = {} 
             elif class_name == "mod-agents":
                 imgs = td.find("div").find_all("img")
-                agents = []
+                agents_played = []
                 for img in imgs:
                     file_name = img.get("src")
                     match = re.search(pattern, file_name)
                     agent_name = match.group(1)
-                    agents.append(agent_name)
-                if len(agents) == 1:
-                    agents_played = agents[0]
+                    agents_played.append(agent_name)
+                if len(agents_played) == 1:
+                    agents = agents_played[0]
                     players_with_one_agent_played.add(player)
-                    players_stats[player][agents_played] = {}
-                    players_stats[player][agents_played]["team"] = team
+                    players_stats[player][agents] = {}
+                    players_stats[player][agents]["team"] = team
                 else:
-                    agents_played = ", ".join(agents)
-                    players_stats[player][agents_played] = {}
-                    players_stats[player][agents_played]["team"] = team
+                    agents = ", ".join(agents_played)
+                    players_stats[player][agents] = {}
+                    players_stats[player][agents]["team"] = team
             elif class_name == "mod-rnd" or class_name == "mod-cl" or class_name == "":
                  stat = remove_special_characters(td.text)
                  stat_name = stats_titles[index]
-                 players_stats[player][agents_played][stat_name] = stat
+                 players_stats[player][agents][stat_name] = stat
             elif class_name == "mod-color-sq mod-acs" or class_name ==  "mod-color-sq":
                  stat = td.find("div").find("span").text
                  stat_name = stats_titles[index]
-                 players_stats[player][agents_played][stat_name] = stat
+                 players_stats[player][agents][stat_name] = stat
             elif class_name == "mod-a mod-kmax":
                  stat = remove_special_characters(td.find("a").text)
                  stat_name = stats_titles[index]
-                 players_stats[player][agents_played][stat_name] = stat
+                 players_stats[player][agents][stat_name] = stat
         except AttributeError:
             continue
     # for index,td in enumerate(tr):
