@@ -97,7 +97,7 @@ for tr in all_trs:
                     players_stats[player][agents] = {}
                     players_stats[player][agents]["team"] = team
                 else:
-                    agents = ", ".join(agents_played)
+                    agents = "multiple agents"
                     players_stats[player][agents] = {}
                     players_stats[player][agents]["team"] = team
             elif class_name == "mod-rnd" or class_name == "mod-cl" or class_name == "":
@@ -137,7 +137,7 @@ for tr in all_trs:
         # except AttributeError:
         #     continue
 
-# print(players_stats["Cloud"])
+# print(players_stats["leaf"])
 # print(players_with_one_agents_played)
 
 # print(all_agents)
@@ -198,4 +198,4 @@ for tr in all_trs:
         except AttributeError:
             continue
 
-print(players_stats["rhyme"])
+# print(players_stats["rhyme"])
