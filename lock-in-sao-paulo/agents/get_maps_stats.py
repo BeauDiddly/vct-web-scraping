@@ -86,7 +86,6 @@ for stage, url in urls.items():
         def_win_percentage = maps_stats[i][3].text.strip()
         maps_stats_dict[stage][map_name] = {"map_counts": map_counts, "atk_win": atk_win_percentage, "def_win": def_win_percentage}
     # print(maps_stats_dict)
-    time.sleep(1.5)
 # index = 0
 
 # for i in range(0, max_rows):

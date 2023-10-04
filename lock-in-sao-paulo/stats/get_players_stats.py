@@ -130,7 +130,6 @@ for stage, url in urls.items():
                 elif class_name == "mod-rnd" or class_name == "mod-cl" or class_name == "":
                     stat = remove_special_characters(td.text)
                     stat_name = stats_titles[index]
-                    print(f'{stat_name} {stat}')
                     players_stats[stage][player][agents][stat_name] = stat
                 elif class_name == "mod-color-sq mod-acs" or class_name ==  "mod-color-sq":
                     stat = td.find("div").find("span").text
@@ -142,8 +141,8 @@ for stage, url in urls.items():
                     players_stats[stage][player][agents][stat_name] = stat
             except AttributeError:
                 continue
-        print(players_stats[stage][player])
-        time.sleep(2)
+        # print(players_stats[stage][player])
+        # time.sleep(2)
     # for index,td in enumerate(tr):
     #     # print(td)
     #     if isinstance(td, Tag) and td.name == 'a':
@@ -223,6 +222,3 @@ for stage, url in urls.items():
                     players_stats[stage][player][agent][stat_name] = stat
             except AttributeError:
                 continue
-    
-
-    time.sleep(1.5)

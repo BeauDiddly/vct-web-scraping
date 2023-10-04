@@ -226,8 +226,6 @@ for stage, url in urls.items():
     # #             except:
     # #                 print(f'0')
             teams_pick_rates[stage][map][team] = team_pick_rate
-    print(teams_pick_rates)
-    time.sleep(1.5)
 # print(teams_pick_rates["Lotus"])
 
 # for key, value in teams_pick_rates.items():

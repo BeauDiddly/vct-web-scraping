@@ -142,9 +142,7 @@ for stage, url in urls.items():
         for index, name in enumerate(agents_names):
             pick_rate = agents_pick_rates[i][index] 
             agents_pick_rates_with_maps[stage][map_name][name] = pick_rate
-    print(agents_pick_rates_with_maps[stage])
 
-    time.sleep(1.5)
 # for i in range(0, max_rows):
 #     map_name = maps_name[i]
 #     agents_pick_rates_with_maps[map_name] = {}
