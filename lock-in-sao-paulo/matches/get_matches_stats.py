@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup, Tag, NavigableString
+from bs4 import BeautifulSoup, Tag, NavigableString, Comment
 import re
 import time
 
@@ -36,6 +36,8 @@ for cards in all_cards:
 
 #it is only getting the first card
 stats_titles = []
+all, attack, defend = "all", "attack", "defend"
+overview, performance, economy = "overview", "performance", "economy"
 
 for index, module in enumerate(modules):
     match_type, stage = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
@@ -47,25 +49,41 @@ for index, module in enumerate(modules):
         loser, loser_flag, loser_score = module.find("div", class_="match-item-vs").select('div.match-item-vs-team:not([class*=" "])')[0].find_all("div")
         loser = loser.text.strip("\n").strip("\t")
         loser_score = loser_score.text.strip("\n").strip("\t")
+
         winner, winner_flag, winner_score = module.find("div", class_="match-item-vs").find("div", class_="match-item-vs-team mod-winner").find_all("div")
         winner = winner.text.strip("\n").strip("\t")
         winner_score = winner_score.text.strip("\n").strip("\t")
+
         match_name = f"{loser} vs {winner}"
+
         stage_dict = matches_stats[tournament].setdefault(stage, {})
+
         match_type_dict = stage_dict.setdefault(match_type, {})
         match_type_dict[match_name] = {}
+
         url = module.get("href")
         match_page = requests.get(f'https://vlr.gg{url}')
         match_soup = BeautifulSoup(match_page.content, "html.parser")
-        print(match_soup)
+
         if not stats_titles:
             stats_titles = ["", ""]
 
-            all_ths = match_soup.find_all("th")[2:]
+            all_ths = match_soup.find("tr").find_all("th")[2:]
             for th in all_ths:
                 title = th.get("title")
                 stats_titles.append(title)
-            break
+        
+        match_maps = match_soup.find("div", class_="vm-stats-gamesnav noselect").select('div[data-disabled="0"]')
+        for index, map in enumerate(match_maps):
+            # map = re.sub(r'\d+|\t|\n', '',map.text.strip())
+            comments = map.find(string=lambda text: isinstance(text, Comment))
+            comment_soup = BeautifulSoup(comments, "html.parser")
+            who_picked = comment_soup.find("div", class_="pick ge-text-light").text.strip()
+            if who_picked:
+                who_picked = who_picked.split(":")[1].strip()
+            # print(who_picked)
+            match_maps[index] = (re.sub(r'\d+|\t|\n', '',map.text.strip()), who_picked)
+        break
+print(match_maps)
 
-print(stats_titles)
     
