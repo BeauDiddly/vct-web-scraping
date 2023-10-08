@@ -83,6 +83,69 @@ for index, module in enumerate(modules):
                 who_picked = who_picked.split(":")[1].strip()
             # print(who_picked)
             match_maps[index] = (re.sub(r'\d+|\t|\n', '',map.text.strip()), who_picked)
+        
+        maps_id = {}
+        
+        maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav noselect").find_all("div")
+        for div in maps_id_divs:
+            id = div.get("data-game-id")
+            print(id)
+            map = re.sub(r"\d+|\t|\n", "", div.text.strip())
+            maps_id[id] = map
+        overview_stats = match_soup.find_all("div", class_="vm-stats-game")
+        overview_stats[0], overview_stats[1] = overview_stats[1], overview_stats[0]
+        trs = []
+        # for index, main_div in enumerate(overview_stats):
+        #     team_1_table, team_2_table = main_div.find_all("div")
+
+        print(len(trs))
+        
+        # trs = match_soup.find_all("tr")
+        # for tr in trs:
+        #     for td in tr:
+        #         player = ""
+        #         team = ""
+        #         agents = ""
+        #         try:
+        #             td_class = td.get('class') or ""
+        #             class_name = " ".join(td_class)
+        #             # print(class_name)
+        #             if class_name == "mod-player":
+        #                 player_info = td.find("div").find("a").find_all("div")
+        #                 player = player_info[0].text
+        #                 team = player_info[1].text
+        #                 match_type_dict[match_name][] = {} 
+        #             elif class_name == "mod-agents":
+        #                 imgs = td.find("div").find_all("img")
+        #                 agents_played = []
+        #                 for img in imgs:
+        #                     file_name = img.get("src")
+        #                     match = re.search(pattern, file_name)
+        #                     agent_name = match.group(1)
+        #                     agents_played.append(agent_name)
+        #                 if len(agents_played) == 1:
+        #                     agents = agents_played[0]
+        #                     players_with_one_agent_played.add(player)
+        #                     players_stats[stage][player][agents] = {}
+        #                     players_stats[stage][player][agents]["team"] = team
+        #                 else:
+        #                     agents = "multiple agents"
+        #                     players_stats[stage][player][agents] = {}
+        #                     players_stats[stage][player][agents]["team"] = team
+        #             elif class_name == "mod-rnd" or class_name == "mod-cl" or class_name == "":
+        #                 stat = remove_special_characters(td.text)
+        #                 stat_name = stats_titles[index]
+        #                 players_stats[stage][player][agents][stat_name] = stat
+        #             elif class_name == "mod-color-sq mod-acs" or class_name ==  "mod-color-sq":
+        #                 stat = td.find("div").find("span").text
+        #                 stat_name = stats_titles[index]
+        #                 players_stats[stage][player][agents][stat_name] = stat
+        #             elif class_name == "mod-a mod-kmax":
+        #                 stat = remove_special_characters(td.find("a").text)
+        #                 stat_name = stats_titles[index]
+        #                 players_stats[stage][player][agents][stat_name] = stat
+        #         except AttributeError:
+        #             continue
         break
 print(match_maps)
 
