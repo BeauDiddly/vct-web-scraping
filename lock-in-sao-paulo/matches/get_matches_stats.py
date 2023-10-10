@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup, Tag, NavigableString, Comment
 import re
 import time
+import pprint
 
 def remove_special_characters(input_string, pattern):
     
@@ -15,7 +16,7 @@ matches_url = {}
 matches_stats = {}
 tournament = "Lock-In Sao Paulo"
 matches_stats[tournament] = {}
-pattern = r'[^a-zA-Z0-9_/]+'
+pattern = r'/(\w+)\.png'
 page = requests.get(url)
 
 soup = BeautifulSoup(page.content, "html.parser")
@@ -88,18 +89,58 @@ for index, module in enumerate(modules):
         
         maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav noselect").find_all("div")
         for div in maps_id_divs:
-            id = div.get("data-game-id")
-            print(id)
+            if div.get("data-game-id"):
+                id = div.get("data-game-id")
+            else:
+                id = ""
             map = re.sub(r"\d+|\t|\n", "", div.text.strip())
             maps_id[id] = map
-        overview_stats = match_soup.find_all("div", class_="vm-stats-game")
-        overview_stats[0], overview_stats[1] = overview_stats[1], overview_stats[0]
-        trs = []
-        # for index, main_div in enumerate(overview_stats):
-        #     team_1_table, team_2_table = main_div.find_all("div")
-
-        print(len(trs))
         
+        match_type_dict[match_name]["maps_picks"] = {}
+        match_type_dict[match_name]["maps_bans"] = {}
+
+        for map, team in match_maps[1:]:
+            match_type_dict[match_name]["maps_picks"][team] = map
+
+        overview_stats = match_soup.find_all("div", class_="vm-stats-game")
+        for overview in overview_stats:
+            id = overview.get("data-game-id")
+            map = maps_id[id]
+            match_type_dict[match_name][map] = {}
+            tds = overview.select("table tbody tr td")
+            for index, td in enumerate(tds):
+                td_class = td.get("class") or ""
+                class_name = " ".join(td_class)
+                if class_name == "mod-player":
+                    player, team = td.find("a").find_all("div")
+                    player, team =  player.text.strip(), team.text.strip()
+                    team_dict = match_type_dict[match_name][map].setdefault(team, {})
+                    team_dict[player] = {}
+                elif class_name == "mod-agents":
+                    imgs = td.find_all("img")
+                    agents_played = []
+                    for img in imgs:
+                        agent = img.get("alt")
+                        agents_played.append(agent)
+                    agents = ", ".join(agents_played)
+                    team_dict[player]["agents"] = agents
+                elif class_name in ["mod-stat mod-vlr-kills", "mod-stat", "mod-stat mod-vlr-assists", "mod-stat mod-kd-diff",
+                                    "mod-stat mod-fb", "mod-stat mod-fd", "mod-stat mod-fk-diff"]:
+                    print()
+                    all_stat, attack_stat, defend_stat = td.find("span").find_all("span")
+                    all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
+                    stat_name = stats_titles[index % 14]
+                    team_dict[player][stat_name] = {"all": all_stat, "attack": attack_stat, "defend": defend_stat}
+                elif class_name == "mod-stat mod-vlr-deaths":
+                    all_stat, attack_stat, defend_stat = td.find("span").find_all("span")[1].find_all("span")
+                    all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
+                    stat_name = stats_titles[index % 14]
+                    team_dict[player][stat_name] = {"all": all_stat, "attack": attack_stat, "defend": defend_stat}
+            # print(team_dict)
+            # print(team_dict[player])
+
+        pprint.pprint(match_type_dict[match_name]["Icebox"]["KOI"])
+
         # trs = match_soup.find_all("tr")
         # for tr in trs:
         #     for td in tr:
@@ -147,6 +188,6 @@ for index, module in enumerate(modules):
         #         except AttributeError:
         #             continue
         break
-print(match_maps)
+# print(match_maps)
 
     
