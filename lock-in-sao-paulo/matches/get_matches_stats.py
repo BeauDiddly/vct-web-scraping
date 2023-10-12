@@ -4,6 +4,7 @@ import re
 import time
 import pprint
 
+
 def remove_special_characters(input_string, pattern):
     
     # Use the sub() method to replace all matched characters with an empty string
@@ -36,7 +37,8 @@ for cards in all_cards:
 #         break
 
 #it is only getting the first card
-stats_titles = []
+overview_stats_titles = []
+performance_stats_title = []
 all, attack, defend = "all", "attack", "defend"
 overview, performance, economy = "overview", "performance", "economy"
 
@@ -66,13 +68,13 @@ for index, module in enumerate(modules):
         match_page = requests.get(f'https://vlr.gg{url}')
         match_soup = BeautifulSoup(match_page.content, "html.parser")
 
-        if not stats_titles:
-            stats_titles = ["", ""]
+        if not overview_stats_titles:
+            overview_stats_titles = ["", ""]
 
             all_ths = match_soup.find("tr").find_all("th")[2:]
             for th in all_ths:
                 title = th.get("title")
-                stats_titles.append(title)
+                overview_stats_titles.append(title)
         
         match_maps = match_soup.find("div", class_="vm-stats-gamesnav noselect").select('div[data-disabled="0"]')
         for index, map in enumerate(match_maps):
@@ -101,20 +103,20 @@ for index, module in enumerate(modules):
 
         for map, team in match_maps[1:]:
             match_type_dict[match_name]["maps_picks"][team] = map
-
+        match_type_dict[match_name][overview] = {}
         overview_stats = match_soup.find_all("div", class_="vm-stats-game")
-        for overview in overview_stats:
-            id = overview.get("data-game-id")
+        for stats in overview_stats:
+            id = stats.get("data-game-id")
             map = maps_id[id]
-            match_type_dict[match_name][map] = {}
-            tds = overview.select("table tbody tr td")
+            match_type_dict[match_name][overview][map] = {}
+            tds = stats.select("table tbody tr td")
             for index, td in enumerate(tds):
                 td_class = td.get("class") or ""
                 class_name = " ".join(td_class)
                 if class_name == "mod-player":
                     player, team = td.find("a").find_all("div")
                     player, team =  player.text.strip(), team.text.strip()
-                    team_dict = match_type_dict[match_name][map].setdefault(team, {})
+                    team_dict = match_type_dict[match_name][overview][map].setdefault(team, {})
                     team_dict[player] = {}
                 elif class_name == "mod-agents":
                     imgs = td.find_all("img")
@@ -126,20 +128,39 @@ for index, module in enumerate(modules):
                     team_dict[player]["agents"] = agents
                 elif class_name in ["mod-stat mod-vlr-kills", "mod-stat", "mod-stat mod-vlr-assists", "mod-stat mod-kd-diff",
                                     "mod-stat mod-fb", "mod-stat mod-fd", "mod-stat mod-fk-diff"]:
-                    print()
                     all_stat, attack_stat, defend_stat = td.find("span").find_all("span")
                     all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
-                    stat_name = stats_titles[index % 14]
+                    stat_name = overview_stats_titles[index % len(overview_stats_titles)]
                     team_dict[player][stat_name] = {"all": all_stat, "attack": attack_stat, "defend": defend_stat}
                 elif class_name == "mod-stat mod-vlr-deaths":
                     all_stat, attack_stat, defend_stat = td.find("span").find_all("span")[1].find_all("span")
                     all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
-                    stat_name = stats_titles[index % 14]
+                    stat_name = overview_stats_titles[index % len(overview_stats_titles)]
                     team_dict[player][stat_name] = {"all": all_stat, "attack": attack_stat, "defend": defend_stat}
             # print(team_dict)
             # print(team_dict[player])
 
-        pprint.pprint(match_type_dict[match_name]["Icebox"]["KOI"])
+        # pprint.pprint(match_type_dict[match_name]["All Maps"]["KOI"])
+        performance_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=performance')
+        performance_soup = BeautifulSoup(performance_page.content, "html.parser")
+        # teams = performance_soup.select('div.team:not([class*=" "])')
+        # print(teams)
+        performance_stats = performance_soup.find_all("div", class_="vm-stats-game")
+
+        if not performance_stats_title:
+            performance_stats_title = ["", ""]
+            all_ths = performance_soup.find("table", class_="wf-table-inset mod-adv-stats").find("tr").find_all("th")[2:]
+            for th in all_ths:
+                title = th.text.strip()
+                performance_stats_title.append(title)
+        
+        opposing_team = []
+
+        team = performance_stats[1].find("div").find("tr").find_all("div", class_="team")
+
+        for player in team:
+            print(player.text.strip().replace("\t", ""))
+        
 
         # trs = match_soup.find_all("tr")
         # for tr in trs:
