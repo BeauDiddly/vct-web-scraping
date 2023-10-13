@@ -145,7 +145,7 @@ for index, module in enumerate(modules):
         performance_soup = BeautifulSoup(performance_page.content, "html.parser")
         # teams = performance_soup.select('div.team:not([class*=" "])')
         # print(teams)
-        performance_stats = performance_soup.find_all("div", class_="vm-stats-game")
+        performance_stats_div = performance_soup.find_all("div", class_="vm-stats-game")
 
         if not performance_stats_title:
             performance_stats_title = ["", ""]
@@ -154,12 +154,31 @@ for index, module in enumerate(modules):
                 title = th.text.strip()
                 performance_stats_title.append(title)
         
-        opposing_team = []
 
-        team = performance_stats[1].find("div").find("tr").find_all("div", class_="team")
-
-        for player in team:
-            print(player.text.strip().replace("\t", ""))
+        opposing_team = performance_stats_div[1].find("div").find("tr").find_all("div", class_="team")
+        opposing_team_players = [""]
+        for player in opposing_team:
+            player = player.text.strip().replace("\t", "").replace("\n", "").strip(f"{team}")
+            opposing_team_players.append(player)
+        
+        players_to_players_kills_stats = {}
+        players_kills_stats = {}
+        for div in performance_stats_div:
+            kills_div = div.select_one("div[style='overflow-x: auto; padding-bottom: 500px; margin-bottom: -500px;']")
+            if kills_div != None:
+                id = div.get("data-game-id")
+                players_to_players_kills_stats[id] = []
+                players_kills_stats[id] = []
+                players_to_players_kills_tables = div.find("div").find_all("table")
+                kills_trs = kills_div.find_all("tr")[1:]
+                players_kills_stats[id].append(kills_trs)
+                for table in players_to_players_kills_tables:
+                    trs = table.find_all("tr")[1:]
+                    players_to_players_kills_stats[id].append(trs)
+            else:
+                continue
+        
+        print(len(players_kills_stats[id]))
         
 
         # trs = match_soup.find_all("tr")
