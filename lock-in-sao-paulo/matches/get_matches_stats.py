@@ -155,32 +155,48 @@ for index, module in enumerate(modules):
                 performance_stats_title.append(title)
         
 
-        opposing_team = performance_stats_div[1].find("div").find("tr").find_all("div", class_="team")
+        opposing_team_div = performance_stats_div[1].find("div").find("tr").find_all("div", class_="team")
         opposing_team_players = [""]
-        for player in opposing_team:
+        for player in opposing_team_div:
             player = player.text.strip().replace("\t", "").replace("\n", "").strip(f"{team}")
             opposing_team_players.append(player)
-        
-        players_to_players_kills_stats = {}
-        players_kills_stats = {}
+        opposing_team = team
+        specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
+        players_to_players_kills = {}
+        players_kills = {}
         for div in performance_stats_div:
             kills_div = div.select_one("div[style='overflow-x: auto; padding-bottom: 500px; margin-bottom: -500px;']")
             if kills_div != None:
                 id = div.get("data-game-id")
-                players_to_players_kills_stats[id] = []
-                players_kills_stats[id] = []
+                players_to_players_kills[id] = []
+                players_kills[id] = []
                 players_to_players_kills_tables = div.find("div").find_all("table")
                 kills_trs = kills_div.find_all("tr")[1:]
-                players_kills_stats[id].append(kills_trs)
                 for table in players_to_players_kills_tables:
                     trs = table.find_all("tr")[1:]
-                    players_to_players_kills_stats[id].append(trs)
+                    for tr in trs:
+                        tds = tr.find_all("td")
+                        players_to_players_kills[id].append(tds)
+                for tr in kills_trs:
+                    tds = tr.find_all("td")
+                    players_kills[id].extend(tds)
             else:
                 continue
-        
-        print(len(players_kills_stats[id]))
-        
-
+        match_type_dict[match_name][performance] = {}
+        for id, tds_list in players_to_players_kills.items():
+            for specifc_kills_name_index, td_list in enumerate(tds_list):
+                for opposing_player_index, td in enumerate(td_list):
+                    if td.find("img") != None:
+                        player, team = td.text.strip().replace("\t", "").split("\n")
+                        kill_name = specific_kills_name[specifc_kills_name_index]
+                        performance_dict = match_type_dict[match_name][performance].setdefault(kill_name, {})
+                        rival_team_dict = performance_dict.setdefault(team, {})
+                        player_to_player_kills_dict = rival_team_dict.setdefault(player , {})
+                        opposing_team_dict = player_to_player_kills_dict.setdefault(opposing_team, {})
+                    break
+                break
+            break
+        print(match_type_dict[match_name][performance])
         # trs = match_soup.find_all("tr")
         # for tr in trs:
         #     for td in tr:
