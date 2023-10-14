@@ -155,12 +155,12 @@ for index, module in enumerate(modules):
                 performance_stats_title.append(title)
         
 
-        opposing_team_div = performance_stats_div[1].find("div").find("tr").find_all("div", class_="team")
-        opposing_team_players = [""]
-        for player in opposing_team_div:
+        team_b_div = performance_stats_div[1].find("div").find("tr").find_all("div", class_="team")
+        team_b_players = [""]
+        for player in team_b_div:
             player = player.text.strip().replace("\t", "").replace("\n", "").strip(f"{team}")
-            opposing_team_players.append(player)
-        opposing_team = team
+            team_b_players.append(player)
+        team_b = team
         specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
         players_to_players_kills = {}
         players_kills = {}
@@ -185,16 +185,19 @@ for index, module in enumerate(modules):
         match_type_dict[match_name][performance] = {}
         for id, tds_list in players_to_players_kills.items():
             for specifc_kills_name_index, td_list in enumerate(tds_list):
-                for opposing_player_index, td in enumerate(td_list):
+                for team_b_player_index, td in enumerate(td_list):
                     if td.find("img") != None:
                         player, team = td.text.strip().replace("\t", "").split("\n")
-                        kill_name = specific_kills_name[specifc_kills_name_index]
+                        kill_name = specific_kills_name[specifc_kills_name_index % len(specific_kills_name)]
                         performance_dict = match_type_dict[match_name][performance].setdefault(kill_name, {})
-                        rival_team_dict = performance_dict.setdefault(team, {})
-                        player_to_player_kills_dict = rival_team_dict.setdefault(player , {})
-                        opposing_team_dict = player_to_player_kills_dict.setdefault(opposing_team, {})
-                    break
-                break
+                        team_a_dict = performance_dict.setdefault(team, {})
+                        team_a_player_kills_dict = team_a_dict.setdefault(player , {})
+                        team_b_dict = team_a_player_kills_dict.setdefault(team_b, {})
+                    else:
+                        kills_div = td.find("div").find_all("div")
+                        team_a_player_kills, team_b_player_kills, difference = kills_div[0].text.strip(), kills_div[1].text.strip(), kills_div[2].text.strip()
+                        team_b_player = team_b_players[team_b_player_index]
+                        team_b_dict[team_b_player] = {"Kills to": team_a_player_kills, "Death by": team_b_player_kills, "Difference": difference}
             break
         print(match_type_dict[match_name][performance])
         # trs = match_soup.find_all("tr")
