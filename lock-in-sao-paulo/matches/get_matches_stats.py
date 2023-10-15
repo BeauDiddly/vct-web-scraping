@@ -185,12 +185,14 @@ for index, module in enumerate(modules):
         print(len(team_b_players))
         match_type_dict[match_name][performance] = {}
         for id, tds_list in players_to_players_kills.items():
+            map = maps_id[id]
+            match_type_dict[match_name][performance][map] = {}
             for index, td_list in enumerate(tds_list):
                 for team_b_player_index, td in enumerate(td_list):
                     if td.find("img") != None:
                         player, team = td.text.strip().replace("\t", "").split("\n")
                         kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
-                        performance_dict = match_type_dict[match_name][performance].setdefault(kill_name, {})
+                        performance_dict = match_type_dict[match_name][performance][map].setdefault(kill_name, {})
                         team_a_dict = performance_dict.setdefault(team, {})
                         team_a_player_kills_dict = team_a_dict.setdefault(player , {})
                         team_b_dict = team_a_player_kills_dict.setdefault(team_b, {})
@@ -199,8 +201,6 @@ for index, module in enumerate(modules):
                         team_a_player_kills, team_b_player_kills, difference = kills_div[0].text.strip(), kills_div[1].text.strip(), kills_div[2].text.strip()
                         team_b_player = team_b_players[team_b_player_index]
                         team_b_dict[team_b_player] = {"Kills to": team_a_player_kills, "Death by": team_b_player_kills, "Difference": difference}
-            break
-        print(match_type_dict[match_name][performance])
         # trs = match_soup.find_all("tr")
         # for tr in trs:
         #     for td in tr:
