@@ -182,13 +182,14 @@ for index, module in enumerate(modules):
                     players_kills[id].extend(tds)
             else:
                 continue
+        print(len(team_b_players))
         match_type_dict[match_name][performance] = {}
         for id, tds_list in players_to_players_kills.items():
-            for specifc_kills_name_index, td_list in enumerate(tds_list):
+            for index, td_list in enumerate(tds_list):
                 for team_b_player_index, td in enumerate(td_list):
                     if td.find("img") != None:
                         player, team = td.text.strip().replace("\t", "").split("\n")
-                        kill_name = specific_kills_name[specifc_kills_name_index % len(specific_kills_name)]
+                        kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
                         performance_dict = match_type_dict[match_name][performance].setdefault(kill_name, {})
                         team_a_dict = performance_dict.setdefault(team, {})
                         team_a_player_kills_dict = team_a_dict.setdefault(player , {})
