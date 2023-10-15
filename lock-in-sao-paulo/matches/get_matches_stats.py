@@ -182,7 +182,6 @@ for index, module in enumerate(modules):
                     players_kills[id].extend(tds)
             else:
                 continue
-        print(len(team_b_players))
         match_type_dict[match_name][performance] = {}
         for id, tds_list in players_to_players_kills.items():
             map = maps_id[id]
@@ -192,8 +191,8 @@ for index, module in enumerate(modules):
                     if td.find("img") != None:
                         player, team = td.text.strip().replace("\t", "").split("\n")
                         kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
-                        performance_dict = match_type_dict[match_name][performance][map].setdefault(kill_name, {})
-                        team_a_dict = performance_dict.setdefault(team, {})
+                        map_dict = match_type_dict[match_name][performance][map].setdefault(kill_name, {})
+                        team_a_dict = map_dict.setdefault(team, {})
                         team_a_player_kills_dict = team_a_dict.setdefault(player , {})
                         team_b_dict = team_a_player_kills_dict.setdefault(team_b, {})
                     else:
@@ -201,6 +200,31 @@ for index, module in enumerate(modules):
                         team_a_player_kills, team_b_player_kills, difference = kills_div[0].text.strip(), kills_div[1].text.strip(), kills_div[2].text.strip()
                         team_b_player = team_b_players[team_b_player_index]
                         team_b_dict[team_b_player] = {"Kills to": team_a_player_kills, "Death by": team_b_player_kills, "Difference": difference}
+        
+        for id, tds_list in players_kills.items():
+            map = maps_id[id]
+            kill_stats_dict = match_type_dict[match_name][performance][map].setdefault("Kill Stats", {})
+            for index, td in enumerate(tds_list):
+                if td.find("img") != None:
+                    class_name = td.find("div").get("class")[0]
+                    if class_name == "team":
+                        print(f"{index} Getting the team and name")
+                        player, team = td.text.strip().replace("\t", "").split("\n")
+                        team_dict = kill_stats_dict.setdefault(team, {})
+                    elif class_name == "stats-sq":
+                        print(f"{index} Getting the agent")
+                        img = td.find("img")
+                        src = img.get("src")
+                        agent = re.search(r'/(\w+)\.png', src).group(1)
+                        team_dict[player] = {}
+                        team_dict[player]["agent"] = agent
+                else:
+                    print(f"{index} Getting the stats")
+                    stat = td.text.strip()
+                    stat_name = performance_stats_title[index % len(performance_stats_title)]
+                    team_dict[player][stat_name] = stat
+        print(team_dict)
+
         # trs = match_soup.find_all("tr")
         # for tr in trs:
         #     for td in tr:
