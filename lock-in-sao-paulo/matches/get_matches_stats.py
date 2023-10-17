@@ -230,29 +230,30 @@ for index, module in enumerate(modules):
                     else:
                         stat = td.text.split()[0]
                         stat_name = performance_stats_title[index % len(performance_stats_title)]
-                        additional_info_divs = td.find("div").find("div").find("div").find("div").find_all("div")
-                        print(additional_info_divs)
+                        rounds_divs = td.find("div").find("div").find("div").find_all("div")
                         team_dict[player][stat_name] = {}
                         team_dict[player][stat_name]["amount"] = stat
-                        for div in additional_info_divs:
-                            img = div.find("img")
-                            if img == None:
-                                round_stat = div.text.strip()
-                                team_dict[player][stat_name][round_stat] = {}
-                            else:
-                                src = img.get("src")
-                                agent = re.search(r'/(\w+)\.png', src).group(1)
-                                victim = div.text.strip()
-                                team = team_a_players_lookup.get(victim) or team_b_players_lookup.get(victim)
-                                team_dict[player][stat_name][round_stat]["team"] = team
-                                team_dict[player][stat_name][round_stat][victim] = {"agent": agent}
-                                # print(player, agent)
+                        for round_div in rounds_divs:
+                            kills_div = round_div.find_all("div")
+                            for div in kills_div:
+                                img = div.find("img")
+                                if img == None:
+                                    round_stat = div.text.strip()
+                                    team_dict[player][stat_name][round_stat] = {}
+                                else:
+                                    src = img.get("src")
+                                    agent = re.search(r'/(\w+)\.png', src).group(1)
+                                    victim = div.text.strip()
+                                    team = team_a_players_lookup.get(victim) or team_b_players_lookup.get(victim)
+                                    team_dict[player][stat_name][round_stat]["team"] = team
+                                    team_dict[player][stat_name][round_stat][victim] = {"agent": agent}
+                                    # print(player, agent)
 
                 else:
                     stat = td.text.strip()
                     stat_name = performance_stats_title[index % len(performance_stats_title)]
                     team_dict[player][stat_name] = stat
-        print(team_dict)
+        print(match_type_dict[match_name][performance][map])
 
         # trs = match_soup.find_all("tr")
         # for tr in trs:
