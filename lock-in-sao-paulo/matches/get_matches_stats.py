@@ -41,6 +41,7 @@ overview_stats_titles = []
 performance_stats_title = []
 all, attack, defend = "all", "attack", "defend"
 overview, performance, economy = "overview", "performance", "economy"
+specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
 
 for index, module in enumerate(modules):
     match_type, stage = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
@@ -168,7 +169,6 @@ for index, module in enumerate(modules):
         team_b = team
         team_a = ""
 
-        specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
         players_to_players_kills = {}
         players_kills = {}
 
@@ -190,18 +190,22 @@ for index, module in enumerate(modules):
                     players_kills[id].extend(tds)
             else:
                 continue
-
+        
         match_type_dict[match_name][performance] = {}
+
+        for kill_name in specific_kills_name:
+            print(kill_name)
+            match_type_dict[match_name][performance][kill_name] = {}
+
         for id, tds_list in players_to_players_kills.items():
             map = maps_id[id]
-            match_type_dict[match_name][performance][map] = {}
             for index, td_list in enumerate(tds_list):
                 for team_b_player_index, td in enumerate(td_list):
                     if td.find("img") != None:
                         player, team = td.text.strip().replace("\t", "").split("\n")
                         team_a = team
                         kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
-                        map_dict = match_type_dict[match_name][performance][map].setdefault(kill_name, {})
+                        map_dict = match_type_dict[match_name][performance][kill_name].setdefault(map, {})
                         team_a_players_lookup[player] = team_a
                         team_a_dict = map_dict.setdefault(team, {})
                         team_a_player_kills_dict = team_a_dict.setdefault(player , {})
@@ -212,9 +216,10 @@ for index, module in enumerate(modules):
                         team_b_player = team_b_players[team_b_player_index]
                         team_b_dict[team_b_player] = {"Kills to": team_a_player_kills, "Death by": team_b_player_kills, "Difference": difference}
         
+        match_type_dict[match_name][performance]["Kill Stats"] = {}
         for id, td_list in players_kills.items():
             map = maps_id[id]
-            kill_stats_dict = match_type_dict[match_name][performance][map].setdefault("Kill Stats", {})
+            kill_stats_dict = match_type_dict[match_name][performance]["Kill Stats"].setdefault(map, {})
             for index, td in enumerate(td_list):
                 img = td.find("img")
                 if img != None:
@@ -253,7 +258,7 @@ for index, module in enumerate(modules):
                     stat = td.text.strip()
                     stat_name = performance_stats_title[index % len(performance_stats_title)]
                     team_dict[player][stat_name] = stat
-        print(match_type_dict[match_name][performance][map])
+        print(match_type_dict[match_name][performance]["Kill Stats"]["Haven"])
 
         # trs = match_soup.find_all("tr")
         # for tr in trs:
