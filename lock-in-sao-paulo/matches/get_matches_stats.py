@@ -29,19 +29,14 @@ modules = []
 for cards in all_cards:
     all_modules = cards.find_all("a")
     modules.extend(all_modules)
-# for card in cards[::-1]:
-#     match_type = remove_special_characters(card.find_all("div")[-1].text)
-#     print(match_type)
-#     if match_type == "Showmatch":
-#         cards.remove(card)
-#         break
 
-#it is only getting the first card
 overview_stats_titles = []
 performance_stats_title = []
+economy_stats_title = []
 all, attack, defend = "all", "attack", "defend"
 overview, performance, economy = "overview", "performance", "economy"
 specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
+
 
 for index, module in enumerate(modules):
     match_type, stage = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
@@ -143,7 +138,7 @@ for index, module in enumerate(modules):
             # print(team_dict[player])
 
         # pprint.pprint(match_type_dict[match_name]["All Maps"]["KOI"])
-        performance_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=performance')
+        performance_page = requests.get(f'https://vlr.gg{url}/?game={all}&tab={performance}')
         performance_soup = BeautifulSoup(performance_page.content, "html.parser")
         # teams = performance_soup.select('div.team:not([class*=" "])')
         # print(teams)
@@ -194,7 +189,6 @@ for index, module in enumerate(modules):
         match_type_dict[match_name][performance] = {}
 
         for kill_name in specific_kills_name:
-            print(kill_name)
             match_type_dict[match_name][performance][kill_name] = {}
 
         for id, tds_list in players_to_players_kills.items():
@@ -258,7 +252,59 @@ for index, module in enumerate(modules):
                     stat = td.text.strip()
                     stat_name = performance_stats_title[index % len(performance_stats_title)]
                     team_dict[player][stat_name] = stat
-        print(match_type_dict[match_name][performance]["Kill Stats"]["Haven"])
+        
+        economy_page = requests.get(f'https://vlr.gg{url}/?game={all}&tab={economy}')
+        economy_soup = BeautifulSoup(economy_page.content, "html.parser")
+
+        economy_stats_div = economy_soup.find_all("div", class_="vm-stats-game")
+
+        if not economy_stats_title:
+            economy_stats_title = [""]
+            all_ths = economy_soup.find("tr").find_all("th")[1:]
+            for th in all_ths:
+                economy_stats_title.append(th.text.strip())
+        
+        match_type_dict[match_name][economy] = {}
+        match_type_dict[match_name][economy]["Eco Stats"] = {}
+        match_type_dict[match_name][economy]["Eco Rounds"] = {}
+        eco_stats = {}
+        eco_rounds_stats = {}
+
+        for div in economy_stats_div:
+            id = div.get("data-game-id")
+            stats_div = div.find_all("div")
+            print(len(stats_div))
+            if len(stats_div) == 3:
+                eco_stats[id] = []
+                eco_rounds_stats[id] = []
+                eco_stats_trs = stats_div[0].find("tr")[1:]
+                eco_rounds_trs = stats_div[2].find("tr")[1:]
+                for tr in eco_stats_trs:
+                    tds = tr.find_all("td")
+                    eco_stats[id].extend(tds)
+                for tr in eco_rounds_trs:
+                    tds = tr.find_all("td")
+                    eco_rounds_stats[id].extend(tds)
+            
+            elif len(stats_div) == 2:
+                eco_stats[id] = []
+                eco_rounds_stats[id] = []
+                eco_stats_trs = stats_div[0].find("tr")[1:]
+                for tr in eco_stats_trs:
+                    tds = tr.find_all("td")
+                    eco_stats[id].extend(tds)
+        
+        print(len(eco_stats))
+        for id, td_list in eco_stats.items():
+            for td in td_list:
+                class_name = td.get("class")[0]
+                print(class_name)
+                if class_name == "team":
+                    team = td.text.strip()
+                    print(team)
+                else:
+                    stats = td.text.strip().replace("(", "").replace(")", "")
+                    print(stats)
 
         # trs = match_soup.find_all("tr")
         # for tr in trs:
