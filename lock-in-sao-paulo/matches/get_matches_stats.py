@@ -272,13 +272,13 @@ for index, module in enumerate(modules):
 
         for div in economy_stats_div:
             id = div.get("data-game-id")
-            stats_div = div.find_all("div")
+            stats_div = div.find_all(recursive=False)
             print(len(stats_div))
             if len(stats_div) == 3:
                 eco_stats[id] = []
                 eco_rounds_stats[id] = []
-                eco_stats_trs = stats_div[0].find("tr")[1:]
-                eco_rounds_trs = stats_div[2].find("tr")[1:]
+                eco_stats_trs = stats_div[0].find_all("tr")[1:]
+                eco_rounds_trs = stats_div[2].find_all("tr")[1:]
                 for tr in eco_stats_trs:
                     tds = tr.find_all("td")
                     eco_stats[id].extend(tds)
@@ -289,22 +289,25 @@ for index, module in enumerate(modules):
             elif len(stats_div) == 2:
                 eco_stats[id] = []
                 eco_rounds_stats[id] = []
-                eco_stats_trs = stats_div[0].find("tr")[1:]
+                eco_stats_trs = stats_div[0].find_all("tr")[1:]
                 for tr in eco_stats_trs:
                     tds = tr.find_all("td")
                     eco_stats[id].extend(tds)
         
-        print(len(eco_stats))
         for id, td_list in eco_stats.items():
-            for td in td_list:
-                class_name = td.get("class")[0]
-                print(class_name)
+            for index, td in enumerate(td_list):
+                class_name = td.find("div").get("class")[0]
                 if class_name == "team":
                     team = td.text.strip()
-                    print(team)
+                    eco_stats_dict = match_type_dict[match_name][economy]["Eco Stats"].setdefault(team, {})
                 else:
-                    stats = td.text.strip().replace("(", "").replace(")", "")
-                    print(stats)
+                    stats = td.text.strip().replace("(", "").replace(")", "").split()
+                    if len(stats) > 1:
+                        initiated, won = stats[0], stats[1]
+                    else:
+                        initiated, won = "", stats[0]
+                    stat_name = economy_stats_title[index % len(economy_stats_title)]
+                    eco_stats_dict[stat_name] = {"Initiated": initiated, "Won": won}
 
         # trs = match_soup.find_all("tr")
         # for tr in trs:
