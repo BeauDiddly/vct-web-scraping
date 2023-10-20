@@ -26,6 +26,7 @@ all_cards = soup.select('div.wf-card:not([class*=" "])')
 
 modules = []
 
+
 for cards in all_cards:
     all_modules = cards.find_all("a")
     modules.extend(all_modules)
@@ -36,7 +37,7 @@ economy_stats_title = []
 all, attack, defend = "all", "attack", "defend"
 overview, performance, economy = "overview", "performance", "economy"
 specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
-
+eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", "$$$": "Full buy: 20k+"}
 
 for index, module in enumerate(modules):
     match_type, stage = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
@@ -273,12 +274,11 @@ for index, module in enumerate(modules):
         for div in economy_stats_div:
             id = div.get("data-game-id")
             stats_div = div.find_all(recursive=False)
-            print(len(stats_div))
             if len(stats_div) == 3:
                 eco_stats[id] = []
                 eco_rounds_stats[id] = []
                 eco_stats_trs = stats_div[0].find_all("tr")[1:]
-                eco_rounds_trs = stats_div[2].find_all("tr")[1:]
+                eco_rounds_trs = stats_div[2].find_all("tr")
                 for tr in eco_stats_trs:
                     tds = tr.find_all("td")
                     eco_stats[id].extend(tds)
@@ -295,11 +295,14 @@ for index, module in enumerate(modules):
                     eco_stats[id].extend(tds)
         
         for id, td_list in eco_stats.items():
+            map = maps_id[id]
+            print(map)
+            map_dict = match_type_dict[match_name][economy]["Eco Stats"].setdefault(map, {})
             for index, td in enumerate(td_list):
                 class_name = td.find("div").get("class")[0]
                 if class_name == "team":
                     team = td.text.strip()
-                    eco_stats_dict = match_type_dict[match_name][economy]["Eco Stats"].setdefault(team, {})
+                    eco_stats_dict = map_dict.setdefault(team, {})
                 else:
                     stats = td.text.strip().replace("(", "").replace(")", "").split()
                     if len(stats) > 1:
@@ -308,7 +311,32 @@ for index, module in enumerate(modules):
                         initiated, won = "", stats[0]
                     stat_name = economy_stats_title[index % len(economy_stats_title)]
                     eco_stats_dict[stat_name] = {"Initiated": initiated, "Won": won}
+        print(match_type_dict[match_name][economy]["Eco Stats"]["Haven"])
 
+        for id, td_list in eco_rounds_stats.items():
+            map = maps_id[id]
+            for index, td in enumerate(td_list):
+                teams = td.find_all("div", class_="team")
+                if teams:
+                    team_a, team_b = teams[0].text.strip(), teams[1].text.strip()
+                    eco_rounds_stats_dict = match_type_dict[match_name][economy]["Eco Rounds"].setdefault(map, {})
+                else:
+                    stats = td.find_all("div")
+                    round = stats[0].text.strip()
+                    team_a_bank = stats[1].text.strip()
+                    team_a_eco_type = eco_types[stats[2].text.strip()]
+                    team_b_eco_type = eco_types[stats[3].text.strip()]
+                    team_b_bank = stats[4].text.strip()
+                    if "mod-win" in stats[2]["class"]:
+                        team_a_outcome = "Win"
+                        team_b_outcome = "Lost"
+                    else:
+                        team_a_outcome = "Lost"
+                        team_b_outcome = "Win"
+                    eco_rounds_stats_dict[f"Round {round}"] = {team_a: {"Credits": team_a_bank, "Eco Type": team_a_eco_type, "Outcome": team_a_outcome}
+                                                               , team_b: {"Credits": team_b_bank, "Eco Type": team_b_eco_type, "Outcome": team_b_outcome}}
+
+                
         # trs = match_soup.find_all("tr")
         # for tr in trs:
         #     for td in tr:
