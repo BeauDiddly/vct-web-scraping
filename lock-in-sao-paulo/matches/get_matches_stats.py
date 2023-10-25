@@ -40,7 +40,7 @@ overview, performance, economy = "overview", "performance", "economy"
 specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
 eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", "$$$": "Full buy: 20k+"}
 
-for index, module in enumerate(modules):
+for index, module in enumerate(modules[28:]):
     match_type, stage = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
     match_type = match_type.strip("\t")
     stage = stage.strip("\t")
@@ -55,12 +55,22 @@ for index, module in enumerate(modules):
         winner = winner.text.strip("\n").strip("\t")
         winner_score = winner_score.text.strip("\n").strip("\t")
 
-        match_name = f"{loser} vs {winner}"
+        teams = module.find("div", class_="match-item-vs").find_all(recursive=False)
+
+        team_a = teams[0].find("div").text.strip("\n").strip("\t")
+
+        team_b = teams[1].find("div").text.strip("\n").strip("\t")
+
+
+        match_name = f"{team_a} vs {team_b}"
         stage_dict = matches_stats[tournament].setdefault(stage, {})
 
         match_type_dict = stage_dict.setdefault(match_type, {})
         match_dict = match_type_dict.setdefault(match_name, {})
-        
+
+        match_dict["Winner"] = winner
+        match_dict["Loser"] = loser
+        match_dict["Score"] = {winner: winner_score, loser: loser_score}
 
         url = module.get("href")
         print(index, match_name, url)
@@ -74,16 +84,16 @@ for index, module in enumerate(modules):
             for th in all_ths:
                 title = th.get("title")
                 overview_stats_titles.append(title)
-        match_maps = match_soup.find("div", class_="vm-stats-gamesnav").select('div[data-disabled="0"]')
-        for index, map in enumerate(match_maps):
-            # map = re.sub(r'\d+|\t|\n', '',map.text.strip())
-            comments = map.find(string=lambda text: isinstance(text, Comment))
-            comment_soup = BeautifulSoup(comments, "html.parser")
-            who_picked = comment_soup.find("div", class_="pick ge-text-light").text.strip()
-            if who_picked:
-                who_picked = who_picked.split(":")[1].strip()
-            # print(who_picked)
-            match_maps[index] = (re.sub(r'\d+|\t|\n', '',map.text.strip()), who_picked)
+        # match_maps = match_soup.find("div", class_="vm-stats-gamesnav").select('div[data-disabled="0"]')
+        # for index, map in enumerate(match_maps):
+        #     # map = re.sub(r'\d+|\t|\n', '',map.text.strip())
+        #     comments = map.find(string=lambda text: isinstance(text, Comment))
+        #     comment_soup = BeautifulSoup(comments, "html.parser")
+        #     who_picked = comment_soup.find("div", class_="pick ge-text-light").text.strip()
+        #     if who_picked:
+        #         who_picked = who_picked.split(":")[1].strip()
+        #     # print(who_picked)
+        #     match_maps[index] = (re.sub(r'\d+|\t|\n', '',map.text.strip()), who_picked)
         
         maps_id = {}
         
@@ -95,12 +105,27 @@ for index, module in enumerate(modules):
                 id = ""
             map = re.sub(r"\d+|\t|\n", "", div.text.strip())
             maps_id[id] = map
-        
-        map_picks_dict = match_dict.setdefault("map_picks", {})
-        map_bans_dict = match_dict.setdefault("map_bans", {})
 
-        for map, team in match_maps[1:]:
-            map_picks_dict[team] = map
+        maps_notes = match_soup.find("div", class_="match-header-note").text.strip().split("; ")
+
+
+        # team_a_picks_dict = map_picks_dict.setdefault(team_a, [])
+        # team_a_bans_dict = map_bans_dict.setdefault(team_a, [])
+
+        # team_b_picks_dict = map_picks_dict.setdefault(team_b, [])
+        # team_b_bans_dict = map_bans_dict.setdefault(team_b, [])
+
+        for note in maps_notes:
+            print(note)
+            if "ban" in note or "pick" in note:
+                team, action, map = note.split()
+                draft_phase_dict = match_dict.setdefault(action, {})
+                team_dict = draft_phase_dict.setdefault(team, [])
+                team_dict.append(map)
+        print(match_dict["ban"])
+        print(match_dict["pick"])
+        # for map, team in match_maps[1:]:
+        #     map_picks_dict[team] = map
 
         overview_dict = match_dict.setdefault(overview, {})
         overview_stats = match_soup.find_all("div", class_="vm-stats-game")
@@ -176,9 +201,6 @@ for index, module in enumerate(modules):
             player = player.text.strip().replace("\t", "").replace("\n", "").strip(f"{team}")
             team_b_players_lookup[player] = team
             team_b_players.append(player)
-
-        team_b = team
-        team_a = ""
 
         players_to_players_kills = {}
         players_kills = {}
