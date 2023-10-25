@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup, Tag, NavigableString, Comment
 import re
 import time
 import pprint
+import csv
 
 
 def remove_special_characters(input_string, pattern):
@@ -55,13 +56,14 @@ for index, module in enumerate(modules):
         winner_score = winner_score.text.strip("\n").strip("\t")
 
         match_name = f"{loser} vs {winner}"
-
         stage_dict = matches_stats[tournament].setdefault(stage, {})
 
         match_type_dict = stage_dict.setdefault(match_type, {})
-        match_type_dict[match_name] = {}
+        match_dict = match_type_dict.setdefault(match_name, {})
+        
 
         url = module.get("href")
+        print(index, match_name, url)
         match_page = requests.get(f'https://vlr.gg{url}')
         match_soup = BeautifulSoup(match_page.content, "html.parser")
 
@@ -72,8 +74,7 @@ for index, module in enumerate(modules):
             for th in all_ths:
                 title = th.get("title")
                 overview_stats_titles.append(title)
-        
-        match_maps = match_soup.find("div", class_="vm-stats-gamesnav noselect").select('div[data-disabled="0"]')
+        match_maps = match_soup.find("div", class_="vm-stats-gamesnav").select('div[data-disabled="0"]')
         for index, map in enumerate(match_maps):
             # map = re.sub(r'\d+|\t|\n', '',map.text.strip())
             comments = map.find(string=lambda text: isinstance(text, Comment))
@@ -86,7 +87,7 @@ for index, module in enumerate(modules):
         
         maps_id = {}
         
-        maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav noselect").find_all("div")
+        maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
         for div in maps_id_divs:
             if div.get("data-game-id"):
                 id = div.get("data-game-id")
@@ -95,18 +96,18 @@ for index, module in enumerate(modules):
             map = re.sub(r"\d+|\t|\n", "", div.text.strip())
             maps_id[id] = map
         
-        match_type_dict[match_name]["maps_picks"] = {}
-        match_type_dict[match_name]["maps_bans"] = {}
+        map_picks_dict = match_dict.setdefault("map_picks", {})
+        map_bans_dict = match_dict.setdefault("map_bans", {})
 
         for map, team in match_maps[1:]:
-            match_type_dict[match_name]["maps_picks"][team] = map
+            map_picks_dict[team] = map
 
-        match_type_dict[match_name][overview] = {}
+        overview_dict = match_dict.setdefault(overview, {})
         overview_stats = match_soup.find_all("div", class_="vm-stats-game")
         for stats in overview_stats:
             id = stats.get("data-game-id")
             map = maps_id[id]
-            match_type_dict[match_name][overview][map] = {}
+            map_dict = overview_dict.setdefault(map, {})
             tds = stats.select("table tbody tr td")
             for index, td in enumerate(tds):
                 td_class = td.get("class") or ""
@@ -114,8 +115,8 @@ for index, module in enumerate(modules):
                 if class_name == "mod-player":
                     player, team = td.find("a").find_all("div")
                     player, team =  player.text.strip(), team.text.strip()
-                    team_dict = match_type_dict[match_name][overview][map].setdefault(team, {})
-                    team_dict[player] = {}
+                    team_dict = map_dict.setdefault(team, {})
+                    player_dict = team_dict.setdefault(player, {})
                 elif class_name == "mod-agents":
                     imgs = td.find_all("img")
                     agents_played = []
@@ -123,22 +124,36 @@ for index, module in enumerate(modules):
                         agent = img.get("alt")
                         agents_played.append(agent)
                     agents = ", ".join(agents_played)
-                    team_dict[player]["agents"] = agents
+                    player_dict["agents"] = agents
                 elif class_name in ["mod-stat mod-vlr-kills", "mod-stat", "mod-stat mod-vlr-assists", "mod-stat mod-kd-diff",
                                     "mod-stat mod-fb", "mod-stat mod-fd", "mod-stat mod-fk-diff"]:
-                    all_stat, attack_stat, defend_stat = td.find("span").find_all("span")
-                    all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
-                    stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                    team_dict[player][stat_name] = {"all": all_stat, "attack": attack_stat, "defend": defend_stat}
+                    stats = td.find("span").find_all("span")
+                    if len(stats) == 3:
+                        all_stat, attack_stat, defend_stat = stats
+                        all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
+                        stat_name = overview_stats_titles[index % len(overview_stats_titles)]
+                        player_dict[stat_name] = {"all": all_stat, "attack": attack_stat, "defend": defend_stat}
+                    else:
+                        all_stat = stats[0]
+                        all_stat = all_stat.text.strip()
+                        stat_name = overview_stats_titles[index % len(overview_stats_titles)]
+                        player_dict[stat_name] = {"all": all_stat}
                 elif class_name == "mod-stat mod-vlr-deaths":
-                    all_stat, attack_stat, defend_stat = td.find("span").find_all("span")[1].find_all("span")
-                    all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
-                    stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                    team_dict[player][stat_name] = {"all": all_stat, "attack": attack_stat, "defend": defend_stat}
+                    stats = td.find("span").find_all("span")[1].find_all("span")
+                    if len(stats) == 3:
+                        all_stat, attack_stat, defend_stat = td.find("span").find_all("span")[1].find_all("span")
+                        all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
+                        stat_name = overview_stats_titles[index % len(overview_stats_titles)]
+                        player_dict[stat_name] = {"all": all_stat, "attack": attack_stat, "defend": defend_stat}
+                    else:
+                        all_stat = stats[0]
+                        all_stat = all_stat.text.strip()
+                        stat_name = overview_stats_titles[index % len(overview_stats_titles)]
+                        player_dict[stat_name] = {"all": all_stat}
             # print(team_dict)
             # print(team_dict[player])
 
-        # pprint.pprint(match_type_dict[match_name]["All Maps"]["KOI"])
+        # pprint.pprint(match_dict[match_name]["All Maps"]["KOI"])
         performance_page = requests.get(f'https://vlr.gg{url}/?game={all}&tab={performance}')
         performance_soup = BeautifulSoup(performance_page.content, "html.parser")
         # teams = performance_soup.select('div.team:not([class*=" "])')
@@ -187,10 +202,10 @@ for index, module in enumerate(modules):
             else:
                 continue
         
-        match_type_dict[match_name][performance] = {}
+        performance_dict = match_dict.setdefault(performance, {})
 
         for kill_name in specific_kills_name:
-            match_type_dict[match_name][performance][kill_name] = {}
+            performance_dict[kill_name] = {}
 
         for id, tds_list in players_to_players_kills.items():
             map = maps_id[id]
@@ -200,7 +215,7 @@ for index, module in enumerate(modules):
                         player, team = td.text.strip().replace("\t", "").split("\n")
                         team_a = team
                         kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
-                        map_dict = match_type_dict[match_name][performance][kill_name].setdefault(map, {})
+                        map_dict = performance_dict[kill_name].setdefault(map, {})
                         team_a_players_lookup[player] = team_a
                         team_a_dict = map_dict.setdefault(team, {})
                         team_a_player_kills_dict = team_a_dict.setdefault(player , {})
@@ -211,48 +226,49 @@ for index, module in enumerate(modules):
                         team_b_player = team_b_players[team_b_player_index]
                         team_b_dict[team_b_player] = {"Kills to": team_a_player_kills, "Death by": team_b_player_kills, "Difference": difference}
         
-        match_type_dict[match_name][performance]["Kill Stats"] = {}
+        kill_stats_dict = performance_dict.setdefault("Kill Stats", {})
+
         for id, td_list in players_kills.items():
             map = maps_id[id]
-            kill_stats_dict = match_type_dict[match_name][performance]["Kill Stats"].setdefault(map, {})
+            map_dict = kill_stats_dict.setdefault(map, {})
             for index, td in enumerate(td_list):
                 img = td.find("img")
                 if img != None:
                     class_name = " ".join(td.find("div").get("class"))
                     if class_name == "team":
                         player, team = td.text.strip().replace("\t", "").split("\n")
-                        team_dict = kill_stats_dict.setdefault(team, {})
+                        team_dict = map_dict.setdefault(team, {})
                     elif class_name == "stats-sq":
                         src = img.get("src")
                         agent = re.search(r'/(\w+)\.png', src).group(1)
-                        team_dict[player] = {}
-                        team_dict[player]["agent"] = agent
+                        player_dict = team_dict.setdefault(player, {})
+                        player_dict["agent"] = agent
                     else:
                         stat = td.text.split()[0]
                         stat_name = performance_stats_title[index % len(performance_stats_title)]
                         rounds_divs = td.find("div").find("div").find("div").find_all("div")
-                        team_dict[player][stat_name] = {}
-                        team_dict[player][stat_name]["amount"] = stat
+                        stat_dict = player_dict.setdefault(stat_name, {})
+                        stat_dict["amount"] = stat
                         for round_div in rounds_divs:
                             kills_div = round_div.find_all("div")
                             for div in kills_div:
                                 img = div.find("img")
                                 if img == None:
                                     round_stat = div.text.strip()
-                                    team_dict[player][stat_name][round_stat] = {}
+                                    round_dict = stat_dict.setdefault(round_stat, {})
                                 else:
                                     src = img.get("src")
                                     agent = re.search(r'/(\w+)\.png', src).group(1)
                                     victim = div.text.strip()
                                     team = team_a_players_lookup.get(victim) or team_b_players_lookup.get(victim)
-                                    team_dict[player][stat_name][round_stat]["team"] = team
-                                    team_dict[player][stat_name][round_stat][victim] = {"agent": agent}
+                                    round_dict["team"] = team
+                                    round_dict[victim] = {"agent": agent}
                                     # print(player, agent)
 
                 else:
                     stat = td.text.strip()
                     stat_name = performance_stats_title[index % len(performance_stats_title)]
-                    team_dict[player][stat_name] = stat
+                    player_dict[stat_name] = stat
         
         economy_page = requests.get(f'https://vlr.gg{url}/?game={all}&tab={economy}')
         economy_soup = BeautifulSoup(economy_page.content, "html.parser")
@@ -265,9 +281,10 @@ for index, module in enumerate(modules):
             for th in all_ths:
                 economy_stats_title.append(th.text.strip())
         
-        match_type_dict[match_name][economy] = {}
-        match_type_dict[match_name][economy]["Eco Stats"] = {}
-        match_type_dict[match_name][economy]["Eco Rounds"] = {}
+
+        economy_dict = match_dict.setdefault(economy, {})
+        eco_stats_dict = economy_dict.setdefault("Eco Stats", {})
+        eco_rounds_dict = economy_dict.setdefault("Eco Rounds", {})        
         eco_stats = {}
         eco_rounds_stats = {}
 
@@ -296,13 +313,12 @@ for index, module in enumerate(modules):
         
         for id, td_list in eco_stats.items():
             map = maps_id[id]
-            print(map)
-            map_dict = match_type_dict[match_name][economy]["Eco Stats"].setdefault(map, {})
+            map_dict = eco_stats_dict.setdefault(map, {})
             for index, td in enumerate(td_list):
                 class_name = td.find("div").get("class")[0]
                 if class_name == "team":
                     team = td.text.strip()
-                    eco_stats_dict = map_dict.setdefault(team, {})
+                    team_dict = map_dict.setdefault(team, {})
                 else:
                     stats = td.text.strip().replace("(", "").replace(")", "").split()
                     if len(stats) > 1:
@@ -310,8 +326,7 @@ for index, module in enumerate(modules):
                     else:
                         initiated, won = "", stats[0]
                     stat_name = economy_stats_title[index % len(economy_stats_title)]
-                    eco_stats_dict[stat_name] = {"Initiated": initiated, "Won": won}
-        print(match_type_dict[match_name][economy]["Eco Stats"]["Haven"])
+                    team_dict[stat_name] = {"Initiated": initiated, "Won": won}
 
         for id, td_list in eco_rounds_stats.items():
             map = maps_id[id]
@@ -319,7 +334,7 @@ for index, module in enumerate(modules):
                 teams = td.find_all("div", class_="team")
                 if teams:
                     team_a, team_b = teams[0].text.strip(), teams[1].text.strip()
-                    eco_rounds_stats_dict = match_type_dict[match_name][economy]["Eco Rounds"].setdefault(map, {})
+                    map_dict = eco_rounds_dict.setdefault(map, {})
                 else:
                     stats = td.find_all("div")
                     round = stats[0].text.strip()
@@ -333,57 +348,11 @@ for index, module in enumerate(modules):
                     else:
                         team_a_outcome = "Lost"
                         team_b_outcome = "Win"
-                    eco_rounds_stats_dict[f"Round {round}"] = {team_a: {"Credits": team_a_bank, "Eco Type": team_a_eco_type, "Outcome": team_a_outcome}
+                    map_dict[f"Round {round}"] = {team_a: {"Credits": team_a_bank, "Eco Type": team_a_eco_type, "Outcome": team_a_outcome}
                                                                , team_b: {"Credits": team_b_bank, "Eco Type": team_b_eco_type, "Outcome": team_b_outcome}}
+        
+        time.sleep(0.1)
 
-                
-        # trs = match_soup.find_all("tr")
-        # for tr in trs:
-        #     for td in tr:
-        #         player = ""
-        #         team = ""
-        #         agents = ""
-        #         try:
-        #             td_class = td.get('class') or ""
-        #             class_name = " ".join(td_class)
-        #             # print(class_name)
-        #             if class_name == "mod-player":
-        #                 player_info = td.find("div").find("a").find_all("div")
-        #                 player = player_info[0].text
-        #                 team = player_info[1].text
-        #                 match_type_dict[match_name][] = {} 
-        #             elif class_name == "mod-agents":
-        #                 imgs = td.find("div").find_all("img")
-        #                 agents_played = []
-        #                 for img in imgs:
-        #                     file_name = img.get("src")
-        #                     match = re.search(pattern, file_name)
-        #                     agent_name = match.group(1)
-        #                     agents_played.append(agent_name)
-        #                 if len(agents_played) == 1:
-        #                     agents = agents_played[0]
-        #                     players_with_one_agent_played.add(player)
-        #                     players_stats[stage][player][agents] = {}
-        #                     players_stats[stage][player][agents]["team"] = team
-        #                 else:
-        #                     agents = "multiple agents"
-        #                     players_stats[stage][player][agents] = {}
-        #                     players_stats[stage][player][agents]["team"] = team
-        #             elif class_name == "mod-rnd" or class_name == "mod-cl" or class_name == "":
-        #                 stat = remove_special_characters(td.text)
-        #                 stat_name = stats_titles[index]
-        #                 players_stats[stage][player][agents][stat_name] = stat
-        #             elif class_name == "mod-color-sq mod-acs" or class_name ==  "mod-color-sq":
-        #                 stat = td.find("div").find("span").text
-        #                 stat_name = stats_titles[index]
-        #                 players_stats[stage][player][agents][stat_name] = stat
-        #             elif class_name == "mod-a mod-kmax":
-        #                 stat = remove_special_characters(td.find("a").text)
-        #                 stat_name = stats_titles[index]
-        #                 players_stats[stage][player][agents][stat_name] = stat
-        #         except AttributeError:
-        #             continue
-        break
-# print(match_maps)
 
+print(matches_stats.keys())
     
