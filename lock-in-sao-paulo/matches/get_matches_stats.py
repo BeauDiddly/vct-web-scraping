@@ -12,6 +12,38 @@ def remove_special_characters(input_string, pattern):
     cleaned_string = re.sub(pattern, '', input_string)
     return cleaned_string
 
+url = "https://www.vlr.gg/vct-2023"
+page = requests.get(url)
+soup = BeautifulSoup(page.content, "html.parser")
+
+urls = {}
+
+tournament_cards = soup.find_all("a", class_="wf-card mod-flex event-item")
+
+for card in tournament_cards:
+    href = card.get("href")
+    matches_url = "https://www.vlr.gg" + href.replace("/event/", "/event/matches/")
+    tournament = card.find("div", class_="event-item-title").text.strip().split(": ")
+    if len(tournament) == 2:
+        tournament_name = tournament[1]
+    else:
+        tournament_name = tournament[0]
+    if tournament_name == "LOCK//IN São Paulo":
+        tournament_name = "Lock-In Sao Paulo"
+
+    urls[tournament_name] = matches_url
+
+print(urls)
+
+matches_url = {}
+
+# for url in urls:
+
+
+
+# tournament_cards = {"Lock-In Sao Paulo:, "Pacific League": , "EMEA League": , "Americas League": , "Masters Tokyo": 
+#                     , "Champions China Qualifer": , "Pacfific Last Chance Qualifier": , "EMEA Last Chance Qualifier"}
+
 url = "https://www.vlr.gg/event/matches/1188/champions-tour-2023-lock-in-s-o-paulo"
 
 matches_url = {}
@@ -40,7 +72,7 @@ overview, performance, economy = "overview", "performance", "economy"
 specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
 eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", "$$$": "Full buy: 20k+"}
 
-for index, module in enumerate(modules[28:]):
+for index, module in enumerate(modules[:2]):
     match_type, stage = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
     match_type = match_type.strip("\t")
     stage = stage.strip("\t")
@@ -122,8 +154,6 @@ for index, module in enumerate(modules[28:]):
                 draft_phase_dict = match_dict.setdefault(action, {})
                 team_dict = draft_phase_dict.setdefault(team, [])
                 team_dict.append(map)
-        print(match_dict["ban"])
-        print(match_dict["pick"])
         # for map, team in match_maps[1:]:
         #     map_picks_dict[team] = map
 
@@ -235,7 +265,6 @@ for index, module in enumerate(modules[28:]):
                 for team_b_player_index, td in enumerate(td_list):
                     if td.find("img") != None:
                         player, team = td.text.strip().replace("\t", "").split("\n")
-                        team_a = team
                         kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
                         map_dict = performance_dict[kill_name].setdefault(map, {})
                         team_a_players_lookup[player] = team_a
@@ -376,5 +405,13 @@ for index, module in enumerate(modules[28:]):
         time.sleep(0.1)
 
 
-print(matches_stats.keys())
-    
+# for tournament, stage in matches_stats.items():
+#     for stage_name, match_type in stage.items():
+#         for match_type_name, match in match_type.items():
+#             for match_name, value in match.items():
+#                 print(value[match_name])
+
+# with open("scores.csv", "r") as file:
+#     writer = csv.writer(file)
+#     writer.writerow(["Winner", "Loser", "Match Type", "Stage", "Tournament", "Winner's Score", "Loser's Score"])
+#     for 
