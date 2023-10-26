@@ -33,8 +33,6 @@ for card in tournament_cards:
 
     urls[tournament_name] = matches_url
 
-print(urls)
-
 matches_cards = {}
 
 for tournament, url in urls.items():
@@ -50,25 +48,7 @@ for tournament, url in urls.items():
     matches_cards[tournament] = modules
 
 
-# tournament_cards = {"Lock-In Sao Paulo:, "Pacific League": , "EMEA League": , "Americas League": , "Masters Tokyo": 
-#                     , "Champions China Qualifer": , "Pacfific Last Chance Qualifier": , "EMEA Last Chance Qualifier"}
-
-# url = "https://www.vlr.gg/event/matches/1188/champions-tour-2023-lock-in-s-o-paulo"
-
 matches_stats = {}
-# pattern = r'/(\w+)\.png'
-# page = requests.get(url)
-
-# soup = BeautifulSoup(page.content, "html.parser")
-
-# all_cards = soup.select('div.wf-card:not([class*=" "])')
-
-# modules = []
-
-
-# for cards in all_cards:
-#     all_modules = cards.find_all("a")
-#     modules.extend(all_modules)
 
 overview_stats_titles = []
 performance_stats_title = []
@@ -81,7 +61,7 @@ eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", 
 
 for tournament, cards in matches_cards.items():
     tournament_dict = matches_stats.setdefault(tournament, {})
-    for module in cards:
+    for module in cards[:2]:
         match_type, stage = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
         match_type = match_type.strip("\t")
         stage = stage.strip("\t")
@@ -114,7 +94,6 @@ for tournament, cards in matches_cards.items():
             match_dict["Score"] = {winner: winner_score, loser: loser_score}
 
             url = module.get("href")
-            print(index, match_name, url)
             match_page = requests.get(f'https://vlr.gg{url}')
             match_soup = BeautifulSoup(match_page.content, "html.parser")
 
@@ -125,17 +104,6 @@ for tournament, cards in matches_cards.items():
                 for th in all_ths:
                     title = th.get("title")
                     overview_stats_titles.append(title)
-            # match_maps = match_soup.find("div", class_="vm-stats-gamesnav").select('div[data-disabled="0"]')
-            # for index, map in enumerate(match_maps):
-            #     # map = re.sub(r'\d+|\t|\n', '',map.text.strip())
-            #     comments = map.find(string=lambda text: isinstance(text, Comment))
-            #     comment_soup = BeautifulSoup(comments, "html.parser")
-            #     who_picked = comment_soup.find("div", class_="pick ge-text-light").text.strip()
-            #     if who_picked:
-            #         who_picked = who_picked.split(":")[1].strip()
-            #     # print(who_picked)
-            #     match_maps[index] = (re.sub(r'\d+|\t|\n', '',map.text.strip()), who_picked)
-            
             maps_id = {}
             
             maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
@@ -149,22 +117,12 @@ for tournament, cards in matches_cards.items():
 
             maps_notes = match_soup.find("div", class_="match-header-note").text.strip().split("; ")
 
-
-            # team_a_picks_dict = map_picks_dict.setdefault(team_a, [])
-            # team_a_bans_dict = map_bans_dict.setdefault(team_a, [])
-
-            # team_b_picks_dict = map_picks_dict.setdefault(team_b, [])
-            # team_b_bans_dict = map_bans_dict.setdefault(team_b, [])
-
             for note in maps_notes:
-                print(note)
                 if "ban" in note or "pick" in note:
                     team, action, map = note.split()
                     draft_phase_dict = match_dict.setdefault(action, {})
                     team_dict = draft_phase_dict.setdefault(team, [])
                     team_dict.append(map)
-            # for map, team in match_maps[1:]:
-            #     map_picks_dict[team] = map
 
             overview_dict = match_dict.setdefault(overview, {})
             overview_stats = match_soup.find_all("div", class_="vm-stats-game")
@@ -214,14 +172,9 @@ for tournament, cards in matches_cards.items():
                             all_stat = all_stat.text.strip()
                             stat_name = overview_stats_titles[index % len(overview_stats_titles)]
                             player_dict[stat_name] = {"all": all_stat}
-                # print(team_dict)
-                # print(team_dict[player])
 
-            # pprint.pprint(match_dict[match_name]["All Maps"]["KOI"])
             performance_page = requests.get(f'https://vlr.gg{url}/?game={all}&tab={performance}')
             performance_soup = BeautifulSoup(performance_page.content, "html.parser")
-            # teams = performance_soup.select('div.team:not([class*=" "])')
-            # print(teams)
             performance_stats_div = performance_soup.find_all("div", class_="vm-stats-game")
 
             if not performance_stats_title:
@@ -410,16 +363,22 @@ for tournament, cards in matches_cards.items():
                             team_b_outcome = "Win"
                         map_dict[f"Round {round}"] = {team_a: {"Credits": team_a_bank, "Eco Type": team_a_eco_type, "Outcome": team_a_outcome}
                                                                 , team_b: {"Credits": team_b_bank, "Eco Type": team_b_eco_type, "Outcome": team_b_outcome}}
-            
-            # time.sleep(0.1)
-            break
-print(tournament_dict)
+    break
 
-# for tournament, stage in matches_stats.items():
-#     for stage_name, match_type in stage.items():
-#         for match_type_name, match in match_type.items():
-#             for match_name, value in match.items():
-#                 print(value[match_name])
+
+
+with open("scores.csv", "w") as file:
+    writer = csv.writer(file)
+    writer.writerow(["Winner", "Loser", "Match Type", "Stage", "Tournament", "Winner's Score", "Loser's Score"])
+
+    for tournament, stage in matches_stats.items():
+        for stage_name, match_type in stage.items():
+            for match_type_name, match in match_type.items():
+                for match_name, value in match.items():
+                    winner, loser, match_type, stage= value["Winner"], value["Loser"], match_type_name, stage_name
+                    winner_score, loser_score = value["Score"].values()
+
+                    writer.writerow([winner, loser, match_type, stage, tournament, winner_score, loser_score])
 
 # with open("scores.csv", "r") as file:
 #     writer = csv.writer(file)
