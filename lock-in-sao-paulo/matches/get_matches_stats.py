@@ -53,8 +53,7 @@ matches_stats = {}
 overview_stats_titles = []
 performance_stats_title = []
 economy_stats_title = []
-all, attack, defend = "all", "attack", "defend"
-overview, performance, economy = "overview", "performance", "economy"
+overview, performance, economy = "Overview", "Performance", "Economy"
 specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
 eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", "$$$": "Full buy: 20k+"}
 
@@ -104,6 +103,9 @@ for tournament, cards in matches_cards.items():
                 for th in all_ths:
                     title = th.get("title")
                     overview_stats_titles.append(title)
+                overview_stats_titles[7] += " (KD)"
+                overview_stats_titles[13] += " (FKD)"
+                print(overview_stats_titles)
             maps_id = {}
             
             maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
@@ -159,7 +161,7 @@ for tournament, cards in matches_cards.items():
                             all_stat = stats[0]
                             all_stat = all_stat.text.strip()
                             stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                            player_dict[stat_name] = {"all": all_stat}
+                            player_dict[stat_name] = {"all": all_stat, "attack": "", "defend": ""}
                     elif class_name == "mod-stat mod-vlr-deaths":
                         stats = td.find("span").find_all("span")[1].find_all("span")
                         if len(stats) == 3:
@@ -171,14 +173,15 @@ for tournament, cards in matches_cards.items():
                             all_stat = stats[0]
                             all_stat = all_stat.text.strip()
                             stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                            player_dict[stat_name] = {"all": all_stat}
+                            player_dict[stat_name] = {"all": all_stat, "attack": "", "defend": ""}
 
-            performance_page = requests.get(f'https://vlr.gg{url}/?game={all}&tab={performance}')
+            performance_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=performance')
             performance_soup = BeautifulSoup(performance_page.content, "html.parser")
             performance_stats_div = performance_soup.find_all("div", class_="vm-stats-game")
 
             if not performance_stats_title:
                 performance_stats_title = ["", ""]
+                print(tournament, stage, match_type, match_name)
                 all_ths = performance_soup.find("table", class_="wf-table-inset mod-adv-stats").find("tr").find_all("th")[2:]
                 for th in all_ths:
                     title = th.text.strip()
@@ -283,7 +286,7 @@ for tournament, cards in matches_cards.items():
                         stat_name = performance_stats_title[index % len(performance_stats_title)]
                         player_dict[stat_name] = stat
             
-            economy_page = requests.get(f'https://vlr.gg{url}/?game={all}&tab={economy}')
+            economy_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=economy')
             economy_soup = BeautifulSoup(economy_page.content, "html.parser")
 
             economy_stats_div = economy_soup.find_all("div", class_="vm-stats-game")
@@ -365,22 +368,54 @@ for tournament, cards in matches_cards.items():
                                                                 , team_b: {"Credits": team_b_bank, "Eco Type": team_b_eco_type, "Outcome": team_b_outcome}}
     break
 
+sides = ["all", "attack", "defend"]
 
-
-with open("scores.csv", "w") as file:
+with open("overview.csv", "w") as file:
     writer = csv.writer(file)
-    writer.writerow(["Winner", "Loser", "Match Type", "Stage", "Tournament", "Winner's Score", "Loser's Score"])
-
+    writer.writerow(["Tournament", "Stage", "Match Type", "Player", "Team", "Agents", "Rating", "Average Combat Score",
+                     "Kills", "Deaths", "Assists", "Kill - Deaths (KD)", "Kill, Assist, Trade, Survive %", "Average Damage per Round",
+                     "Headshot %", "First Kills", "First Deaths", "Kills - Deaths (FKD)", "Side"])
     for tournament, stage in matches_stats.items():
         for stage_name, match_type in stage.items():
             for match_type_name, match in match_type.items():
-                for match_name, value in match.items():
-                    winner, loser, match_type, stage= value["Winner"], value["Loser"], match_type_name, stage_name
-                    winner_score, loser_score = value["Score"].values()
+                for match_name, values in match.items():
+                    winner, loser, match_type, stage= values["Winner"], values["Loser"], match_type_name, stage_name
+                    winner_score, loser_score = values["Score"].values()
 
-                    writer.writerow([winner, loser, match_type, stage, tournament, winner_score, loser_score])
+                    overview = values["Overview"]
+
+                    for map, team in overview.items():
+                        for team_name, player in team.items():
+                            for player_name, data in player.items():
+                                agents = data["agents"]
+                                rating = data["Rating"]
+                                acs = data["Average Combat Score"]
+                                kills = data["Kills"]
+                                deaths = data["Deaths"]
+                                assists = data["Assists"]
+                                kills_deaths_fd = data["Kills - Deaths (KD)"]
+                                kats = data["Kill, Assist, Trade, Survive %"]
+                                adr = data["Average Damage per Round"]
+                                headshot = data["Headshot %"]
+                                first_kills = data["First Kills"]
+                                first_deaths = data["First Deaths"]
+                                kills_deaths_fkd = data["Kills - Deaths (FKD)"]
+                                for side in sides:
+                                    writer.writerow([tournament, stage, match_type, player_name, team_name, agents, rating[side],
+                                                     acs[side], kills[side], deaths[side], assists[side], kills_deaths_fd[side],
+                                                     kats[side], adr[side], headshot[side], first_kills[side], first_deaths[side],
+                                                     kills_deaths_fkd[side], side])
+
+
+                    performance = values["Performance"]
+                    economy = values["Economy"]
+
 
 # with open("scores.csv", "r") as file:
 #     writer = csv.writer(file)
 #     writer.writerow(["Winner", "Loser", "Match Type", "Stage", "Tournament", "Winner's Score", "Loser's Score"])
 #     for 
+# with open("scores.csv", "w") as file:
+#     writer = csv.writer(file)
+#     writer.writerow(["Tournament", "Stage", "Match Type", "Winner", "Loser", "Winner's Score", "Loser's Score"])
+#                     writer.writerow([tournament, stage, match_type, winner, loser, winner_score, loser_score])
