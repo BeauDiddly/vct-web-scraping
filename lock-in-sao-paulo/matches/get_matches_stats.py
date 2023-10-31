@@ -105,7 +105,6 @@ for tournament, cards in matches_cards.items():
                     overview_stats_titles.append(title)
                 overview_stats_titles[7] += " (KD)"
                 overview_stats_titles[13] += " (FKD)"
-                print(overview_stats_titles)
             maps_id = {}
             
             maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
@@ -181,7 +180,6 @@ for tournament, cards in matches_cards.items():
 
             if not performance_stats_title:
                 performance_stats_title = ["", ""]
-                print(tournament, stage, match_type, match_name)
                 all_ths = performance_soup.find("table", class_="wf-table-inset mod-adv-stats").find("tr").find_all("th")[2:]
                 for th in all_ths:
                     title = th.text.strip()
@@ -240,7 +238,8 @@ for tournament, cards in matches_cards.items():
                             kills_div = td.find("div").find_all("div")
                             team_a_player_kills, team_b_player_kills, difference = kills_div[0].text.strip(), kills_div[1].text.strip(), kills_div[2].text.strip()
                             team_b_player = team_b_players[team_b_player_index]
-                            team_b_dict[team_b_player] = {"Kills to": team_a_player_kills, "Death by": team_b_player_kills, "Difference": difference}
+                            if team_a_player_kills  and team_b_player_kills and difference:
+                                team_b_dict[team_b_player] = {"Player A Kills": team_a_player_kills, "Player B Kills": team_b_player_kills, "Difference": difference}
             
             kill_stats_dict = performance_dict.setdefault("Kill Stats", {})
 
@@ -370,44 +369,64 @@ for tournament, cards in matches_cards.items():
 
 sides = ["all", "attack", "defend"]
 
-with open("overview.csv", "w") as file:
-    writer = csv.writer(file)
-    writer.writerow(["Tournament", "Stage", "Match Type", "Player", "Team", "Agents", "Rating", "Average Combat Score",
+with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w", newline="") as overview_file, \
+     open("kills.csv", "w", newline="") as kills_file:
+    scores_writer = csv.writer(scores_file)
+    overview_writer = csv.writer(overview_file)
+    kills_writer = csv.writer(kills_file)
+    scores_writer.writerow(["Tournament", "Stage", "Match Type", "Winner", "Loser", "Winner's Score", "Loser's Score"])
+    overview_writer.writerow(["Tournament", "Stage", "Match Type", "Player", "Team", "Agents", "Rating", "Average Combat Score",
                      "Kills", "Deaths", "Assists", "Kill - Deaths (KD)", "Kill, Assist, Trade, Survive %", "Average Damage per Round",
                      "Headshot %", "First Kills", "First Deaths", "Kills - Deaths (FKD)", "Side"])
+    kills_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Team A", "Player A", "Team B", "Player B", "Player A Kills", "Player B Kills", "Difference"])
     for tournament, stage in matches_stats.items():
         for stage_name, match_type in stage.items():
             for match_type_name, match in match_type.items():
                 for match_name, values in match.items():
                     winner, loser, match_type, stage= values["Winner"], values["Loser"], match_type_name, stage_name
                     winner_score, loser_score = values["Score"].values()
-
+                    scores_writer.writerow([tournament, stage, match_type, winner, loser, winner_score, loser_score])
                     overview = values["Overview"]
 
-                    for map, team in overview.items():
-                        for team_name, player in team.items():
-                            for player_name, data in player.items():
-                                agents = data["agents"]
-                                rating = data["Rating"]
-                                acs = data["Average Combat Score"]
-                                kills = data["Kills"]
-                                deaths = data["Deaths"]
-                                assists = data["Assists"]
-                                kills_deaths_fd = data["Kills - Deaths (KD)"]
-                                kats = data["Kill, Assist, Trade, Survive %"]
-                                adr = data["Average Damage per Round"]
-                                headshot = data["Headshot %"]
-                                first_kills = data["First Kills"]
-                                first_deaths = data["First Deaths"]
-                                kills_deaths_fkd = data["Kills - Deaths (FKD)"]
-                                for side in sides:
-                                    writer.writerow([tournament, stage, match_type, player_name, team_name, agents, rating[side],
-                                                     acs[side], kills[side], deaths[side], assists[side], kills_deaths_fd[side],
-                                                     kats[side], adr[side], headshot[side], first_kills[side], first_deaths[side],
-                                                     kills_deaths_fkd[side], side])
+                    # for map, team in overview.items():
+                    #     for team_name, player in team.items():
+                    #         for player_name, data in player.items():
+                    #             agents = data["agents"]
+                    #             rating = data["Rating"]
+                    #             acs = data["Average Combat Score"]
+                    #             kills = data["Kills"]
+                    #             deaths = data["Deaths"]
+                    #             assists = data["Assists"]
+                    #             kills_deaths_fd = data["Kills - Deaths (KD)"]
+                    #             kats = data["Kill, Assist, Trade, Survive %"]
+                    #             adr = data["Average Damage per Round"]
+                    #             headshot = data["Headshot %"]
+                    #             first_kills = data["First Kills"]
+                    #             first_deaths = data["First Deaths"]
+                    #             kills_deaths_fkd = data["Kills - Deaths (FKD)"]
+                    #             for side in sides:
+                    #                 overview_writer.writerow([tournament, stage, match_type, player_name, team_name, agents, rating[side],
+                    #                                  acs[side], kills[side], deaths[side], assists[side], kills_deaths_fd[side],
+                    #                                  kats[side], adr[side], headshot[side], first_kills[side], first_deaths[side],
+                    #                                  kills_deaths_fkd[side], side])
 
 
-                    performance = values["Performance"]
+
+                    kills = {"All Kills": values["Performance"]["All Kills"],
+                            "First Kills": values["Performance"]["First Kills"],
+                            "Op Kills": values["Performance"]["Op Kills"]}
+                    killS_stats = values["Performance"]["Kill Stats"]
+                    for kill_name, map in kills.items():
+                        for map_name, team_a, in map.items():
+                            for team_a_name, player_a in team_a.items():
+                                for player_a_name, team_b in player_a.items():
+                                    for team_b_name, player_b in team_b.items():
+                                        for player_b_name, stats in player_b.items():
+                                            kills_writer.writerow([tournament, stage, match_type, map_name, team_a_name, player_a_name, team_b_name, player_b_name,
+                                                             stats["Player A Kills"], stats["Player B Kills"], stats["Difference"]])
+
+
+
                     economy = values["Economy"]
 
 
