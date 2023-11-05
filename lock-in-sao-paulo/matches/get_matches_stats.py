@@ -453,8 +453,10 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
                                                         for player_b_name, information in players_b.items():
                                                             rounds_kill_stats_writer.writerow([tournament, stage_name, match_type, map_name, round_number,
                                                                                            team_name, player_name, stats["agent"], information["team"], player_b_name, information["agent"]])
-
-
+                                                kill_occurence = len(value[rounds])
+                                                stats[stat_name] = kill_occurence
+                                        kills_stats_writer.writerow([tournament, stage, match_type, map_name, team_name, player_name] +  list(stats.values()))
+                                        
                                 # for stat_name, value in stats.item():
 
 #'Rounds': {'Round 21': {'Zyppan': {'agent': 'raze'}, 'Shao': {'agent': 'skye'}, 'SUYGETSU': {'agent': 'viper'}}}, 'amount': '1', 'team': 'NAVI'}
