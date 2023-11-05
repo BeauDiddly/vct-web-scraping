@@ -376,13 +376,15 @@ sides = ["all", "attack", "defend"]
 
 with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w", newline="") as overview_file, \
      open("kills.csv", "w", newline="") as kills_file, open("kills_stats.csv", "w", newline="") as kills_stats_file, \
-     open("rounds_kills_stats.csv", "w", newline="") as rounds_kills_stats_file, open("eco_stats.csv", "w", newline="") as eco_stats_file:
+     open("rounds_kills_stats.csv", "w", newline="") as rounds_kills_stats_file, open("eco_stats.csv", "w", newline="") as eco_stats_file, \
+     open("eco_rounds.csv", "w", newline="") as eco_rounds_file:
     scores_writer = csv.writer(scores_file)
     overview_writer = csv.writer(overview_file)
     kills_writer = csv.writer(kills_file)
     kills_stats_writer = csv.writer(kills_stats_file)
     rounds_kill_stats_writer = csv.writer(rounds_kills_stats_file)
     eco_stats_writer = csv.writer(eco_stats_file)
+    eco_rounds_writer = csv.writer(eco_rounds_file)
     scores_writer.writerow(["Tournament", "Stage", "Match Type", "Winner", "Loser", "Winner's Score", "Loser's Score"])
     overview_writer.writerow(["Tournament", "Stage", "Match Type", "Player", "Team", "Agents", "Rating", "Average Combat Score",
                      "Kills", "Deaths", "Assists", "Kill - Deaths (KD)", "Kill, Assist, Trade, Survive %", "Average Damage per Round",
@@ -394,6 +396,7 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
     rounds_kill_stats_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Round Number", "Eliminator's Team", "Eliminator", "Eliminator's Agent",
                                     "Eliminated Team", "Eliminated", "Eliminated's Agent"])
     eco_stats_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Team", "Type", "Initiated", "Won"])
+    eco_rounds_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Round Number", "Team", "Credits", "Type", "Outcome"])
     for tournament, stage in matches_stats.items():
         for stage_name, match_type in stage.items():
             for match_type_name, match in match_type.items():
@@ -469,11 +472,15 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
                     eco_rounds = values["Economy"]["Eco Rounds"]
 
 
-                    for map_name, teams in eco_stats.items():
-                        for team_name, eco in teams.items():
-                            for eco_type, value in eco.items():
-                                eco_stats_writer.writerow([tournament, stage, match_type, map_name, team_name, eco_type] + list(value.values()))
+                    # for map_name, teams in eco_stats.items():
+                    #     for team_name, eco in teams.items():
+                    #         for eco_type, value in eco.items():
+                    #             eco_stats_writer.writerow([tournament, stage, match_type, map_name, team_name, eco_type] + list(value.values()))
 
+                    for map_name, rounds in eco_rounds.items():
+                        for round_number, teams in rounds.items():
+                            for team_name, stats in teams.items():
+                                eco_rounds_writer.writerow([tournament, stage, match_type, map_name, round_number, team_name] + list(stats.values()))
 
 # with open("scores.csv", "r") as file:
 #     writer = csv.writer(file)
