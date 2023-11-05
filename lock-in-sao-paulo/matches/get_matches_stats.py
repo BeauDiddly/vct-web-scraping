@@ -262,12 +262,12 @@ for tournament, cards in matches_cards.items():
                             player_dict = team_dict.setdefault(player, {})
                             player_dict["agent"] = agent
                         else:
-                            stat = td.text.split()[0]
+                            # stat = td.text.split()[0]
                             stat_name = performance_stats_title[index % len(performance_stats_title)]
                             rounds_divs = td.find("div").find("div").find("div").find_all("div")
                             stat_dict = player_dict.setdefault(stat_name, {})
                             rounds_dict = stat_dict.setdefault("Rounds", {})
-                            stat_dict["amount"] = stat
+                            # stat_dict["amount"] = stat
                             for round_div in rounds_divs:
                                 kills_div = round_div.find_all("div")
                                 for div in kills_div:
@@ -280,8 +280,7 @@ for tournament, cards in matches_cards.items():
                                         agent = re.search(r'/(\w+)\.png', src).group(1)
                                         victim = div.text.strip()
                                         team = team_a_players_lookup.get(victim) or team_b_players_lookup.get(victim)
-                                        stat_dict["team"] = team
-                                        round_dict[victim] = {"agent": agent}
+                                        round_dict[victim] = {"agent": agent, "team": team}
                                         # print(player, agent)
 
                     else:
@@ -391,8 +390,8 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
                         "Player B", "Player A Kills", "Player B Kills", "Difference", "Kill Type"])
     kills_stats_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Team", "Player", "Agent", "2K", "3k", "4k", "5k", "1v1",
                                  "1v2", "1v3", "1v4", "1v5", "Econ", "Spike Plants", "Spike Defuse"])
-    rounds_kill_stats_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Round", "Team A", "Player A", "Player A's Agent",
-                                    "Team B", "Player B", "Player B's Agent"])
+    rounds_kill_stats_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Round Number", "Eliminator's Team", "Eliminator", "Eliminator's Agent",
+                                    "Eliminated Team", "Eliminated", "Eliminated's Agent"])
     for tournament, stage in matches_stats.items():
         for stage_name, match_type in stage.items():
             for match_type_name, match in match_type.items():
@@ -451,9 +450,9 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
                                             if isinstance(value, dict):
                                                 for rounds, round in value.items():
                                                     for round_number, players_b in round.items():
-                                                        for player_b_name, agent in players_b.items():
+                                                        for player_b_name, information in players_b.items():
                                                             rounds_kill_stats_writer.writerow([tournament, stage_name, match_type, map_name, round_number,
-                                                                                           team_name, player_name, stats["agent"], ["team"], player_b_name, agent])
+                                                                                           team_name, player_name, stats["agent"], information["team"], player_b_name, information["agent"]])
 
 
                                 # for stat_name, value in stats.item():
