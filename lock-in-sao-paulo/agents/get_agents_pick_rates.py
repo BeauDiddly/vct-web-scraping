@@ -18,142 +18,115 @@ urls = {"all_stages": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-
         "omega": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16339.16332.16333.16334",
         "bracket_stage": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16339"}
 
-# url = "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo"
-# page = requests.get(url)
+url = "https://www.vlr.gg/vct-2023"
+page = requests.get(url)
+soup = BeautifulSoup(page.content, "html.parser")
 
-# soup = BeautifulSoup(page.content, "html.parser")
+urls = {}
 
-# agent_pictures = soup.find("table", class_="wf-table mod-pr-global").find_all("th", style=" vertical-align: middle; padding-top: 0; padding-bottom: 0; width: 65px;")
+tournament_cards = soup.find_all("a", class_="wf-card mod-flex event-item")
 
-# maps = soup.find("table", class_="wf-table mod-pr-global").find_all("td", style="white-space: nowrap; padding-top: 0; padding-bottom: 0;")
+for card in tournament_cards:
+    href = card.get("href")
+    agent_url = "https://www.vlr.gg" + href.replace("/event/", "/event/agents/")
+    tournament = card.find("div", class_="event-item-title").text.strip().split(": ")
+    if len(tournament) == 2:
+        tournament_name = tournament[1]
+    else:
+        tournament_name = tournament[0]
+    if tournament_name == "LOCK//IN São Paulo":
+        tournament_name = "Lock-In Sao Paulo"
 
-# pick_rates = soup.find("table", class_="wf-table mod-pr-global").find_all("div", class_="color-sq")
+    urls[tournament_name] = agent_url
 
-# max_rows = len(soup.find("table", class_="wf-table mod-pr-global").find_all("tr", class_="pr-global-row"))
+stages_filter = {}
 
-
-
-# for th in maps:
-#     has_span = th.find("span")
-#     if has_span:
-#         has_span.extract()
-
-
-# maps[0].string = "All Maps"
-
-# print(maps)
-
-# maps_name = []
-
-# for name in maps:
-#     maps_name.append(name.text.strip())
-
-# print(maps_name)
- 
-
-# agents_names = []
-# pattern = r'/(\w+)\.png'
-# for th in agent_pictures:
-#     file_name = th.find("img").get("src")
-#     match = re.search(pattern, file_name)
-#     agent_name = match.group(1)
-#     agents_names.append(agent_name)
-
-# print(agents_names)
-
-# for i in range(len(pick_rates)):
-#     pick_rates[i] = pick_rates[i].text.strip()
-
-# steps = len(agents_names)
-
-# agents_pick_rates = []
-
-# for i in range(0, len(pick_rates), steps):
-#     start = i
-#     end = i + steps
-#     sub_list = pick_rates[start: end]
-#     agents_pick_rates.append(sub_list)
-# for pick_rate in pick_rates:
-#     agents_pick_rates.append(pick_rate.text.strip())
-
-# print(agents_pick_rates)
-
-# print(agents_pick_rates)
-
-pattern = r'/(\w+)\.png'
-agents_pick_rates_with_maps = {}
-
-for stage, url in urls.items():
-    print(stage, url)
+for tournament, url in urls.items():
     page = requests.get(url)
 
     soup = BeautifulSoup(page.content, "html.parser")
 
-    agent_pictures = soup.find("table", class_="wf-table mod-pr-global").find_all("th", style=" vertical-align: middle; padding-top: 0; padding-bottom: 0; width: 65px;")
+    all_stages = soup.find("div", class_="wf-card mod-dark mod-scroll stats-filter").find("div").find_all("div", recursive=False)
+    tournament_dict = stages_filter.setdefault(tournament, {})
+    tournament_dict["All"] = ""
+    for stage in all_stages:
+        # print(stage.find_all("div", recursive=False))
+        stage_name_div, match_types_div = stage.find_all("div", recursive=False)
+        stage_name = stage_name_div.find("div").text.strip()
+        match_types_div = match_types_div.find_all("div")
+        stage_dict = tournament_dict.setdefault(stage_name, {})
+        for match_type in match_types_div:
+            match_type_name = match_type.text.strip()
+            id = match_type.get("data-subseries-id")
+            stage_dict[match_type_name] = id
 
-    maps = soup.find("table", class_="wf-table mod-pr-global").find_all("td", style="white-space: nowrap; padding-top: 0; padding-bottom: 0;")
-
-    pick_rates = soup.find("table", class_="wf-table mod-pr-global").find_all("div", class_="color-sq")
-
-    max_rows = len(soup.find("table", class_="wf-table mod-pr-global").find_all("tr", class_="pr-global-row"))
-
-    for th in maps:
-        has_span = th.find("span")
-        if has_span:
-            has_span.extract()
 
 
-    agents_names = []
-    pattern = r'/(\w+)\.png'
-    for th in agent_pictures:
-        file_name = th.find("img").get("src")
-        match = re.search(pattern, file_name)
-        agent_name = match.group(1)
-        agents_names.append(agent_name)
+    break
 
-    maps[0].string = "All Maps"
+# for tournament, stages in stages_filter.items():
+#     for stage_name, match_types in stages.items():
 
-    # print(maps)
+# agents_pages = {}
+# agents_pages["All"] = {"url": }
 
-    maps_name = []
+# pattern = r'/(\w+)\.png'
+# agents_pick_rates_with_maps = {}
 
-    for name in maps:
-        maps_name.append(name.text.strip())
-    # print(maps_name)
+# for stage, url in urls.items():
+#     print(stage, url)
+#     page = requests.get(url)
 
-    for i in range(len(pick_rates)):
-        pick_rates[i] = pick_rates[i].text.strip()
+#     soup = BeautifulSoup(page.content, "html.parser")
 
-    steps = len(agents_names)
+#     agent_pictures = soup.find("table", class_="wf-table mod-pr-global").find_all("th", style=" vertical-align: middle; padding-top: 0; padding-bottom: 0; width: 65px;")
 
-    agents_pick_rates = []
+#     maps = soup.find("table", class_="wf-table mod-pr-global").find_all("td", style="white-space: nowrap; padding-top: 0; padding-bottom: 0;")
 
-    for i in range(0, len(pick_rates), steps):
-        start = i
-        end = i + steps
-        sub_list = pick_rates[start: end]
-        agents_pick_rates.append(sub_list)
+#     pick_rates = soup.find("table", class_="wf-table mod-pr-global").find_all("div", class_="color-sq")
 
-    agents_pick_rates_with_maps[stage] = {}
+#     max_rows = len(soup.find("table", class_="wf-table mod-pr-global").find_all("tr", class_="pr-global-row"))
 
-    for i in range(0, max_rows):
-        map_name = maps_name[i]
-        agents_pick_rates_with_maps[stage][map_name] = {}
-        for index, name in enumerate(agents_names):
-            pick_rate = agents_pick_rates[i][index] 
-            agents_pick_rates_with_maps[stage][map_name][name] = pick_rate
+#     for th in maps:
+#         has_span = th.find("span")
+#         if has_span:
+#             has_span.extract()
 
-# for i in range(0, max_rows):
-#     map_name = maps_name[i]
-#     agents_pick_rates_with_maps[map_name] = {}
-#     for index, name in enumerate(agents_names):
-#         pick_rate = agents_pick_rates[i][index] 
-#         agents_pick_rates_with_maps[map_name][name] = pick_rate
-    # map_name = maps_stats[index].text.strip()
-    # map_counts = maps_stats[index + 1].text.strip()
-    # atk_win_percentage = maps_stats[index + 2].text.strip()
-    # def_win_percentage = maps_stats[index + 3].text.strip()
-    # maps_stats_dict[map_name] = {"map_counts": map_counts, "atk_win": atk_win_percentage, "def_win": def_win_percentage}
-    # index += 4
 
-# print(agents_pick_rates_with_maps)
+#     agents_names = []
+#     pattern = r'/(\w+)\.png'
+#     for th in agent_pictures:
+#         file_name = th.find("img").get("src")
+#         match = re.search(pattern, file_name)
+#         agent_name = match.group(1)
+#         agents_names.append(agent_name)
+
+#     maps[0].string = "All Maps"
+
+
+#     maps_name = []
+
+#     for name in maps:
+#         maps_name.append(name.text.strip())
+
+#     for i in range(len(pick_rates)):
+#         pick_rates[i] = pick_rates[i].text.strip()
+
+#     steps = len(agents_names)
+
+#     agents_pick_rates = []
+
+#     for i in range(0, len(pick_rates), steps):
+#         start = i
+#         end = i + steps
+#         sub_list = pick_rates[start: end]
+#         agents_pick_rates.append(sub_list)
+
+#     agents_pick_rates_with_maps[stage] = {}
+
+#     for i in range(0, max_rows):
+#         map_name = maps_name[i]
+#         agents_pick_rates_with_maps[stage][map_name] = {}
+#         for index, name in enumerate(agents_names):
+#             pick_rate = agents_pick_rates[i][index] 
+#             agents_pick_rates_with_maps[stage][map_name][name] = pick_rate
