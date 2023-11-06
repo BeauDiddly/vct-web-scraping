@@ -48,7 +48,7 @@ for tournament, url in urls.items():
 
     all_stages = soup.find("div", class_="wf-card mod-dark mod-scroll stats-filter").find("div").find_all("div", recursive=False)
     tournament_dict = stages_filter.setdefault(tournament, {})
-    tournament_dict["All"] = ""
+    all_ids = ""
     for stage in all_stages:
         # print(stage.find_all("div", recursive=False))
         stage_name_div, match_types_div = stage.find_all("div", recursive=False)
@@ -59,10 +59,19 @@ for tournament, url in urls.items():
             match_type_name = match_type.text.strip()
             id = match_type.get("data-subseries-id")
             stage_dict[match_type_name] = id
-
-
-
+            all_ids += f"{id}."
+    all_ids = all_ids.strip(".").split(".")
+    for stage_name, match_types in tournament_dict.items():
+        for match_type, id in match_types.items():
+            excluded_ids = ".".join(included_id for included_id in all_ids if included_id != id)
+            filter_url = f"{url}?exclude={excluded_ids}"
+            tournament_dict[stage_name][match_type] = filter_url
+    
     break
+print(stages_filter)
+
+
+
 
 # for tournament, stages in stages_filter.items():
 #     for stage_name, match_types in stages.items():
