@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, Tag, NavigableString
 import re
 import time
 # url = f"https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16339.16332.16334.16335.16336.16337"
@@ -77,6 +77,7 @@ pick_rates = {"maps_stats": {}, "agents_pick_rates": {}, "teams_pick_rates": {}}
 for tournament_name, stages in stages_filter.items():
     for stage_name, match_types in stages.items():
         for match_type_name, url in match_types.items():
+            print(url)
             page = requests.get(url)
             soup = BeautifulSoup(page.content, "html.parser")
             global_maps_table = soup.find("table", class_="wf-table mod-pr-global")
@@ -98,7 +99,6 @@ for tournament_name, stages in stages_filter.items():
                 all_tds = tr.find_all("td")
                 filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
                 for index, td in enumerate(filtered_tds):
-                    print(td)
                     td_class = td.get("class") or ""
                     class_name = " ".join(td_class)
                     if not class_name:
@@ -117,11 +117,57 @@ for tournament_name, stages in stages_filter.items():
                         stat = td.text.strip()
                         agent = global_table_titles[index]
                         agents_pick_rates_dict[agent] = stat
+            
+            teams_tables = soup.select('table.wf-table:not([class*=" "])')
+            table_titles = ["", ""] + global_table_titles[4:]
+
+            for table in teams_tables:
+                all_tr = table.find_all("tr")
+                logo, map = table.find("tr").find("th").text.replace("\t", "").split()
+                map_dict = pick_rates["teams_pick_rates"].setdefault(map, {})
+                teams_pick_rate_tr = table.find_all("tr")[1:]
+                for tr in teams_pick_rate_tr:
+                    all_tds = tr.find_all("td")
+                    filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
+                    contained_any_agents = any(td.has_attr('class') and ('mod-picked' in td['class']) for td in filtered_tds)
+                    if contained_any_agents:
+                        for index, td in enumerate(filtered_tds):
+                            td_class = td.get("class") or ""
+                            a_tag = td.find("a")
+                            if a_tag and a_tag.find_all("img"):
+                                team = a_tag.text.strip()
+                                print(team, index)
+                                team_dict = map_dict.setdefault(team, set())
+                            # elif td.find("a") and len(tr_class) > 1:
+                            #     vs, team_b = td.find("a").text.strip().split(".")
+                            #     specific_match_dict = team_a_dict.setdefault(team_b, set())
+                            elif len(td_class) == 1:
+                                print(team, index, team_dict)
+                                agent = table_titles[index]
+                                team_dict.add(agent)
+                            # elif len(td_class) == 1 and len(tr_class) > 1:
+                            #     agent = table_titles[index]
+                            #     specific_match_dict.add(agent)
+                break
+            break
+        break
+    break
+print(pick_rates["teams_pick_rates"])
+                        
+
+
+                # for index, td in enumerate(teams_pick_rate_tr):
+                #     print(index, isinstance(td))
+                # break
+
+                
 
 
 
-print(pick_rates["maps_stats"])
-print(pick_rates["agents_pick_rates"])
+
+
+# print(pick_rates["maps_stats"])
+# print(pick_rates["agents_pick_rates"])
 
 
 
