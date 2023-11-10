@@ -51,9 +51,11 @@ for tournament, url in urls.items():
 
 matches_stats = {}
 
-overview_stats_titles = []
-performance_stats_title = []
-economy_stats_title = []
+overview_stats_titles = ["", "", "Rating", "Average Combat Score", "Kills", "Deaths", "Assists", "Kills - Deaths (KD)",
+                         "Kill, Assist, Trade, Survive %", "Average Damage per Round", "Headshot %", "First Kills",
+                         "First Deaths", "Kills - Deaths (FKD)"]
+performance_stats_title = ["", "", "2k", "3k", "4k", "5k", "1v1", "1v2", "1v3", "1v4", "1v5", "Economy", "Spike Plants", "Spike Defuse"]
+economy_stats_title = ["Pistol Won", "Eco (won)", "$ (won)", "$$ (won)", "$$$ (won)"]
 overview, performance, economy = "Overview", "Performance", "Economy"
 specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
 eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", "$$$": "Full buy: 20k+"}
@@ -97,15 +99,15 @@ for tournament, cards in matches_cards.items():
             match_page = requests.get(f'https://vlr.gg{url}')
             match_soup = BeautifulSoup(match_page.content, "html.parser")
 
-            if not overview_stats_titles:
-                overview_stats_titles = ["", ""]
+            # if not overview_stats_titles:
+            #     overview_stats_titles = ["", ""]
 
-                all_ths = match_soup.find("tr").find_all("th")[2:]
-                for th in all_ths:
-                    title = th.get("title")
-                    overview_stats_titles.append(title)
-                overview_stats_titles[7] += " (KD)"
-                overview_stats_titles[13] += " (FKD)"
+            #     all_ths = match_soup.find("tr").find_all("th")[2:]
+            #     for th in all_ths:
+            #         title = th.get("title")
+            #         overview_stats_titles.append(title)
+            #     overview_stats_titles[7] += " (KD)"
+            #     overview_stats_titles[13] += " (FKD)"
             maps_id = {}
             
             maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
@@ -157,13 +159,13 @@ for tournament, cards in matches_cards.items():
                             all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
                             stat_name = overview_stats_titles[index % len(overview_stats_titles)]
                             if not all_stat and not attack_stat and not defend_stat:
-                                all_stat, attack_stat, defend_stat = "0", "0", "0"
+                                all_stat, attack_stat, defend_stat = "-1", "-1", "-1"
                             player_dict[stat_name] = {"all": all_stat, "attack": attack_stat, "defend": defend_stat}
                         else:
                             all_stat = stats[0]
                             all_stat = all_stat.text.strip()
                             stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                            player_dict[stat_name] = {"all": all_stat, "attack": "0", "defend": "0"}
+                            player_dict[stat_name] = {"all": all_stat, "attack": "-1", "defend": "-1"}
                     elif class_name == "mod-stat mod-vlr-deaths":
                         stats = td.find("span").find_all("span")[1].find_all("span")
                         if len(stats) == 3:
@@ -175,18 +177,18 @@ for tournament, cards in matches_cards.items():
                             all_stat = stats[0]
                             all_stat = all_stat.text.strip()
                             stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                            player_dict[stat_name] = {"all": all_stat, "attack": "0", "defend": "0"}
+                            player_dict[stat_name] = {"all": all_stat, "attack": "-1", "defend": "-1"}
 
             performance_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=performance')
             performance_soup = BeautifulSoup(performance_page.content, "html.parser")
             performance_stats_div = performance_soup.find_all("div", class_="vm-stats-game")
 
-            if not performance_stats_title:
-                performance_stats_title = ["", ""]
-                all_ths = performance_soup.find("table", class_="wf-table-inset mod-adv-stats").find("tr").find_all("th")[2:]
-                for th in all_ths:
-                    title = th.text.strip()
-                    performance_stats_title.append(title)
+            # if not performance_stats_title:
+            #     performance_stats_title = ["", ""]
+            #     all_ths = performance_soup.find("table", class_="wf-table-inset mod-adv-stats").find("tr").find_all("th")[2:]
+            #     for th in all_ths:
+            #         title = th.text.strip()
+            #         performance_stats_title.append(title)
             
 
             team_b_div = performance_stats_div[1].find("div").find("tr").find_all("div", class_="team")
@@ -241,7 +243,7 @@ for tournament, cards in matches_cards.items():
                             player_a_kills, player_b_kills, difference = kills_div[0].text.strip(), kills_div[1].text.strip(), kills_div[2].text.strip()
                             player_b = team_b_players[team_b_player_index]
                             if not player_a_kills and not player_b_kills and not difference:
-                                player_a_kills, player_b_kills, difference = "0", "0" , "0"
+                                player_a_kills, player_b_kills, difference = "-1", "-1" , "-1"
                             team_b_dict[player_b] = {"Player A Kills": player_a_kills, "Player B Kills": player_b_kills, "Difference": difference}
             
             kill_stats_dict = performance_dict.setdefault("Kill Stats", {})
@@ -295,11 +297,11 @@ for tournament, cards in matches_cards.items():
 
             economy_stats_div = economy_soup.find_all("div", class_="vm-stats-game")
 
-            if not economy_stats_title:
-                economy_stats_title = [""]
-                all_ths = economy_soup.find("tr").find_all("th")[1:]
-                for th in all_ths:
-                    economy_stats_title.append(th.text.strip())
+            # if not economy_stats_title:
+            #     economy_stats_title = [""]
+            #     all_ths = economy_soup.find("tr").find_all("th")[1:]
+            #     for th in all_ths:
+            #         economy_stats_title.append(th.text.strip())
             
 
             economy_dict = match_dict.setdefault(economy, {})
@@ -344,7 +346,7 @@ for tournament, cards in matches_cards.items():
                         if len(stats) > 1:
                             initiated, won = stats[0], stats[1]
                         else:
-                            initiated, won = "0", stats[0]
+                            initiated, won = "-1", stats[0]
                         stat_name = economy_stats_title[index % len(economy_stats_title)]
                         team_dict[stat_name] = {"Initiated": initiated, "Won": won}
 
@@ -464,7 +466,6 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
 
                                         
 
-#'Rounds': {'Round 21': {'Zyppan': {'agent': 'raze'}, 'Shao': {'agent': 'skye'}, 'SUYGETSU': {'agent': 'viper'}}}, 'amount': '1', 'team': 'NAVI'}
                             
 
 
@@ -477,10 +478,10 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
                     #         for eco_type, value in eco.items():
                     #             eco_stats_writer.writerow([tournament, stage, match_type, map_name, team_name, eco_type] + list(value.values()))
 
-                    for map_name, rounds in eco_rounds.items():
-                        for round_number, teams in rounds.items():
-                            for team_name, stats in teams.items():
-                                eco_rounds_writer.writerow([tournament, stage, match_type, map_name, round_number, team_name] + list(stats.values()))
+                    # for map_name, rounds in eco_rounds.items():
+                    #     for round_number, teams in rounds.items():
+                    #         for team_name, stats in teams.items():
+                    #             eco_rounds_writer.writerow([tournament, stage, match_type, map_name, round_number, team_name] + list(stats.values()))
 
 # with open("scores.csv", "r") as file:
 #     writer = csv.writer(file)
