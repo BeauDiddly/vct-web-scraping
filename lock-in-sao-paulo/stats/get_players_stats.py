@@ -183,6 +183,8 @@ for tournament_name, stages in filtered_urls.items():
         break
     break
 
+#only on all agents. Need to get on idnividual agents
+
 print(players_stats)
                     
 
