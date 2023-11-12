@@ -78,7 +78,7 @@ players_agents = {}
 
 stats_titles = ["", "", "Rounds Played", "Rating", "Average Combat Score", "Kills:Deaths", "Kill, Assist, Trade, Survive %",
                 "Average Damage per Round", "Kills Per Round", "Assists Per Round", "First Kills Per Round", "First Deaths Per Round", 
-                "Headshot %", "Clutch Success %", "Cluthces (won/played)", "Maximum Kills in a Single Map", "Kills", "Deaths", "Assists",
+                "Headshot %", "Clutch Success %", "Clutches (won/played)", "Maximum Kills in a Single Map", "Kills", "Deaths", "Assists",
                 "First Kills", "First Deaths"]
 print(len(stats_titles))
 tournament_cards = soup.find_all("a", class_="wf-card mod-flex event-item")
@@ -150,14 +150,15 @@ for tournament_name, stages in filtered_urls.items():
                         player_dict = team_dict.setdefault(player, {})
                     elif class_name == "mod-agents":
                         imgs = td.find("div").find_all("img")
-                        player_dict["agents"] = ""
+                        agents = ""
                         for img in imgs:
-                            file_name = img.get("src")
-                            match = re.search(pattern, file_name)
-                            agent_name = match.group(1)
-                            all_agents.add(agent_name)
-                            player_dict["agents"] += f"{agent_name}, "
-                        player_dict["agents"] = player_dict["agents"].strip(", ")
+                            src = img.get("src")
+                            match = re.search(pattern, src)
+                            agent = match.group(1)
+                            all_agents.add(agent)
+                            agents += f"{agent}, "
+                        agents = agents.strip(", ")
+                        agents_dict = player_dict.setdefault(agents, {})
                         if len(imgs) == 1:
                             players_with_one_agent_played.add(player)
                     elif class_name == "mod-rnd" or class_name == "mod-cl" or class_name == "":
@@ -165,20 +166,64 @@ for tournament_name, stages in filtered_urls.items():
                         stat_name = stats_titles[index]
                         if stat == "":
                             stat = "-1"
-                        player_dict[stat_name] = stat
+                        agents_dict[stat_name] = stat
                     elif class_name == "mod-color-sq mod-acs" or class_name ==  "mod-color-sq":
                         stat = td.find("div").find("span").text.strip()
                         stat_name = stats_titles[index]
                         if stat == "":
                             stat = "-1"
-                        player_dict[stat_name] = stat
+                        agents_dict[stat_name] = stat
                     elif class_name == "mod-a mod-kmax":
                         stat = td.find("a").text.strip()
                         stat_name = stats_titles[index]
                         if stat == "":
                             stat = "-1"
-                        player_dict[stat_name] = stat
-                break
+                        agents_dict[stat_name] = stat
+                
+            url = f"{url}&min_rounds=0&agent="
+            for agent in all_agents:
+                print(agent)
+                page = requests.get(f"{url}{agent}")
+                soup = BeautifulSoup(page.content, "html.parser")
+                stats_trs = soup.find_all("tr")[1:]
+                for tr in stats_trs:
+                    all_tds = tr.find_all("td")
+                    filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
+                    for index, td in enumerate(filtered_tds):
+                        td_class = td.get("class") or ""
+                        class_name = " ".join(td_class)
+                        if class_name == "mod-player mod-a":
+                            player_info = td.find("div").find_all("div")
+                            player, team = player_info[0].text, player_info[1].text
+                            if player not in players_with_one_agent_played:
+                                team_dict = match_type_dict.setdefault(team, {})
+                                player_dict = team_dict.setdefault(player, {})
+                            else:
+                                break
+                        elif class_name == "mod-agents":
+                            img = td.find("div").find("img")
+                            src = img.get("src")
+                            match = re.search(pattern, src)
+                            agent = match.group(1)
+                            agents_dict = player_dict.setdefault(agent, {})
+                        elif class_name == "mod-rnd" or class_name == "mod-cl" or class_name == "":
+                            stat = td.text.strip()
+                            stat_name = stats_titles[index]
+                            if stat == "":
+                                stat = "-1"
+                            agents_dict[stat_name] = stat
+                        elif class_name == "mod-color-sq mod-acs" or class_name ==  "mod-color-sq":
+                            stat = td.find("div").find("span").text.strip()
+                            stat_name = stats_titles[index]
+                            if stat == "":
+                                stat = "-1"
+                            agents_dict[stat_name] = stat
+                        elif class_name == "mod-a mod-kmax":
+                            stat = td.find("a").text.strip()
+                            stat_name = stats_titles[index]
+                            if stat == "":
+                                stat = "-1"
+                            agents_dict[stat_name] = stat
             break
         break
     break
