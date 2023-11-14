@@ -141,12 +141,15 @@ for tournament_name, stages in stages_filter.items():
                             a_tag = td.find("a")
                             if a_tag and a_tag.find_all("img"):
                                 team = a_tag.text.strip()
+                                print(team)
                                 team_dict = map_dict.setdefault(team, set())
                             elif len(td_class) == 1:
                                 agent = table_titles[index]
+                                print(agent)
                                 team_dict.add(agent)
                 break
             break
+        print(teams_pick_rates_dict)
         break
     break
 
@@ -178,7 +181,7 @@ with open("maps_stats.csv", "w", newline="") as maps_stats_file, open("agents_pi
                 for map_name, teams in teams_pick_rates.items():
                     for team_name, agents in teams.items():
                         for agent in agents:
-                            teams_pick_rates_writer.writerow([tournament, stage_name, match_type, map, team, agent_name])
+                            teams_pick_rates_writer.writerow([tournament, stage_name, match_type, map, team_name, agent])
 
 
                         
