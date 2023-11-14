@@ -76,7 +76,7 @@ pick_rates = {}
 global_table_titles = ["Map", "Total Played", "Attacker Side Win", "Defender Side Win"]
 
 for tournament_name, stages in stages_filter.items():
-    tournament_dict = pick_rates["maps_stats"].setdefault(tournament_name, {})
+    tournament_dict = pick_rates.setdefault(tournament_name, {})
     for stage_name, match_types in stages.items():
         stage_dict = tournament_dict.setdefault(stage_name, {})
         for match_type_name, url in match_types.items():
@@ -143,7 +143,6 @@ for tournament_name, stages in stages_filter.items():
                                 team = a_tag.text.strip()
                                 team_dict = map_dict.setdefault(team, set())
                             elif len(td_class) == 1:
-                                print(team, index, team_dict)
                                 agent = table_titles[index]
                                 team_dict.add(agent)
                 break
@@ -158,16 +157,29 @@ with open("maps_stats.csv", "w", newline="") as maps_stats_file, open("agents_pi
     agents_pick_rates_writer = csv.writer(agents_pick_rates_file)
     teams_pick_rates_writer = csv.writer(teams_pick_rates_file)
     maps_stats_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Total Played", "Attacker Side Win Percentage", "Defender Side Win Percentage"])
-    agents_pick_rates_file.writerow(["Tournament", "Stage", "Match Type", "Map", "Agent", "Pick Rate"])
+    agents_pick_rates_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Agent", "Pick Rate"])
     teams_pick_rates_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Team", "Agent"])
     
-    maps_stats_dict = pick_rates["maps_stats"]
-    agents_pick_rates_dict = pick_rates["agents_pick_rates"]
-    teams_pick_rates_dict = pick_rates["teams_pick_rates"]
 
     for tournament_name, stages in pick_rates.items():
         for stage_name, match_types in stages.items():
-            for match_type, 
+            for match_type, title in match_types.items():
+                maps_stats = title["Maps Stats"]
+                agents_pick_rates = title["Agents Pick Rates"]
+                teams_pick_rates = title["Teams Pick Rates"]
+
+                for map_name, stats in maps_stats.items():
+                    maps_stats_writer.writerow([tournament_name, stage_name, match_type, map] + list(stats.values()))
+                
+                for map_name, agents in agents_pick_rates.items():
+                    for agent_name, pick_rate in agents.items():
+                        agents_pick_rates_writer.writerow([tournament, stage_name, match_type, map, agent_name, pick_rate])
+                
+                for map_name, teams in teams_pick_rates.items():
+                    for team_name, agents in teams.items():
+                        for agent in agents:
+                            teams_pick_rates_writer.writerow([tournament, stage_name, match_type, map, team, agent_name])
+
 
                         
 
