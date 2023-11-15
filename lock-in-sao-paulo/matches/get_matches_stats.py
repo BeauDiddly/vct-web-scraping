@@ -5,13 +5,9 @@ import time
 import pprint
 import csv
 
-#just hardcode the stats name value
+start_time = time.time()
 
-def remove_special_characters(input_string, pattern):
-    
-    # Use the sub() method to replace all matched characters with an empty string
-    cleaned_string = re.sub(pattern, '', input_string)
-    return cleaned_string
+
 
 url = "https://www.vlr.gg/vct-2023"
 page = requests.get(url)
@@ -99,15 +95,6 @@ for tournament, cards in matches_cards.items():
             match_page = requests.get(f'https://vlr.gg{url}')
             match_soup = BeautifulSoup(match_page.content, "html.parser")
 
-            # if not overview_stats_titles:
-            #     overview_stats_titles = ["", ""]
-
-            #     all_ths = match_soup.find("tr").find_all("th")[2:]
-            #     for th in all_ths:
-            #         title = th.get("title")
-            #         overview_stats_titles.append(title)
-            #     overview_stats_titles[7] += " (KD)"
-            #     overview_stats_titles[13] += " (FKD)"
             maps_id = {}
             
             maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
@@ -183,12 +170,6 @@ for tournament, cards in matches_cards.items():
             performance_soup = BeautifulSoup(performance_page.content, "html.parser")
             performance_stats_div = performance_soup.find_all("div", class_="vm-stats-game")
 
-            # if not performance_stats_title:
-            #     performance_stats_title = ["", ""]
-            #     all_ths = performance_soup.find("table", class_="wf-table-inset mod-adv-stats").find("tr").find_all("th")[2:]
-            #     for th in all_ths:
-            #         title = th.text.strip()
-            #         performance_stats_title.append(title)
             
 
             team_b_div = performance_stats_div[1].find("div").find("tr").find_all("div", class_="team")
@@ -244,7 +225,7 @@ for tournament, cards in matches_cards.items():
                             player_b = team_b_players[team_b_player_index]
                             if not player_a_kills and not player_b_kills and not difference:
                                 player_a_kills, player_b_kills, difference = "-1", "-1" , "-1"
-                            team_b_dict[player_b] = {"Player A Kills": player_a_kills, "Player B Kills": player_b_kills, "Difference": difference}
+                            team_b_dict[player_b] = {"Player Kills": player_a_kills, "Enemy Kills": player_b_kills, "Difference": difference}
             
             kill_stats_dict = performance_dict.setdefault("Kill Stats", {})
 
@@ -297,11 +278,6 @@ for tournament, cards in matches_cards.items():
 
             economy_stats_div = economy_soup.find_all("div", class_="vm-stats-game")
 
-            # if not economy_stats_title:
-            #     economy_stats_title = [""]
-            #     all_ths = economy_soup.find("tr").find_all("th")[1:]
-            #     for th in all_ths:
-            #         economy_stats_title.append(th.text.strip())
             
 
             economy_dict = match_dict.setdefault(economy, {})
@@ -372,7 +348,13 @@ for tournament, cards in matches_cards.items():
                             team_b_outcome = "Win"
                         map_dict[f"Round {round}"] = {team_a: {"Credits": team_a_bank, "Eco Type": team_a_eco_type, "Outcome": team_a_outcome}
                                                                 , team_b: {"Credits": team_b_bank, "Eco Type": team_b_eco_type, "Outcome": team_b_outcome}}
-    break
+    time.sleep(0.05)
+
+end_time = time.time()
+
+print(f"Datascraping time: {end_time - start_time} seconds")
+
+start_time = time.time()
 
 sides = ["all", "attack", "defend"]
 
@@ -391,15 +373,15 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
     overview_writer.writerow(["Tournament", "Stage", "Match Type", "Player", "Team", "Agents", "Rating", "Average Combat Score",
                      "Kills", "Deaths", "Assists", "Kill - Deaths (KD)", "Kill, Assist, Trade, Survive %", "Average Damage per Round",
                      "Headshot %", "First Kills", "First Deaths", "Kills - Deaths (FKD)", "Side"])
-    kills_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Team A", "Player A", "Team B",
-                        "Player B", "Player A Kills", "Player B Kills", "Difference", "Kill Type"])
+    kills_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Player's Team", "Player", "Enemy's Team",
+                        "Enemy", "Player Kills", "Enemy Kills", "Difference", "Kill Type"])
     kills_stats_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Team", "Player", "Agent", "2K", "3k", "4k", "5k", "1v1",
                                  "1v2", "1v3", "1v4", "1v5", "Econ", "Spike Plants", "Spike Defuse"])
     rounds_kill_stats_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Round Number", "Eliminator's Team", "Eliminator", "Eliminator's Agent",
                                     "Eliminated Team", "Eliminated", "Eliminated's Agent"])
     eco_stats_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Team", "Type", "Initiated", "Won"])
     eco_rounds_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Round Number", "Team", "Credits", "Type", "Outcome"])
-    for tournament, stage in matches_stats.items():
+    for tournament_name, stage in matches_stats.items():
         for stage_name, match_type in stage.items():
             for match_type_name, match in match_type.items():
                 for match_name, values in match.items():
@@ -408,27 +390,27 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
                     scores_writer.writerow([tournament, stage, match_type, winner, loser, winner_score, loser_score])
                     overview = values["Overview"]
 
-                    # for map, team in overview.items():
-                    #     for team_name, player in team.items():
-                    #         for player_name, data in player.items():
-                    #             agents = data["agents"]
-                    #             rating = data["Rating"]
-                    #             acs = data["Average Combat Score"]
-                    #             kills = data["Kills"]
-                    #             deaths = data["Deaths"]
-                    #             assists = data["Assists"]
-                    #             kills_deaths_fd = data["Kills - Deaths (KD)"]
-                    #             kats = data["Kill, Assist, Trade, Survive %"]
-                    #             adr = data["Average Damage per Round"]
-                    #             headshot = data["Headshot %"]
-                    #             first_kills = data["First Kills"]
-                    #             first_deaths = data["First Deaths"]
-                    #             kills_deaths_fkd = data["Kills - Deaths (FKD)"]
-                    #             for side in sides:
-                    #                 overview_writer.writerow([tournament, stage, match_type, player_name, team_name, agents, rating[side],
-                    #                                  acs[side], kills[side], deaths[side], assists[side], kills_deaths_fd[side],
-                    #                                  kats[side], adr[side], headshot[side], first_kills[side], first_deaths[side],
-                    #                                  kills_deaths_fkd[side], side])
+                    for map, team in overview.items():
+                        for team_name, player in team.items():
+                            for player_name, data in player.items():
+                                agents = data["agents"]
+                                rating = data["Rating"]
+                                acs = data["Average Combat Score"]
+                                kills = data["Kills"]
+                                deaths = data["Deaths"]
+                                assists = data["Assists"]
+                                kills_deaths_fd = data["Kills - Deaths (KD)"]
+                                kats = data["Kill, Assist, Trade, Survive %"]
+                                adr = data["Average Damage per Round"]
+                                headshot = data["Headshot %"]
+                                first_kills = data["First Kills"]
+                                first_deaths = data["First Deaths"]
+                                kills_deaths_fkd = data["Kills - Deaths (FKD)"]
+                                for side in sides:
+                                    overview_writer.writerow([tournament_name, stage_name, match_type_name, player_name, team_name, agents, rating[side],
+                                                     acs[side], kills[side], deaths[side], assists[side], kills_deaths_fd[side],
+                                                     kats[side], adr[side], headshot[side], first_kills[side], first_deaths[side],
+                                                     kills_deaths_fkd[side], side])
 
 
 
@@ -436,32 +418,32 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
                             "First Kills": values["Performance"]["First Kills"],
                             "Op Kills": values["Performance"]["Op Kills"]}
                     kills_stats = values["Performance"]["Kill Stats"]
-                    # for kill_name, map in kills.items():
-                    #     for map_name, team_a, in map.items():
-                    #         for team_a_name, player_a in team_a.items():
-                    #             for player_a_name, team_b in player_a.items():
-                    #                 for team_b_name, player_b in team_b.items():
-                    #                     for player_b_name, stats in player_b.items():
-                    #                         kills_writer.writerow([tournament, stage, match_type, map_name, team_a_name, player_a_name, team_b_name, player_b_name,
-                    #                                          stats["Player A Kills"], stats["Player B Kills"], stats["Difference"], kill_name])
+                    for kill_name, map in kills.items():
+                        for map_name, team_a, in map.items():
+                            for team_a_name, player_a in team_a.items():
+                                for player_a_name, team_b in player_a.items():
+                                    for team_b_name, player_b in team_b.items():
+                                        for player_b_name, stats in player_b.items():
+                                            kills_writer.writerow([tournament_name, stage_name, match_type_name, map_name, team_a_name, player_a_name, team_b_name, player_b_name,
+                                                             stats["Player A Kills"], stats["Player B Kills"], stats["Difference"], kill_name])
                     
 
-                    # for map_name, team in kills_stats.items():
-                    #     for team_name, player in team.items():
-                    #         for player_name, stats in player.items():
-                    #                 if map_name == "All Maps":
-                    #                     kills_stats_writer.writerow([tournament, stage, match_type, map_name, team_name, player_name] +  list(stats.values()))
-                    #                 else:
-                    #                     for stat_name, value in stats.items():
-                    #                         if isinstance(value, dict):
-                    #                             for rounds, round in value.items():
-                    #                                 for round_number, players_b in round.items():
-                    #                                     for player_b_name, information in players_b.items():
-                    #                                         rounds_kill_stats_writer.writerow([tournament, stage_name, match_type, map_name, round_number,
-                    #                                                                        team_name, player_name, stats["agent"], information["team"], player_b_name, information["agent"]])
-                    #                             kill_occurence = len(value[rounds])
-                    #                             stats[stat_name] = kill_occurence
-                    #                     kills_stats_writer.writerow([tournament, stage, match_type, map_name, team_name, player_name] +  list(stats.values()))
+                    for map_name, team in kills_stats.items():
+                        for team_name, player in team.items():
+                            for player_name, stats in player.items():
+                                    if map_name == "All Maps":
+                                        kills_stats_writer.writerow([tournament_name, stage_name, match_type_name, map_name, team_name, player_name] +  list(stats.values()))
+                                    else:
+                                        for stat_name, value in stats.items():
+                                            if isinstance(value, dict):
+                                                for rounds, round in value.items():
+                                                    for round_number, players_b in round.items():
+                                                        for player_b_name, information in players_b.items():
+                                                            rounds_kill_stats_writer.writerow([tournament_name, stage_name, match_type_name, map_name, round_number,
+                                                                                           team_name, player_name, stats["agent"], information["team"], player_b_name, information["agent"]])
+                                                kill_occurence = len(value[rounds])
+                                                stats[stat_name] = kill_occurence
+                                        kills_stats_writer.writerow([tournament_name, stage_name, match_type_name, map_name, team_name, player_name] +  list(stats.values()))
 
 
                                         
@@ -473,21 +455,17 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
                     eco_rounds = values["Economy"]["Eco Rounds"]
 
 
-                    # for map_name, teams in eco_stats.items():
-                    #     for team_name, eco in teams.items():
-                    #         for eco_type, value in eco.items():
-                    #             eco_stats_writer.writerow([tournament, stage, match_type, map_name, team_name, eco_type] + list(value.values()))
+                    for map_name, teams in eco_stats.items():
+                        for team_name, eco in teams.items():
+                            for eco_type, value in eco.items():
+                                eco_stats_writer.writerow([tournament_name, stage_name, match_type_name, map_name, team_name, eco_type] + list(value.values()))
 
-                    # for map_name, rounds in eco_rounds.items():
-                    #     for round_number, teams in rounds.items():
-                    #         for team_name, stats in teams.items():
-                    #             eco_rounds_writer.writerow([tournament, stage, match_type, map_name, round_number, team_name] + list(stats.values()))
+                    for map_name, rounds in eco_rounds.items():
+                        for round_number, teams in rounds.items():
+                            for team_name, stats in teams.items():
+                                eco_rounds_writer.writerow([tournament_name, stage_name, match_type_name, map_name, round_number, team_name] + list(stats.values()))
 
-# with open("scores.csv", "r") as file:
-#     writer = csv.writer(file)
-#     writer.writerow(["Winner", "Loser", "Match Type", "Stage", "Tournament", "Winner's Score", "Loser's Score"])
-#     for 
-# with open("scores.csv", "w") as file:
-#     writer = csv.writer(file)
-#     writer.writerow(["Tournament", "Stage", "Match Type", "Winner", "Loser", "Winner's Score", "Loser's Score"])
-#                     writer.writerow([tournament, stage, match_type, winner, loser, winner_score, loser_score])
+
+end_time = time.time()
+
+print(f"Data to CSV time: {end_time - start_time} seconds")
