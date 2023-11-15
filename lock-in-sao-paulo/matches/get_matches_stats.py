@@ -95,7 +95,7 @@ for tournament, cards in matches_cards.items():
 
             print("Starting collecting for ", tournament, stage, match_type, match_name)
             url = module.get("href")
-            match_page = requests.get(f'https://vlr.gg{url}')
+            match_page = requests.get(f'https://vlr.gg{url}', timeout=2)
             match_soup = BeautifulSoup(match_page.content, "html.parser")
 
             maps_id = {}
@@ -169,7 +169,7 @@ for tournament, cards in matches_cards.items():
                             stat_name = overview_stats_titles[index % len(overview_stats_titles)]
                             player_dict[stat_name] = {"all": all_stat, "attack": "-1", "defend": "-1"}
 
-            performance_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=performance')
+            performance_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=performance', timeout=2)
             performance_soup = BeautifulSoup(performance_page.content, "html.parser")
             performance_stats_div = performance_soup.find_all("div", class_="vm-stats-game")
 
@@ -279,7 +279,7 @@ for tournament, cards in matches_cards.items():
                 print(tournament, stage, match_type, match_name, "does not contain any data under their performance page")
 
             
-            economy_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=economy')
+            economy_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=economy', timeout=2)
             economy_soup = BeautifulSoup(economy_page.content, "html.parser")
 
             economy_stats_div = economy_soup.find_all("div", class_="vm-stats-game")
