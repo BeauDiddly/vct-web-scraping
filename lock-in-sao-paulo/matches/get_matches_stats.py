@@ -225,7 +225,7 @@ for tournament, cards in matches_cards.items():
                             player_b = team_b_players[team_b_player_index]
                             if not player_a_kills and not player_b_kills and not difference:
                                 player_a_kills, player_b_kills, difference = "-1", "-1" , "-1"
-                            team_b_dict[player_b] = {"Player Kills": player_a_kills, "Enemy Kills": player_b_kills, "Difference": difference}
+                            team_b_dict[player_b] = {"Player's Kills": player_a_kills, "Enemy's Kills": player_b_kills, "Difference": difference}
             
             kill_stats_dict = performance_dict.setdefault("Kill Stats", {})
 
@@ -425,7 +425,7 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
                                     for team_b_name, player_b in team_b.items():
                                         for player_b_name, stats in player_b.items():
                                             kills_writer.writerow([tournament_name, stage_name, match_type_name, map_name, team_a_name, player_a_name, team_b_name, player_b_name,
-                                                             stats["Player A Kills"], stats["Player B Kills"], stats["Difference"], kill_name])
+                                                             stats["Player's Kills"], stats["Enemy's Kills"], stats["Difference"], kill_name])
                     
 
                     for map_name, team in kills_stats.items():
