@@ -17,6 +17,7 @@ urls = {}
 
 tournament_cards = soup.find_all("a", class_="wf-card mod-flex event-item")
 
+
 for card in tournament_cards:
     href = card.get("href")
     matches_url = "https://www.vlr.gg" + href.replace("/event/", "/event/matches/")
@@ -39,6 +40,7 @@ for tournament, url in urls.items():
 
     all_cards = soup.select('div.wf-card:not([class*=" "])')
     modules = []
+    # print(tournament ,len(all_cards))
     for cards in all_cards:
         all_modules = cards.find_all("a")
         modules.extend(all_modules)
@@ -59,7 +61,7 @@ eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", 
 
 for tournament, cards in matches_cards.items():
     tournament_dict = matches_stats.setdefault(tournament, {})
-    for module in cards[:2]:
+    for module in cards:
         match_type, stage = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
         match_type = match_type.strip("\t")
         stage = stage.strip("\t")
@@ -171,6 +173,7 @@ for tournament, cards in matches_cards.items():
             performance_stats_div = performance_soup.find_all("div", class_="vm-stats-game")
 
             
+            print(tournament, stage, match_type, match_name)
 
             team_b_div = performance_stats_div[1].find("div").find("tr").find_all("div", class_="team")
             team_b_players = [""]
@@ -353,6 +356,8 @@ for tournament, cards in matches_cards.items():
 end_time = time.time()
 
 print(f"Datascraping time: {end_time - start_time} seconds")
+
+print(matches_stats["Valorant Champions 2023"].keys())
 
 start_time = time.time()
 
