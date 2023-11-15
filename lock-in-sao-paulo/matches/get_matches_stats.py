@@ -175,7 +175,7 @@ for tournament, cards in matches_cards.items():
             
             print(tournament, stage, match_type, match_name)
 
-            team_b_div = performance_stats_div[1].find("div").find("tr").find_all("div", class_="team")
+            team_b_div = performance_stats_div[0].find("div").find("tr").find_all("div", class_="team")
             team_b_players = [""]
             team_b_players_lookup = {}
             team_a_players_lookup = {}
