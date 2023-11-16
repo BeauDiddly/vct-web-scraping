@@ -65,7 +65,7 @@ eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", 
 
 for tournament, cards in matches_cards.items():
     tournament_dict = matches_stats.setdefault(tournament, {})
-    for module in cards:
+    for module in cards[:2]:
         match_type, stage = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
         match_type = match_type.strip("\t")
         stage = stage.strip("\t")
@@ -114,12 +114,12 @@ for tournament, cards in matches_cards.items():
                 maps_id[id] = map
 
             maps_notes = match_soup.find("div", class_="match-header-note").text.strip().split("; ")
-
+            draft_phase_dict = match_dict.setdefault("Draft Phase", {})
             for note in maps_notes:
                 if "ban" in note or "pick" in note:
                     team, action, map = note.split()
-                    draft_phase_dict = match_dict.setdefault(action, {})
-                    team_dict = draft_phase_dict.setdefault(team, [])
+                    action_dict = draft_phase_dict.setdefault(action, {})
+                    team_dict = action_dict.setdefault(team, [])
                     team_dict.append(map)
 
             overview_dict = match_dict.setdefault(overview, {})
@@ -361,7 +361,9 @@ for tournament, cards in matches_cards.items():
                                                                     , team_b: {"Credits": team_b_bank, "Eco Type": team_b_eco_type, "Outcome": team_b_outcome}}
             else:
                 print(tournament, stage, match_type, match_name, "does not contain any data under their economy page")
-    time.sleep(0.05)
+        break
+    break
+    # time.sleep(0.05)
 
 end_time = time.time()
 
@@ -373,11 +375,12 @@ start_time = time.time()
 
 sides = ["all", "attack", "defend"]
 
-with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w", newline="") as overview_file, \
-     open("kills.csv", "w", newline="") as kills_file, open("kills_stats.csv", "w", newline="") as kills_stats_file, \
-     open("rounds_kills_stats.csv", "w", newline="") as rounds_kills_stats_file, open("eco_stats.csv", "w", newline="") as eco_stats_file, \
-     open("eco_rounds.csv", "w", newline="") as eco_rounds_file:
+with open("scores.csv", "w", newline="") as scores_file, open("draft_phase.csv", "w", newline="") as draft_phase_file, \
+     open("overview.csv", "w", newline="") as overview_file, open("kills.csv", "w", newline="") as kills_file, \
+     open("kills_stats.csv", "w", newline="") as kills_stats_file, open("rounds_kills_stats.csv", "w", newline="") as rounds_kills_stats_file, \
+     open("eco_stats.csv", "w", newline="") as eco_stats_file, open("eco_rounds.csv", "w", newline="") as eco_rounds_file:
     scores_writer = csv.writer(scores_file)
+    draft_phase_writer = csv.writer(draft_phase_file)
     overview_writer = csv.writer(overview_file)
     kills_writer = csv.writer(kills_file)
     kills_stats_writer = csv.writer(kills_stats_file)
@@ -385,6 +388,7 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
     eco_stats_writer = csv.writer(eco_stats_file)
     eco_rounds_writer = csv.writer(eco_rounds_file)
     scores_writer.writerow(["Tournament", "Stage", "Match Type", "Winner", "Loser", "Winner's Score", "Loser's Score"])
+    draft_phase_writer.writerow(["Tournament", "Stage", "Match Type", "Team", "Action", "Map"])
     overview_writer.writerow(["Tournament", "Stage", "Match Type", "Player", "Team", "Agents", "Rating", "Average Combat Score",
                      "Kills", "Deaths", "Assists", "Kill - Deaths (KD)", "Kill, Assist, Trade, Survive %", "Average Damage per Round",
                      "Headshot %", "First Kills", "First Deaths", "Kills - Deaths (FKD)", "Side"])
@@ -405,6 +409,13 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
                     winner_score, loser_score = values["Score"].values()
                     scores_writer.writerow([tournament_name, stage_name, match_type_name, winner, loser, winner_score, loser_score])
                     overview = values["Overview"]
+                    
+                    draft_phase = values["Draft Phase"]
+
+                    for action_name, teams in draft_phase.items():
+                        for team_name, maps in teams.items():
+                            for map_name in maps:
+                                draft_phase_writer.writerow([tournament, stage_name, match_type_name, team_name, action_name, map_name])
 
                     for map, team in overview.items():
                         for team_name, player in team.items():
