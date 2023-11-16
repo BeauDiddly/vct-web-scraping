@@ -392,7 +392,7 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
     kills_stats_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Team", "Player", "Agent", "2K", "3k", "4k", "5k", "1v1",
                                  "1v2", "1v3", "1v4", "1v5", "Econ", "Spike Plants", "Spike Defuse"])
     rounds_kill_stats_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Round Number", "Eliminator's Team", "Eliminator", "Eliminator's Agent",
-                                    "Eliminated Team", "Eliminated", "Eliminated's Agent"])
+                                    "Eliminated Team", "Eliminated", "Eliminated's Agent", "Kill Type"])
     eco_stats_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Team", "Type", "Initiated", "Won"])
     eco_rounds_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Round Number", "Team", "Credits", "Type", "Outcome"])
     for tournament_name, stage in matches_stats.items():
@@ -453,7 +453,7 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
                                                         for round_number, players_b in round.items():
                                                             for player_b_name, information in players_b.items():
                                                                 rounds_kill_stats_writer.writerow([tournament_name, stage_name, match_type_name, map_name, round_number,
-                                                                                            team_name, player_name, stats["agent"], information["team"], player_b_name, information["agent"]])
+                                                                                            team_name, player_name, stats["agent"], information["team"], player_b_name, information["agent"], stat_name])
                                                     kill_occurence = len(value[rounds])
                                                     stats[stat_name] = kill_occurence
                                             kills_stats_writer.writerow([tournament_name, stage_name, match_type_name, map_name, team_name, player_name] +  list(stats.values()))
