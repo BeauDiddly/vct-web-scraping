@@ -4,10 +4,14 @@ import re
 import time
 import pprint
 import csv
+from datetime import datetime
 
 start_time = time.time()
 
+now = datetime.now()
 
+current_time = now.strftime("%H:%M:%S")
+print("Current Time =", current_time)
 
 url = "https://www.vlr.gg/vct-2023"
 page = requests.get(url)
@@ -180,8 +184,8 @@ for tournament, cards in matches_cards.items():
                 team_b_players_lookup = {}
                 team_a_players_lookup = {}
                 for player in team_b_div:
-                    player = player.text.strip().replace("\t", "").replace("\n", "").replace(team, "")
-                    team_b_players_lookup[player] = team
+                    player, team = player.text.strip().replace("\t", "").split()
+                    team_b_players_lookup[player] = team_b
                     team_b_players.append(player)
                 players_to_players_kills = {}
                 players_kills = {}
@@ -273,7 +277,7 @@ for tournament, cards in matches_cards.items():
                             stat = td.text.strip()
                             stat_name = performance_stats_title[index % len(performance_stats_title)]
                             if not stat:
-                                stat = "0"
+                                stat = "-1"
                             player_dict[stat_name] = stat
             except:
                 print(tournament, stage, match_type, match_name, "does not contain any data under their performance page")
@@ -482,3 +486,8 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
 end_time = time.time()
 
 print(f"Data to CSV time: {end_time - start_time} seconds")
+
+now = datetime.now()
+
+current_time = now.strftime("%H:%M:%S")
+print("End Time =", current_time)
