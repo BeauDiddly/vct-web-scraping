@@ -245,6 +245,7 @@ for tournament, cards in matches_cards.items():
                             class_name = " ".join(td.find("div").get("class"))
                             if class_name == "team":
                                 player, team = td.text.strip().replace("\t", "").split("\n")
+                                team = team_a_players_lookup.get(player) or team_b_players_lookup.get(player)
                                 team_dict = map_dict.setdefault(team, {})
                             elif class_name == "stats-sq":
                                 src = img.get("src")
@@ -399,9 +400,9 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
         for stage_name, match_type in stage.items():
             for match_type_name, match in match_type.items():
                 for match_name, values in match.items():
-                    winner, loser, match_type, stage= values["Winner"], values["Loser"], match_type_name, stage_name
+                    winner, loser= values["Winner"], values["Loser"]
                     winner_score, loser_score = values["Score"].values()
-                    scores_writer.writerow([tournament, stage, match_type, winner, loser, winner_score, loser_score])
+                    scores_writer.writerow([tournament_name, stage_name, match_type_name, winner, loser, winner_score, loser_score])
                     overview = values["Overview"]
 
                     for map, team in overview.items():
