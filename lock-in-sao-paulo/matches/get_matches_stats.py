@@ -223,7 +223,7 @@ for tournament, cards in matches_cards.items():
                                 kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
                                 map_dict = performance_dict[kill_name].setdefault(map, {})
                                 team_a_players_lookup[player] = team_a
-                                team_a_dict = map_dict.setdefault(team, {})
+                                team_a_dict = map_dict.setdefault(team_a, {})
                                 team_a_player_kills_dict = team_a_dict.setdefault(player , {})
                                 team_b_dict = team_a_player_kills_dict.setdefault(team_b, {})
                             else:
@@ -400,6 +400,7 @@ with open("scores.csv", "w", newline="") as scores_file, open("overview.csv", "w
         for stage_name, match_type in stage.items():
             for match_type_name, match in match_type.items():
                 for match_name, values in match.items():
+                    print(tournament_name)
                     winner, loser= values["Winner"], values["Loser"]
                     winner_score, loser_score = values["Score"].values()
                     scores_writer.writerow([tournament_name, stage_name, match_type_name, winner, loser, winner_score, loser_score])
