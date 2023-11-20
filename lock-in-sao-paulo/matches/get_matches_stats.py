@@ -187,11 +187,11 @@ for tournament, cards in matches_cards.items():
             try:
                 team_b_div = performance_stats_div[0].find("div").find("tr").find_all("div", class_="team")
                 team_b_players = [""]
-                team_b_players_lookup = {}
-                team_a_players_lookup = {}
+                team_b_lookup = {}
+                team_a_lookup = {}
                 for player in team_b_div:
                     player, team = player.text.strip().replace("\t", "").split()
-                    team_b_players_lookup[player] = team_b
+                    team_b_lookup[player] = team_b
                     team_b_players.append(player)
                 players_to_players_kills = {}
                 players_kills = {}
@@ -229,6 +229,7 @@ for tournament, cards in matches_cards.items():
                                 kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
                                 map_dict = performance_dict[kill_name].setdefault(map, {})
                                 team = team_mapping[team]
+                                team_a_lookup[player] = team
                                 team_a_dict = map_dict.setdefault(team, {})
                                 team_a_player_kills_dict = team_a_dict.setdefault(player , {})
                                 team_b_dict = team_a_player_kills_dict.setdefault(team_b, {})
@@ -276,7 +277,7 @@ for tournament, cards in matches_cards.items():
                                             src = img.get("src")
                                             agent = re.search(r'/(\w+)\.png', src).group(1)
                                             victim = div.text.strip()
-                                            team = team_a_players_lookup.get(victim) or team_b_players_lookup.get(victim)
+                                            team = team_a_lookup.get(victim) or team_b_lookup.get(victim)
                                             round_dict[victim] = {"agent": agent, "team": team}
                                             # print(player, agent)
 
