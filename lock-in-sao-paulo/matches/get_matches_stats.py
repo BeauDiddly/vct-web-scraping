@@ -65,7 +65,7 @@ eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", 
 
 for tournament, cards in matches_cards.items():
     tournament_dict = matches_stats.setdefault(tournament, {})
-    for module in cards[:10]:
+    for module in cards:
         match_type, stage = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
         match_type = match_type.strip("\t")
         stage = stage.strip("\t")
@@ -371,8 +371,8 @@ for tournament, cards in matches_cards.items():
                                                                     , team_b: {"Credits": team_b_bank, "Eco Type": team_b_eco_type, "Outcome": team_b_outcome}}
             else:
                 print(tournament, stage, match_type, match_name, "does not contain any data under their economy page")
-    break
-    # time.sleep(0.05)
+    # break
+    time.sleep(0.03)
 
 end_time = time.time()
 
