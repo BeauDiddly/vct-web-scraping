@@ -52,7 +52,7 @@ for tournament, url in urls.items():
 
 
 matches_stats = {}
-
+team_mapping = {}
 overview_stats_titles = ["", "", "Rating", "Average Combat Score", "Kills", "Deaths", "Assists", "Kills - Deaths (KD)",
                          "Kill, Assist, Trade, Survive %", "Average Damage per Round", "Headshot %", "First Kills",
                          "First Deaths", "Kills - Deaths (FKD)"]
@@ -65,7 +65,7 @@ eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", 
 
 for tournament, cards in matches_cards.items():
     tournament_dict = matches_stats.setdefault(tournament, {})
-    for module in cards[:2]:
+    for module in cards[:10]:
         match_type, stage = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
         match_type = match_type.strip("\t")
         stage = stage.strip("\t")
@@ -115,9 +115,14 @@ for tournament, cards in matches_cards.items():
 
             maps_notes = match_soup.find("div", class_="match-header-note").text.strip().split("; ")
             draft_phase_dict = match_dict.setdefault("Draft Phase", {})
-            for note in maps_notes:
+            for index, note in enumerate(maps_notes):
                 if "ban" in note or "pick" in note:
                     team, action, map = note.split()
+                    if team not in team_mapping and index == 0:
+                        team_mapping[team] = team_b
+                    elif team not in team_mapping and index == 1:
+                        team_mapping[team] = team_a
+                    team = team_mapping[team]
                     action_dict = draft_phase_dict.setdefault(action, {})
                     team_dict = action_dict.setdefault(team, [])
                     team_dict.append(map)
@@ -361,7 +366,6 @@ for tournament, cards in matches_cards.items():
                                                                     , team_b: {"Credits": team_b_bank, "Eco Type": team_b_eco_type, "Outcome": team_b_outcome}}
             else:
                 print(tournament, stage, match_type, match_name, "does not contain any data under their economy page")
-        break
     break
     # time.sleep(0.05)
 
@@ -404,7 +408,6 @@ with open("scores.csv", "w", newline="") as scores_file, open("draft_phase.csv",
         for stage_name, match_type in stage.items():
             for match_type_name, match in match_type.items():
                 for match_name, values in match.items():
-                    print(tournament_name)
                     winner, loser= values["Winner"], values["Loser"]
                     winner_score, loser_score = values["Score"].values()
                     scores_writer.writerow([tournament_name, stage_name, match_type_name, winner, loser, winner_score, loser_score])
