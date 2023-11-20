@@ -228,8 +228,8 @@ for tournament, cards in matches_cards.items():
                                 player, team = td.text.strip().replace("\t", "").split("\n")
                                 kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
                                 map_dict = performance_dict[kill_name].setdefault(map, {})
-                                team_a_players_lookup[player] = team_a
-                                team_a_dict = map_dict.setdefault(team_a, {})
+                                team = team_mapping[team]
+                                team_a_dict = map_dict.setdefault(team, {})
                                 team_a_player_kills_dict = team_a_dict.setdefault(player , {})
                                 team_b_dict = team_a_player_kills_dict.setdefault(team_b, {})
                             else:
@@ -251,7 +251,7 @@ for tournament, cards in matches_cards.items():
                             class_name = " ".join(td.find("div").get("class"))
                             if class_name == "team":
                                 player, team = td.text.strip().replace("\t", "").split("\n")
-                                team = team_a_players_lookup.get(player) or team_b_players_lookup.get(player)
+                                team = team_mapping[team]
                                 team_dict = map_dict.setdefault(team, {})
                             elif class_name == "stats-sq":
                                 src = img.get("src")
