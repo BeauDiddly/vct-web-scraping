@@ -140,6 +140,7 @@ for tournament, cards in matches_cards.items():
                     if class_name == "mod-player":
                         player, team = td.find("a").find_all("div")
                         player, team =  player.text.strip(), team.text.strip()
+                        team = team_mapping[team]
                         team_dict = map_dict.setdefault(team, {})
                         player_dict = team_dict.setdefault(player, {})
                     elif class_name == "mod-agents":
@@ -332,6 +333,7 @@ for tournament, cards in matches_cards.items():
                         class_name = td.find("div").get("class")[0]
                         if class_name == "team":
                             team = td.text.strip()
+                            team = team_mapping[team]
                             team_dict = map_dict.setdefault(team, {})
                         else:
                             stats = td.text.strip().replace("(", "").replace(")", "").split()
@@ -348,6 +350,8 @@ for tournament, cards in matches_cards.items():
                         teams = td.find_all("div", class_="team")
                         if teams:
                             team_a, team_b = teams[0].text.strip(), teams[1].text.strip()
+                            team_a = team_mapping[team_a]
+                            team_b = team_mapping[team_b]
                             map_dict = eco_rounds_dict.setdefault(map, {})
                         else:
                             stats = td.find_all("div")
