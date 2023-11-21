@@ -5,6 +5,7 @@ import time
 import pprint
 import csv
 from datetime import datetime
+import pandas as pd
 
 start_time = time.time()
 
@@ -63,13 +64,14 @@ specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
 eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", "$$$": "Full buy: 20k+"}
 
 
-for tournament, cards in matches_cards.items():
-    tournament_dict = matches_stats.setdefault(tournament, {})
+
+for tournament_name, cards in matches_cards.items():
+    # tournament_dict = matches_stats.setdefault(tournament, {})
     for module in cards:
-        match_type, stage = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
-        match_type = match_type.strip("\t")
-        stage = stage.strip("\t")
-        if match_type == "Showmatch":
+        match_type_name, stage_name = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
+        match_type_name = match_type_name.strip("\t")
+        stage_name = stage_stage.strip("\t")
+        if match_type_name == "Showmatch":
             continue
         else:
             loser, loser_flag, loser_score = module.find("div", class_="match-item-vs").select('div.match-item-vs-team:not([class*=" "])')[0].find_all("div")
@@ -88,14 +90,14 @@ for tournament, cards in matches_cards.items():
 
 
             match_name = f"{team_a} vs {team_b}"
-            stage_dict = tournament_dict.setdefault(stage, {})
+            # stage_dict = tournament_dict.setdefault(stage, {})
 
-            match_type_dict = stage_dict.setdefault(match_type, {})
-            match_dict = match_type_dict.setdefault(match_name, {})
+            # match_type_dict = stage_dict.setdefault(match_type, {})
+            # match_dict = match_type_dict.setdefault(match_name, {})
 
-            match_dict["Winner"] = winner
-            match_dict["Loser"] = loser
-            match_dict["Score"] = {winner: winner_score, loser: loser_score}
+            # match_dict["Winner"] = winner
+            # match_dict["Loser"] = loser
+            # match_dict["Score"] = {winner: winner_score, loser: loser_score}
 
             print("Starting collecting for ", tournament, stage, match_type, match_name)
             url = module.get("href")
@@ -300,7 +302,7 @@ for tournament, cards in matches_cards.items():
                                 stat = "-1"
                             player_dict[stat_name] = stat
             except:
-                print(tournament, stage, match_type, match_name, "does not contain any data under their performance page")
+                print(tournament, stage_name, match_type_name, match_name, "does not contain any data under their performance page")
 
             
             economy_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=economy', timeout=10)
@@ -382,7 +384,7 @@ for tournament, cards in matches_cards.items():
                             map_dict[f"Round {round}"] = {team_a: {"Credits": team_a_bank, "Eco Type": team_a_eco_type, "Outcome": team_a_outcome}
                                                                     , team_b: {"Credits": team_b_bank, "Eco Type": team_b_eco_type, "Outcome": team_b_outcome}}
             else:
-                print(tournament, stage, match_type, match_name, "does not contain any data under their economy page")
+                print(tournament, stage_name, match_type_name, match_name, "does not contain any data under their economy page")
     # break
     time.sleep(0.1)
 
@@ -496,9 +498,6 @@ with open("scores.csv", "w", newline="") as scores_file, open("draft_phase.csv",
 
                     except:
                         pass
-                
-                                        
-
                             
 
                     try:
