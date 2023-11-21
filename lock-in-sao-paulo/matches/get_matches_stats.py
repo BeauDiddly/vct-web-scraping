@@ -65,7 +65,7 @@ eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", 
 
 for tournament, cards in matches_cards.items():
     tournament_dict = matches_stats.setdefault(tournament, {})
-    for module in cards[:3]:
+    for module in cards:
         match_type, stage = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
         match_type = match_type.strip("\t")
         stage = stage.strip("\t")
