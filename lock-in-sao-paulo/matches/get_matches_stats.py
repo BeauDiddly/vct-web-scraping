@@ -65,7 +65,7 @@ eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", 
 
 for tournament, cards in matches_cards.items():
     tournament_dict = matches_stats.setdefault(tournament, {})
-    for module in cards:
+    for module in cards[:3]:
         match_type, stage = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
         match_type = match_type.strip("\t")
         stage = stage.strip("\t")
@@ -99,7 +99,7 @@ for tournament, cards in matches_cards.items():
 
             print("Starting collecting for ", tournament, stage, match_type, match_name)
             url = module.get("href")
-            match_page = requests.get(f'https://vlr.gg{url}', timeout=2)
+            match_page = requests.get(f'https://vlr.gg{url}', timeout=10)
             match_soup = BeautifulSoup(match_page.content, "html.parser")
 
             maps_id = {}
@@ -113,22 +113,34 @@ for tournament, cards in matches_cards.items():
                 map = re.sub(r"\d+|\t|\n", "", div.text.strip())
                 maps_id[id] = map
 
+            
+            overview_stats = match_soup.find_all("div", class_="vm-stats-game")
+
+            overview_tables = overview_stats[0].find_all("table")
+
+            team_a_abbriev = overview_tables[0].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
+
+            team_b_abbriev = overview_tables[1].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
+
+            if team_a not in team_mapping:
+                team_mapping[team_a_abbriev] = team_a
+            
+            if team_b not in team_mapping:
+                team_mapping[team_b_abbriev] = team_b
+
             maps_notes = match_soup.find("div", class_="match-header-note").text.strip().split("; ")
-            draft_phase_dict = match_dict.setdefault("Draft Phase", {})
-            for index, note in enumerate(maps_notes):
-                if "ban" in note or "pick" in note:
-                    team, action, map = note.split()
-                    if team not in team_mapping and index == 0:
-                        team_mapping[team] = team_b
-                    elif team not in team_mapping and index == 1:
-                        team_mapping[team] = team_a
-                    team = team_mapping[team]
-                    action_dict = draft_phase_dict.setdefault(action, {})
-                    team_dict = action_dict.setdefault(team, [])
-                    team_dict.append(map)
+            if maps_notes:
+                draft_phase_dict = match_dict.setdefault("Draft Phase", {})
+                for note in maps_notes:
+                    if "ban" in note or "pick" in note:
+                        team, action, map = note.split()
+                        team = team_mapping[team]
+                        action_dict = draft_phase_dict.setdefault(action, {})
+                        team_dict = action_dict.setdefault(team, [])
+                        team_dict.append(map)
+                
 
             overview_dict = match_dict.setdefault(overview, {})
-            overview_stats = match_soup.find_all("div", class_="vm-stats-game")
             for stats in overview_stats:
                 id = stats.get("data-game-id")
                 map = maps_id[id]
@@ -179,7 +191,7 @@ for tournament, cards in matches_cards.items():
                             stat_name = overview_stats_titles[index % len(overview_stats_titles)]
                             player_dict[stat_name] = {"all": all_stat, "attack": "-1", "defend": "-1"}
 
-            performance_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=performance', timeout=2)
+            performance_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=performance', timeout=10)
             performance_soup = BeautifulSoup(performance_page.content, "html.parser")
             performance_stats_div = performance_soup.find_all("div", class_="vm-stats-game")
 
@@ -291,7 +303,7 @@ for tournament, cards in matches_cards.items():
                 print(tournament, stage, match_type, match_name, "does not contain any data under their performance page")
 
             
-            economy_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=economy', timeout=2)
+            economy_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=economy', timeout=10)
             economy_soup = BeautifulSoup(economy_page.content, "html.parser")
 
             economy_stats_div = economy_soup.find_all("div", class_="vm-stats-game")
@@ -372,7 +384,7 @@ for tournament, cards in matches_cards.items():
             else:
                 print(tournament, stage, match_type, match_name, "does not contain any data under their economy page")
     # break
-    time.sleep(0.03)
+    time.sleep(0.1)
 
 end_time = time.time()
 
@@ -418,12 +430,15 @@ with open("scores.csv", "w", newline="") as scores_file, open("draft_phase.csv",
                     scores_writer.writerow([tournament_name, stage_name, match_type_name, winner, loser, winner_score, loser_score])
                     overview = values["Overview"]
                     
-                    draft_phase = values["Draft Phase"]
+                    try:
+                        draft_phase = values["Draft Phase"]
 
-                    for action_name, teams in draft_phase.items():
-                        for team_name, maps in teams.items():
-                            for map_name in maps:
-                                draft_phase_writer.writerow([tournament, stage_name, match_type_name, team_name, action_name, map_name])
+                        for action_name, teams in draft_phase.items():
+                            for team_name, maps in teams.items():
+                                for map_name in maps:
+                                    draft_phase_writer.writerow([tournament_name, stage_name, match_type_name, team_name, action_name, map_name])
+                    except:
+                        pass
 
                     for map, team in overview.items():
                         for team_name, player in team.items():
