@@ -6,7 +6,7 @@ import pprint
 import csv
 from datetime import datetime
 import pandas as pd
-
+import traceback
 start_time = time.time()
 
 now = datetime.now()
@@ -63,14 +63,25 @@ overview, performance, economy = "Overview", "Performance", "Economy"
 specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
 eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", "$$$": "Full buy: 20k+"}
 
-
+scores_df = pd.DataFrame(columns=["Tournament", "Stage", "Match Type", "Winner", "Loser", "Winner's Score", "Loser's Score"])
+draft_phase_df = pd.DataFrame(columns=["Tournament", "Stage", "Match Type", "Team", "Action", "Map"])
+overview_df = pd.DataFrame(columns=["Tournament", "Stage", "Match Type", "Player", "Team", "Agents", "Rating", "Average Combat Score",
+                     "Kills", "Deaths", "Assists", "Kill - Deaths (KD)", "Kill, Assist, Trade, Survive %", "Average Damage per Round",
+                     "Headshot %", "First Kills", "First Deaths", "Kills - Deaths (FKD)", "Side"])
+kills_df = pd.DataFrame(columns=["Tournament", "Stage", "Match Type", "Map", "Player's Team", "Player", "Enemy's Team",
+                        "Enemy", "Player's Kills", "Enemy's Kills", "Difference", "Kill Type"])
+kills_stats_df = pd.DataFrame(columns=["Tournament", "Stage", "Match Type", "Map", "Team", "Player", "Agent", "2K", "3k", "4k", "5k", "1v1",
+                                 "1v2", "1v3", "1v4", "1v5", "Econ", "Spike Plants", "Spike Defuse"])
+rounds_kills_df = pd.DataFrame(columns=["Tournament", "Stage", "Match Type", "Map", "Round Number", "Eliminator's Team", "Eliminator", "Eliminator's Agent",
+                                    "Eliminated Team", "Eliminated", "Eliminated's Agent", "Kill Type"])
+eco_stats_df = pd.DataFrame(columns=["Tournament", "Stage", "Match Type", "Map", "Team", "Type", "Initiated", "Won"])
+eco_rounds_df = pd.DataFrame(columns=["Tournament", "Stage", "Match Type", "Map", "Round Number", "Team", "Credits", "Type", "Outcome"])
 
 for tournament_name, cards in matches_cards.items():
-    # tournament_dict = matches_stats.setdefault(tournament, {})
     for module in cards:
         match_type_name, stage_name = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
         match_type_name = match_type_name.strip("\t")
-        stage_name = stage_stage.strip("\t")
+        stage_name = stage_name.strip("\t")
         if match_type_name == "Showmatch":
             continue
         else:
@@ -90,16 +101,10 @@ for tournament_name, cards in matches_cards.items():
 
 
             match_name = f"{team_a} vs {team_b}"
-            # stage_dict = tournament_dict.setdefault(stage, {})
 
-            # match_type_dict = stage_dict.setdefault(match_type, {})
-            # match_dict = match_type_dict.setdefault(match_name, {})
+            scores_df.loc[len(scores_df)] = [tournament_name, stage_name, match_type_name, winner, loser, winner_score, loser_score]
 
-            # match_dict["Winner"] = winner
-            # match_dict["Loser"] = loser
-            # match_dict["Score"] = {winner: winner_score, loser: loser_score}
-
-            print("Starting collecting for ", tournament, stage, match_type, match_name)
+            print("Starting collecting for ", tournament_name, stage_name, match_type_name, match_name)
             url = module.get("href")
             match_page = requests.get(f'https://vlr.gg{url}', timeout=10)
             match_soup = BeautifulSoup(match_page.content, "html.parser")
@@ -132,66 +137,82 @@ for tournament_name, cards in matches_cards.items():
 
             maps_notes = match_soup.find("div", class_="match-header-note").text.strip().split("; ")
             if maps_notes:
-                draft_phase_dict = match_dict.setdefault("Draft Phase", {})
                 for note in maps_notes:
                     if "ban" in note or "pick" in note:
                         team, action, map = note.split()
                         team = team_mapping[team]
-                        action_dict = draft_phase_dict.setdefault(action, {})
-                        team_dict = action_dict.setdefault(team, [])
-                        team_dict.append(map)
-                
+                        draft_phase_df.loc[len(draft_phase_df)] = [tournament_name, stage_name, match_type_name, team, action, map]
 
-            overview_dict = match_dict.setdefault(overview, {})
             for stats in overview_stats:
                 id = stats.get("data-game-id")
                 map = maps_id[id]
-                map_dict = overview_dict.setdefault(map, {})
-                tds = stats.select("table tbody tr td")
-                for index, td in enumerate(tds):
-                    td_class = td.get("class") or ""
-                    class_name = " ".join(td_class)
-                    if class_name == "mod-player":
-                        player, team = td.find("a").find_all("div")
-                        player, team =  player.text.strip(), team.text.strip()
-                        team = team_mapping[team]
-                        team_dict = map_dict.setdefault(team, {})
-                        player_dict = team_dict.setdefault(player, {})
-                    elif class_name == "mod-agents":
-                        imgs = td.find_all("img")
-                        agents_played = []
-                        for img in imgs:
-                            agent = img.get("alt")
-                            agents_played.append(agent)
-                        agents = ", ".join(agents_played)
-                        player_dict["agents"] = agents
-                    elif class_name in ["mod-stat mod-vlr-kills", "mod-stat", "mod-stat mod-vlr-assists", "mod-stat mod-kd-diff",
-                                        "mod-stat mod-fb", "mod-stat mod-fd", "mod-stat mod-fk-diff"]:
-                        stats = td.find("span").find_all("span")
-                        if len(stats) == 3:
-                            all_stat, attack_stat, defend_stat = stats
-                            all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
-                            stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                            if not all_stat and not attack_stat and not defend_stat:
-                                all_stat, attack_stat, defend_stat = "-1", "-1", "-1"
-                            player_dict[stat_name] = {"all": all_stat, "attack": attack_stat, "defend": defend_stat}
-                        else:
-                            all_stat = stats[0]
-                            all_stat = all_stat.text.strip()
-                            stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                            player_dict[stat_name] = {"all": all_stat, "attack": "-1", "defend": "-1"}
-                    elif class_name == "mod-stat mod-vlr-deaths":
-                        stats = td.find("span").find_all("span")[1].find_all("span")
-                        if len(stats) == 3:
-                            all_stat, attack_stat, defend_stat = td.find("span").find_all("span")[1].find_all("span")
-                            all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
-                            stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                            player_dict[stat_name] = {"all": all_stat, "attack": attack_stat, "defend": defend_stat}
-                        else:
-                            all_stat = stats[0]
-                            all_stat = all_stat.text.strip()
-                            stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                            player_dict[stat_name] = {"all": all_stat, "attack": "-1", "defend": "-1"}
+
+                stats_tables = stats.find_all("table")
+                for table in stats_tables:
+                    trs = table.find("tbody").find_all("tr")
+                    for tr in trs:
+                        tds = tr.find_all("td")
+                        values = [[tournament_name, stage_name, match_type_name, map],
+                                 [tournament_name, stage_name, match_type_name, map],
+                                 [tournament_name, stage_name, match_type_name, map]]
+                        for index, td in enumerate(tds):
+                            td_class = td.get("class") or ""
+                            class_name = " ".join(td_class)
+                            if class_name == "mod-player":
+                                player, team = td.find("a").find_all("div")
+                                player, team =  player.text.strip(), team.text.strip()
+                                team = team_mapping[team]
+                                for list in values:
+                                    list.append(player)
+                                    list.append(team)
+                            elif class_name == "mod-agents":
+                                imgs = td.find_all("img")
+                                agents_played = []
+                                for img in imgs:
+                                    agent = img.get("alt")
+                                    agents_played.append(agent)
+                                agents = ", ".join(agents_played)
+                                for list in values:
+                                    list.append(agents)
+                            elif class_name in ["mod-stat mod-vlr-kills", "mod-stat", "mod-stat mod-vlr-assists", "mod-stat mod-kd-diff",
+                                                "mod-stat mod-fb", "mod-stat mod-fd", "mod-stat mod-fk-diff"]:
+                                stats = td.find("span").find_all("span")
+                                if len(stats) == 3:
+                                    all_stat, attack_stat, defend_stat = stats
+                                    all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
+                                    stat_name = overview_stats_titles[index % len(overview_stats_titles)]
+                                    if not all_stat and not attack_stat and not defend_stat:
+                                        all_stat, attack_stat, defend_stat = "-1", "-1", "-1"
+                                    values[0].append(all_stat)
+                                    values[1].append(attack_stat)
+                                    values[2].append(defend_stat)
+                                else:
+                                    all_stat = stats[0]
+                                    all_stat = all_stat.text.strip()
+                                    stat_name = overview_stats_titles[index % len(overview_stats_titles)]
+                                    values[0].append(all_stat)
+                                    values[1].append(-1)
+                                    values[2].append(-1)
+                            elif class_name == "mod-stat mod-vlr-deaths":
+                                stats = td.find("span").find_all("span")[1].find_all("span")
+                                if len(stats) == 3:
+                                    all_stat, attack_stat, defend_stat = td.find("span").find_all("span")[1].find_all("span")
+                                    all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
+                                    stat_name = overview_stats_titles[index % len(overview_stats_titles)]
+                                    values[0].append(all_stat)
+                                    values[1].append(attack_stat)
+                                    values[2].append(defend_stat)
+                                else:
+                                    all_stat = stats[0]
+                                    all_stat = all_stat.text.strip()
+                                    stat_name = overview_stats_titles[index % len(overview_stats_titles)]
+                                    values[0].append(all_stat)
+                                    values[1].append(-1)
+                                    values[2].append(-1)
+
+                        overview_df.loc[len(overview_df)] = values[0]
+                        overview_df.loc[len(overview_df)] = values[1]
+                        overview_df.loc[len(overview_df)] = values[2]
 
             performance_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=performance', timeout=10)
             performance_soup = BeautifulSoup(performance_page.content, "html.parser")
@@ -204,7 +225,7 @@ for tournament_name, cards in matches_cards.items():
                 team_b_lookup = {}
                 team_a_lookup = {}
                 for player in team_b_div:
-                    player, team = player.text.strip().replace("\t", "").split()
+                    player, team = player.text.strip().replace("\t", "").split("\n")
                     team_b_lookup[player] = team_b
                     team_b_players.append(player)
                 players_to_players_kills = {}
@@ -225,84 +246,74 @@ for tournament_name, cards in matches_cards.items():
                                 players_to_players_kills[id].append(tds)
                         for tr in kills_trs:
                             tds = tr.find_all("td")
-                            players_kills[id].extend(tds)
+                            players_kills[id].append(tds)
                     else:
                         continue
                 
-                performance_dict = match_dict.setdefault(performance, {})
 
-                for kill_name in specific_kills_name:
-                    performance_dict[kill_name] = {}
-
-                for id, tds_list in players_to_players_kills.items():
+                for id, tds_lists in players_to_players_kills.items():
                     map = maps_id[id]
-                    for index, td_list in enumerate(tds_list):
+                    for index, td_list in enumerate(tds_lists):
                         for team_b_player_index, td in enumerate(td_list):
                             if td.find("img") != None:
                                 player, team = td.text.strip().replace("\t", "").split("\n")
                                 kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
-                                map_dict = performance_dict[kill_name].setdefault(map, {})
                                 team = team_mapping[team]
                                 team_a_lookup[player] = team
-                                team_a_dict = map_dict.setdefault(team, {})
-                                team_a_player_kills_dict = team_a_dict.setdefault(player , {})
-                                team_b_dict = team_a_player_kills_dict.setdefault(team_b, {})
                             else:
                                 kills_div = td.find("div").find_all("div")
                                 player_a_kills, player_b_kills, difference = kills_div[0].text.strip(), kills_div[1].text.strip(), kills_div[2].text.strip()
                                 player_b = team_b_players[team_b_player_index]
                                 if not player_a_kills and not player_b_kills and not difference:
                                     player_a_kills, player_b_kills, difference = "-1", "-1" , "-1"
-                                team_b_dict[player_b] = {"Player's Kills": player_a_kills, "Enemy's Kills": player_b_kills, "Difference": difference}
-                
-                kill_stats_dict = performance_dict.setdefault("Kill Stats", {})
+                                kills_df.loc[len(kills_df)] = [tournament_name, stage_name, match_type_name, map, team, player, team_b, player_b, player_a_kills, player_b_kills, difference, kill_name]
 
-                for id, td_list in players_kills.items():
+                for id, tds_lists in players_kills.items():
                     map = maps_id[id]
-                    map_dict = kill_stats_dict.setdefault(map, {})
-                    for index, td in enumerate(td_list):
-                        img = td.find("img")
-                        if img != None:
-                            class_name = " ".join(td.find("div").get("class"))
-                            if class_name == "team":
-                                player, team = td.text.strip().replace("\t", "").split("\n")
-                                team = team_mapping[team]
-                                team_dict = map_dict.setdefault(team, {})
-                            elif class_name == "stats-sq":
-                                src = img.get("src")
-                                agent = re.search(r'/(\w+)\.png', src).group(1)
-                                player_dict = team_dict.setdefault(player, {})
-                                player_dict["agent"] = agent
-                            else:
-                                # stat = td.text.split()[0]
-                                stat_name = performance_stats_title[index % len(performance_stats_title)]
-                                rounds_divs = td.find("div").find("div").find("div").find_all("div")
-                                stat_dict = player_dict.setdefault(stat_name, {})
-                                rounds_dict = stat_dict.setdefault("Rounds", {})
-                                # stat_dict["amount"] = stat
-                                for round_div in rounds_divs:
-                                    kills_div = round_div.find_all("div")
-                                    for div in kills_div:
-                                        img = div.find("img")
-                                        if img == None:
-                                            round_stat = div.text.strip()
-                                            round_dict = rounds_dict.setdefault(round_stat, {})
-                                        else:
-                                            src = img.get("src")
-                                            agent = re.search(r'/(\w+)\.png', src).group(1)
-                                            victim = div.text.strip()
-                                            team = team_a_lookup.get(victim) or team_b_lookup.get(victim)
-                                            round_dict[victim] = {"agent": agent, "team": team}
-                                            # print(player, agent)
+                    for tds in tds_lists:
+                        values = [tournament_name, stage_name, match_type_name, map]
+                        for index, td in enumerate(tds):
+                            img = td.find("img")
+                            if img != None:
+                                class_name = " ".join(td.find("div").get("class"))
+                                if class_name == "team":
+                                    player, team = td.text.strip().replace("\t", "").split("\n")
+                                    team = team_mapping[team]
+                                    values.append(team)
+                                    values.append(player)
+                                elif class_name == "stats-sq":
+                                    src = img.get("src")
+                                    agent = re.search(r'/(\w+)\.png', src).group(1)
+                                    values.append(agent)
+                                else:
+                                    stat = td.text.split()[0]
+                                    stat_name = performance_stats_title[index % len(performance_stats_title)]
+                                    rounds_divs = td.find("div").find("div").find("div").find_all("div")
+                                    values.append(stat)
+                                    for round_div in rounds_divs:
+                                        kills_div = round_div.find_all("div")
+                                        for div in kills_div:
+                                            img = div.find("img")
+                                            if img == None:
+                                                round_stat = div.text.strip()
+                                            else:
+                                                src = img.get("src")
+                                                agent = re.search(r'/(\w+)\.png', src).group(1)
+                                                victim = div.text.strip()
+                                                team = team_a_lookup.get(victim) or team_b_lookup.get(victim)
+                                                rounds_kills_df.loc[len(rounds_kills_df)] = [tournament_name, stage_name, match_type_name, map, round_stat, team, player, agent,
+                                                                       team, victim, agent, stat_name]
 
-                        else:
-                            stat = td.text.strip()
-                            stat_name = performance_stats_title[index % len(performance_stats_title)]
-                            if not stat:
-                                stat = "-1"
-                            player_dict[stat_name] = stat
-            except:
-                print(tournament, stage_name, match_type_name, match_name, "does not contain any data under their performance page")
+                            else:
+                                stat = td.text.strip()
+                                stat_name = performance_stats_title[index % len(performance_stats_title)]
+                                if not stat:
+                                    stat = "-1"
+                                values.append(stat)
+                        kills_stats_df.loc[len(kills_stats_df)] = values
+
+            except Exception as e:
+                print(tournament_name, stage_name, match_type_name, match_name, "does not contain any data under their performance page")
 
             
             economy_page = requests.get(f'https://vlr.gg{url}/?game=all&tab=economy', timeout=10)
@@ -336,20 +347,15 @@ for tournament_name, cards in matches_cards.items():
                         tds = tr.find_all("td")
                         eco_stats[id].extend(tds)
             
-            if eco_stats:
-                economy_dict = match_dict.setdefault(economy, {})
-                eco_stats_dict = economy_dict.setdefault("Eco Stats", {})
-                eco_rounds_dict = economy_dict.setdefault("Eco Rounds", {})        
+            if eco_stats:     
                 
                 for id, td_list in eco_stats.items():
                     map = maps_id[id]
-                    map_dict = eco_stats_dict.setdefault(map, {})
                     for index, td in enumerate(td_list):
                         class_name = td.find("div").get("class")[0]
                         if class_name == "team":
                             team = td.text.strip()
                             team = team_mapping[team]
-                            team_dict = map_dict.setdefault(team, {})
                         else:
                             stats = td.text.strip().replace("(", "").replace(")", "").split()
                             if len(stats) > 1:
@@ -357,7 +363,7 @@ for tournament_name, cards in matches_cards.items():
                             else:
                                 initiated, won = "-1", stats[0]
                             stat_name = economy_stats_title[index % len(economy_stats_title)]
-                            team_dict[stat_name] = {"Initiated": initiated, "Won": won}
+                            eco_stats_df.loc[len(eco_stats_df)] = [tournament_name, stage_name, match_type_name, map, team, stat_name, initiated, won]
 
                 for id, td_list in eco_rounds_stats.items():
                     map = maps_id[id]
@@ -367,7 +373,6 @@ for tournament_name, cards in matches_cards.items():
                             team_a, team_b = teams[0].text.strip(), teams[1].text.strip()
                             team_a = team_mapping[team_a]
                             team_b = team_mapping[team_b]
-                            map_dict = eco_rounds_dict.setdefault(map, {})
                         else:
                             stats = td.find_all("div")
                             round = stats[0].text.strip()
@@ -381,141 +386,39 @@ for tournament_name, cards in matches_cards.items():
                             else:
                                 team_a_outcome = "Lost"
                                 team_b_outcome = "Win"
-                            map_dict[f"Round {round}"] = {team_a: {"Credits": team_a_bank, "Eco Type": team_a_eco_type, "Outcome": team_a_outcome}
-                                                                    , team_b: {"Credits": team_b_bank, "Eco Type": team_b_eco_type, "Outcome": team_b_outcome}}
+                            eco_rounds_df.loc[len(eco_rounds_df)] = [tournament_name, stage_name, match_type_name, map, round, team_a, team_a_bank, team_a_eco_type, team_a_outcome]
+                            eco_rounds_df.loc[len(eco_rounds_df)] = [tournament_name, stage_name, match_type_name, map, round, team_b, team_b_bank, team_b_eco_type, team_b_outcome]
+                        
             else:
-                print(tournament, stage_name, match_type_name, match_name, "does not contain any data under their economy page")
-    # break
+                print(tournament_name, stage_name, match_type_name, match_name, "does not contain any data under their economy page")
     time.sleep(0.1)
 
 end_time = time.time()
 
 print(f"Datascraping time: {end_time - start_time} seconds")
 
-print(matches_stats["Valorant Champions 2023"].keys())
 
 start_time = time.time()
 
 sides = ["all", "attack", "defend"]
 
-with open("scores.csv", "w", newline="") as scores_file, open("draft_phase.csv", "w", newline="") as draft_phase_file, \
-     open("overview.csv", "w", newline="") as overview_file, open("kills.csv", "w", newline="") as kills_file, \
-     open("kills_stats.csv", "w", newline="") as kills_stats_file, open("rounds_kills_stats.csv", "w", newline="") as rounds_kills_stats_file, \
-     open("eco_stats.csv", "w", newline="") as eco_stats_file, open("eco_rounds.csv", "w", newline="") as eco_rounds_file:
-    scores_writer = csv.writer(scores_file)
-    draft_phase_writer = csv.writer(draft_phase_file)
-    overview_writer = csv.writer(overview_file)
-    kills_writer = csv.writer(kills_file)
-    kills_stats_writer = csv.writer(kills_stats_file)
-    rounds_kill_stats_writer = csv.writer(rounds_kills_stats_file)
-    eco_stats_writer = csv.writer(eco_stats_file)
-    eco_rounds_writer = csv.writer(eco_rounds_file)
-    scores_writer.writerow(["Tournament", "Stage", "Match Type", "Winner", "Loser", "Winner's Score", "Loser's Score"])
-    draft_phase_writer.writerow(["Tournament", "Stage", "Match Type", "Team", "Action", "Map"])
-    overview_writer.writerow(["Tournament", "Stage", "Match Type", "Player", "Team", "Agents", "Rating", "Average Combat Score",
-                     "Kills", "Deaths", "Assists", "Kill - Deaths (KD)", "Kill, Assist, Trade, Survive %", "Average Damage per Round",
-                     "Headshot %", "First Kills", "First Deaths", "Kills - Deaths (FKD)", "Side"])
-    kills_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Player's Team", "Player", "Enemy's Team",
-                        "Enemy", "Player Kills", "Enemy Kills", "Difference", "Kill Type"])
-    kills_stats_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Team", "Player", "Agent", "2K", "3k", "4k", "5k", "1v1",
-                                 "1v2", "1v3", "1v4", "1v5", "Econ", "Spike Plants", "Spike Defuse"])
-    rounds_kill_stats_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Round Number", "Eliminator's Team", "Eliminator", "Eliminator's Agent",
-                                    "Eliminated Team", "Eliminated", "Eliminated's Agent", "Kill Type"])
-    eco_stats_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Team", "Type", "Initiated", "Won"])
-    eco_rounds_writer.writerow(["Tournament", "Stage", "Match Type", "Map", "Round Number", "Team", "Credits", "Type", "Outcome"])
-    for tournament_name, stage in matches_stats.items():
-        for stage_name, match_type in stage.items():
-            for match_type_name, match in match_type.items():
-                for match_name, values in match.items():
-                    winner, loser= values["Winner"], values["Loser"]
-                    winner_score, loser_score = values["Score"].values()
-                    scores_writer.writerow([tournament_name, stage_name, match_type_name, winner, loser, winner_score, loser_score])
-                    overview = values["Overview"]
-                    
-                    try:
-                        draft_phase = values["Draft Phase"]
+# print(scores_df)
+# print(draft_phase_df)
+# print(overview_df)
+# print(kills_df)
+# print(kills_stats_df)
+# print(rounds_kills_df)
+# print(eco_stats_df)
+# print(eco_rounds_df)
 
-                        for action_name, teams in draft_phase.items():
-                            for team_name, maps in teams.items():
-                                for map_name in maps:
-                                    draft_phase_writer.writerow([tournament_name, stage_name, match_type_name, team_name, action_name, map_name])
-                    except:
-                        pass
-
-                    for map, team in overview.items():
-                        for team_name, player in team.items():
-                            for player_name, data in player.items():
-                                agents = data["agents"]
-                                rating = data["Rating"]
-                                acs = data["Average Combat Score"]
-                                kills = data["Kills"]
-                                deaths = data["Deaths"]
-                                assists = data["Assists"]
-                                kills_deaths_fd = data["Kills - Deaths (KD)"]
-                                kats = data["Kill, Assist, Trade, Survive %"]
-                                adr = data["Average Damage per Round"]
-                                headshot = data["Headshot %"]
-                                first_kills = data["First Kills"]
-                                first_deaths = data["First Deaths"]
-                                kills_deaths_fkd = data["Kills - Deaths (FKD)"]
-                                for side in sides:
-                                    overview_writer.writerow([tournament_name, stage_name, match_type_name, player_name, team_name, agents, rating[side],
-                                                     acs[side], kills[side], deaths[side], assists[side], kills_deaths_fd[side],
-                                                     kats[side], adr[side], headshot[side], first_kills[side], first_deaths[side],
-                                                     kills_deaths_fkd[side], side])
-
-
-                    try:
-                        kills = {"All Kills": values["Performance"]["All Kills"],
-                                "First Kills": values["Performance"]["First Kills"],
-                                "Op Kills": values["Performance"]["Op Kills"]}
-                        kills_stats = values["Performance"]["Kill Stats"]
-                        for kill_name, map in kills.items():
-                            for map_name, team_a, in map.items():
-                                for team_a_name, player_a in team_a.items():
-                                    for player_a_name, team_b in player_a.items():
-                                        for team_b_name, player_b in team_b.items():
-                                            for player_b_name, stats in player_b.items():
-                                                kills_writer.writerow([tournament_name, stage_name, match_type_name, map_name, team_a_name, player_a_name, team_b_name, player_b_name,
-                                                                stats["Player's Kills"], stats["Enemy's Kills"], stats["Difference"], kill_name])
-
-                        for map_name, team in kills_stats.items():
-                            for team_name, player in team.items():
-                                for player_name, stats in player.items():
-                                        if map_name == "All Maps":
-                                            kills_stats_writer.writerow([tournament_name, stage_name, match_type_name, map_name, team_name, player_name] +  list(stats.values()))
-                                        else:
-                                            for stat_name, value in stats.items():
-                                                if isinstance(value, dict):
-                                                    for rounds, round in value.items():
-                                                        for round_number, players_b in round.items():
-                                                            for player_b_name, information in players_b.items():
-                                                                rounds_kill_stats_writer.writerow([tournament_name, stage_name, match_type_name, map_name, round_number,
-                                                                                            team_name, player_name, stats["agent"], information["team"], player_b_name, information["agent"], stat_name])
-                                                    kill_occurence = len(value[rounds])
-                                                    stats[stat_name] = kill_occurence
-                                            kills_stats_writer.writerow([tournament_name, stage_name, match_type_name, map_name, team_name, player_name] +  list(stats.values()))
-
-                    except:
-                        pass
-                            
-
-                    try:
-                        eco_stats = values["Economy"]["Eco Stats"]
-                        eco_rounds = values["Economy"]["Eco Rounds"]
-
-
-                        for map_name, teams in eco_stats.items():
-                            for team_name, eco in teams.items():
-                                for eco_type, value in eco.items():
-                                    eco_stats_writer.writerow([tournament_name, stage_name, match_type_name, map_name, team_name, eco_type] + list(value.values()))
-
-                        for map_name, rounds in eco_rounds.items():
-                            for round_number, teams in rounds.items():
-                                for team_name, stats in teams.items():
-                                    eco_rounds_writer.writerow([tournament_name, stage_name, match_type_name, map_name, round_number, team_name] + list(stats.values()))
-                    except:
-                        pass
+scores_df.to_csv("scores.csv", encoding="utf-8", index=False)
+draft_phase_df.to_csv("draft_phase.csv", encoding="utf-8", index=False)
+overview_df.to_csv("overview.csv", encoding="utf-8", index=False)
+kills_df.to_csv("kills.csv", encoding="utf-8", index=False)
+kills_stats_df.to_csv("kills_stats.csv", encoding="utf-8", index=False)
+rounds_kills_df.to_csv("rounds_kills.csv", encoding="utf-8", index=False)
+eco_stats_df.to_csv("eco_stats.csv", encoding="utf-8", index=False)
+eco_rounds_df.to_csv("eco_rounds.csv", encoding="utf-8", index=False)
 
 
 end_time = time.time()
