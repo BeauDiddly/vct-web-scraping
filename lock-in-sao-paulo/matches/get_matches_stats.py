@@ -180,7 +180,7 @@ async def scraping_data(tournament_name, cards, session):
                                     all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
                                     stat_name = overview_stats_titles[index % len(overview_stats_titles)]
                                     if not all_stat and not attack_stat and not defend_stat:
-                                        all_stat, attack_stat, defend_stat = "-1", "-1", "-1"
+                                        all_stat, attack_stat, defend_stat = pd.NA, pd.NA, pd.NA
                                     # values[0].append(all_stat)
                                     # values[1].append(attack_stat)
                                     # values[2].append(defend_stat)
@@ -192,7 +192,7 @@ async def scraping_data(tournament_name, cards, session):
                                     # values[0].append(all_stat)
                                     # values[1].append(-1)
                                     # values[2].append(-1)
-                                    player_dict[stat_name] = {"both": all_stat, "attack": "-1", "defend": "-1"}
+                                    player_dict[stat_name] = {"both": all_stat, "attack": pd.NA, "defend": pd.NA}
                             elif class_name == "mod-stat mod-vlr-deaths":
                                 stats = td.find("span").find_all("span")[1].find_all("span")
                                 if len(stats) == 3:
@@ -207,7 +207,7 @@ async def scraping_data(tournament_name, cards, session):
                                     all_stat = stats[0]
                                     all_stat = all_stat.text.strip()
                                     stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                                    player_dict[stat_name] = {"both": all_stat, "attack": "-1", "defend": "-1"}
+                                    player_dict[stat_name] = {"both": all_stat, "attack": pd.NA, "defend": pd.NA}
                                     # values[0].append(all_stat)
                                     # values[1].append(-1)
                                     # values[2].append(-1)
@@ -309,7 +309,7 @@ async def scraping_data(tournament_name, cards, session):
                                 player_a_kills, player_b_kills, difference = kills_div[0].text.strip(), kills_div[1].text.strip(), kills_div[2].text.strip()
                                 player_b = team_b_players[team_b_player_index]
                                 if not player_a_kills and not player_b_kills and not difference:
-                                    player_a_kills, player_b_kills, difference = "-1", "-1" , "-1"
+                                    player_a_kills, player_b_kills, difference = pd.NA, pd.NA, pd.NA
                                 result["kills"].append([tournament_name, stage_name, match_type_name, map, team, player,
                                                          team_b, player_b, player_a_kills, player_b_kills, difference,
                                                          kill_name])
@@ -383,7 +383,7 @@ async def scraping_data(tournament_name, cards, session):
                                 stat = td.text.strip()
                                 stat_name = performance_stats_title[index % len(performance_stats_title)]
                                 if not stat:
-                                    stat = "-1"
+                                    stat = pd.NA
                                 values.append(stat)
                         result["kills_stats"].append(values)
                         # kills_df = pd.DataFrame([values],
@@ -453,7 +453,7 @@ async def scraping_data(tournament_name, cards, session):
                             if len(stats) > 1:
                                 initiated, won = stats[0], stats[1]
                             else:
-                                initiated, won = "-1", stats[0]
+                                initiated, won = pd.NA, stats[0]
                             stat_name = economy_stats_title[index % len(economy_stats_title)]
                             result["eco_stats"].append([tournament_name, stage_name, match_type_name,
                                                          map, team, stat_name, initiated, won])
