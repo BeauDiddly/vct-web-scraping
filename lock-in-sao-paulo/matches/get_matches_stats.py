@@ -39,6 +39,7 @@ async def fetch(url, session):
 
 async def scraping_data(tournament_name, cards, session):
     result = {"scores": [],
+              "maps_scores": [],
               "draft_phase": [],
               "overview": [],
               "kills": [],
@@ -103,6 +104,8 @@ async def scraping_data(tournament_name, cards, session):
 
             team_b_abbriev = overview_tables[1].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
 
+            maps_headers = match_soup.find_all("div", class_="vm-stats-game-header")
+
             if team_a not in team_mapping:
                 team_mapping[team_a_abbriev] = team_a
             
@@ -136,6 +139,41 @@ async def scraping_data(tournament_name, cards, session):
                     print(f"For {tournament_name}, {stage_name}, {match_type_name}, {match_name}, its notes regarding the draft phase is empty")
             except IndexError:
                 print(f"For {tournament_name}, {stage_name}, {match_type_name}, {match_name}, its notes regarding the draft phase is empty")
+            
+            for header in maps_headers:
+                left_team_header, map_header, right_team_header = header.find_all(recursive=False)
+                lt_score = left_team_header.find("div", class_="score").text.strip()
+                lt_rounds_scores = left_team_header.find_all("span")
+                map_info = map_header.text.strip().split()
+                rt_score = right_team_header.find("div", class_="score").text.strip()
+                rt_rounds_scores = right_team_header.find_all("span")
+                map = map_info[0]
+
+                lt_attacker_score, lt_defender_score = lt_rounds_scores[0].text.strip(), lt_rounds_scores[1].text.strip()
+                rt_attacker_score, rt_defender_score = rt_rounds_scores[1].text.strip(), rt_rounds_scores[0].text.strip()
+                try:
+                    lt_overtime_score = lt_rounds_scores[2].text.strip()
+                except IndexError:
+                    lt_overtime_score = pd.NA
+                try:
+                    rt_overtime_score = rt_rounds_scores[2].text.strip()
+                except:
+                    rt_overtime_score = pd.NA
+                try:
+                    duration = map_info[2]
+                except IndexError:
+                    duration = pd.NA                
+
+
+                result["maps_scores"].append([tournament_name, stage_name, match_type_name,
+                                              map, team_a, lt_score, lt_attacker_score,
+                                              lt_defender_score, lt_overtime_score,team_b,
+                                              rt_score, rt_attacker_score, rt_defender_score,
+                                              rt_overtime_score, duration])
+
+
+                
+
             overview_dict = {}
             for index, stats in enumerate(overview_stats):
                 id = stats.get("data-game-id")
@@ -600,6 +638,7 @@ async def main():
 
         for result in results:
             scores = result["scores"]
+            maps_scores = result["maps_scores"]
             draft_phase = result["draft_phase"]
             overview = result["overview"]
             kills = result["kills"]
@@ -609,6 +648,11 @@ async def main():
             eco_rounds = result["eco_rounds"]
             dataframes["scores"] = pd.DataFrame(scores,
                                                 columns=["Tournament", "Stage", "Match Type", "Winner", "Loser", "Winner's Score", "Loser's Score"])
+            dataframes["maps_scores"] = pd.DataFrame(maps_scores,
+                                                     columns=["Tournament", "Stage", "Match Type", "Map", "Team A", "Team A's Score",
+                                                               "Team A's Attack Score", "Team A's Defender Score", "Team A's Overtime Score",
+                                                               "Team B", "Team B's Score", "Team B's Attack Score", "Team B' Defender Score",
+                                                               "Team B's Overtime Score", "Duration"])
             dataframes["draft_phase"] = pd.DataFrame(draft_phase,
                                                      columns=["Tournament", "Stage", "Match Type", "Team", "Action", "Map"])
             dataframes["overview"] = pd.DataFrame(overview,
@@ -635,7 +679,6 @@ async def main():
             dataframes["eco_rounds"] = pd.DataFrame(eco_rounds,
                                                     columns=["Tournament", "Stage", "Match Type", "Map", "Round Number", "Team", "Credits", "Type", "Outcome"])
         for file_name, dataframe in dataframes.items():
-            print(dataframe)
             dataframe.to_csv(f"{file_name}.csv", encoding="utf-8", index=False)
 
         
