@@ -1,14 +1,14 @@
 import requests
-from bs4 import BeautifulSoup, Tag, NavigableString, Comment
+from bs4 import BeautifulSoup
 import re
 import time
-from WebScraper.fetch import fetch
+from WebScraper import fetch, retrieve_urls
 from datetime import datetime
 import pandas as pd
 import asyncio
 import aiohttp
 import sys
-from MaxReentriesReached.MaxReentriesReached import MaxReentriesReached
+from MaxReentriesReached.max_reentries_reached import MaxReentriesReached
 
 overview_stats_titles = ["", "", "Rating", "Average Combat Score", "Kills", "Deaths", "Assists", "Kills - Deaths (KD)",
                         "Kill, Assist, Trade, Survive %", "Average Damage per Round", "Headshot %", "First Kills",
@@ -426,19 +426,20 @@ async def main():
 
     tournament_cards = soup.find_all("a", class_="wf-card mod-flex event-item")
 
+    retrieve_urls(urls, tournament_cards, "/event/", "/event/matches/")
 
-    for card in tournament_cards:
-        href = card.get("href")
-        matches_url = "https://www.vlr.gg" + href.replace("/event/", "/event/matches/")
-        tournament = card.find("div", class_="event-item-title").text.strip().split(": ")
-        if len(tournament) == 2:
-            tournament_name = tournament[1]
-        else:
-            tournament_name = tournament[0]
-        if tournament_name == "LOCK//IN São Paulo":
-            tournament_name = "Lock-In Sao Paulo"
+    # for card in tournament_cards:
+    #     href = card.get("href")
+    #     matches_url = "https://www.vlr.gg" + href.replace("/event/", "/event/matches/")
+    #     tournament = card.find("div", class_="event-item-title").text.strip().split(": ")
+    #     if len(tournament) == 2:
+    #         tournament_name = tournament[1]
+    #     else:
+    #         tournament_name = tournament[0]
+    #     if tournament_name == "LOCK//IN São Paulo":
+    #         tournament_name = "Lock-In Sao Paulo"
 
-        urls[tournament_name] = matches_url
+    #     urls[tournament_name] = matches_url
 
     matches_cards = {}
 

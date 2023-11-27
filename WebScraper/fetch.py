@@ -1,5 +1,5 @@
 import asyncio
-from MaxReentriesReached.MaxReentriesReached import MaxReentriesReached
+from MaxReentriesReached.max_reentries_reached import MaxReentriesReached
 
 async def fetch(url, session):
     max_retries = 3
@@ -14,3 +14,4 @@ async def fetch(url, session):
     else:
         # print(f"Max retries reached for URL: {url}")
         raise MaxReentriesReached(f"Max retries reached for URL: {url}")
+    
