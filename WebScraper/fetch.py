@@ -73,6 +73,8 @@ async def scraping_matches_data(tournament_name, cards, session):
         match_type_name, stage_name = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
         match_type_name = match_type_name.strip("\t")
         stage_name = stage_name.strip("\t")
+        if tournament_name != "Pacific League":
+            break
         if match_type_name == "Showmatch":
             continue
         else:
@@ -93,7 +95,7 @@ async def scraping_matches_data(tournament_name, cards, session):
 
             match_name = f"{team_a} vs {team_b}"
 
-            result["scores"].append([tournament_name, stage_name, match_type_name, winner,loser, winner_score, loser_score])
+            result["scores"].append([tournament_name, stage_name, match_type_name, match_name, winner,loser, winner_score, loser_score])
             print("Starting collecting for ",tournament_name, stage_name, match_type_name, match_name)
             url = module.get("href")
             try:
@@ -139,7 +141,7 @@ async def scraping_matches_data(tournament_name, cards, session):
                         if "ban" in note or "pick" in note:
                             team, action, map = note.split()
                             team = team_mapping[team]
-                            result["draft_phase"].append([tournament_name, stage_name, match_type_name, team, action, map])
+                            result["draft_phase"].append([tournament_name, stage_name, match_type_name, match_name, team, action, map])
                         
                 else:
                     print(f"For {tournament_name}, {stage_name}, {match_type_name}, {match_name}, its notes regarding the draft phase is empty")
@@ -171,7 +173,7 @@ async def scraping_matches_data(tournament_name, cards, session):
                     duration = pd.NA                
 
 
-                result["maps_scores"].append([tournament_name, stage_name, match_type_name,
+                result["maps_scores"].append([tournament_name, stage_name, match_type_name, match_name,
                                               map, team_a, lt_score, lt_attacker_score,
                                               lt_defender_score, lt_overtime_score,team_b,
                                               rt_score, rt_attacker_score, rt_defender_score,
@@ -252,7 +254,7 @@ async def scraping_matches_data(tournament_name, cards, session):
                             first_deaths = data["First Deaths"]
                             kills_deaths_fkd = data["Kills - Deaths (FKD)"]
                             for side in sides:
-                                result["overview"].append([tournament_name, stage_name, match_type_name, map_name, player_name, team_name, agents, rating[side],
+                                result["overview"].append([tournament_name, stage_name, match_type_name, match_name, map_name, player_name, team_name, agents, rating[side],
                                                      acs[side], kills[side], deaths[side], assists[side], kills_deaths_fd[side],
                                                      kats[side], adr[side], headshot[side], first_kills[side], first_deaths[side],
                                                      kills_deaths_fkd[side], side])
@@ -312,14 +314,14 @@ async def scraping_matches_data(tournament_name, cards, session):
                                 player_b = team_b_players[team_b_player_index]
                                 if not player_a_kills and not player_b_kills and not difference:
                                     player_a_kills, player_b_kills, difference = pd.NA, pd.NA, pd.NA
-                                result["kills"].append([tournament_name, stage_name, match_type_name, map, team, player,
+                                result["kills"].append([tournament_name, stage_name, match_type_name, match_name, map, team, player,
                                                          team_b, player_b, player_a_kills, player_b_kills, difference,
                                                          kill_name])
                                
                 for id, tds_lists in players_kills.items():
                     map = maps_id[id]
                     for tds in tds_lists:
-                        values = [tournament_name, stage_name, match_type_name, map]
+                        values = [tournament_name, stage_name, match_type_name, match_name, map]
                         for index, td in enumerate(tds):
                             img = td.find("img")
                             if img != None:
@@ -349,7 +351,7 @@ async def scraping_matches_data(tournament_name, cards, session):
                                                 agent = re.search(r'/(\w+)\.png', src).group(1)
                                                 victim = div.text.strip()
                                                 team = team_a_lookup.get(victim) or team_b_lookup.get(victim)
-                                                result["rounds_kills"].append([tournament_name, stage_name, match_type_name, map, round_stat,
+                                                result["rounds_kills"].append([tournament_name, stage_name, match_type_name, match_name, map, round_stat,
                                                                                 team, player, agent, team, victim, agent, stat_name])
                             else:
                                 stat = td.text.strip()
@@ -413,7 +415,7 @@ async def scraping_matches_data(tournament_name, cards, session):
                             else:
                                 initiated, won = pd.NA, stats[0]
                             stat_name = economy_stats_title[index % len(economy_stats_title)]
-                            result["eco_stats"].append([tournament_name, stage_name, match_type_name,
+                            result["eco_stats"].append([tournament_name, stage_name, match_type_name, match_name,
                                                          map, team, stat_name, initiated, won])
                 for id, td_list in eco_rounds_stats.items():
                     map = maps_id[id]
@@ -436,9 +438,9 @@ async def scraping_matches_data(tournament_name, cards, session):
                             else:
                                 team_a_outcome = "Lost"
                                 team_b_outcome = "Win"
-                            result["eco_rounds"].append([tournament_name, stage_name, match_type_name, map,
+                            result["eco_rounds"].append([tournament_name, stage_name, match_type_name, match_name, map,
                                                         round, team_a, team_a_bank, team_a_eco_type, team_a_outcome])
-                            result["eco_rounds"].append([tournament_name, stage_name, match_type_name, map,
+                            result["eco_rounds"].append([tournament_name, stage_name, match_type_name, match_name, map,
                                                         round, team_b, team_b_bank, team_b_eco_type, team_b_outcome])
                         
                         

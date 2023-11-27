@@ -67,37 +67,37 @@ async def main():
 
 
     dataframes["scores"] = pd.DataFrame(all_results["scores"],
-                                        columns=["Tournament", "Stage", "Match Type", "Winner", "Loser", "Winner's Score", "Loser's Score"])
+                                        columns=["Tournament", "Stage", "Match Type", "Match Name", "Winner", "Loser", "Winner's Score", "Loser's Score"])
     dataframes["maps_scores"] = pd.DataFrame(all_results["maps_scores"],
-                                                columns=["Tournament", "Stage", "Match Type", "Map", "Team A", "Team A's Score",
+                                                columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team A", "Team A's Score",
                                                         "Team A's Attack Score", "Team A's Defender Score", "Team A's Overtime Score",
                                                         "Team B", "Team B's Score", "Team B's Attack Score", "Team B' Defender Score",
                                                         "Team B's Overtime Score", "Duration"])
     dataframes["draft_phase"] = pd.DataFrame(all_results["draft_phase"],
-                                                columns=["Tournament", "Stage", "Match Type", "Team", "Action", "Map"])
+                                                columns=["Tournament", "Stage", "Match Type", "Match Name", "Team", "Action", "Map"])
     dataframes["overview"] = pd.DataFrame(all_results["overview"],
-                                            columns=["Tournament", "Stage", "Match Type", "Map", "Player", "Team",
+                                            columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Player", "Team",
                                                     "Agents", "Rating", "Average Combat Score", "Kills", "Deaths",
                                                     "Assists", "Kill - Deaths (KD)", "Kill, Assist, Trade, Survive %",
                                                     "Average Damage per Round", "Headshot %", "First Kills", "First Deaths",
                                                     "Kills - Deaths (FKD)", "Side"])
     dataframes["kills"] = pd.DataFrame(all_results["kills"],
-                                        columns=["Tournament", "Stage", "Match Type", "Map", "Player's Team",
+                                        columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Player's Team",
                                                 "Player", "Enemy's Team", "Enemy", "Player's Kills", "Enemy's Kills",
                                                 "Difference", "Kill Type"])
     dataframes["kills_stats"] = pd.DataFrame(all_results["kills_stats"],
-                                                columns=["Tournament", "Stage", "Match Type", "Map", "Team",
+                                                columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team",
                                                         "Player", "Agent", "2K", "3k", "4k", "5k", "1v1",
                                                         "1v2", "1v3", "1v4", "1v5", "Econ", "Spike Plants",
                                                         "Spike Defuse"])
     dataframes["rounds_kills"] = pd.DataFrame(all_results["rounds_kills"],
-                                                columns=["Tournament", "Stage", "Match Type", "Map", "Round Number",
+                                                columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Round Number",
                                                         "Eliminator's Team", "Eliminator", "Eliminator's Agent", 
                                                         "Eliminated Team", "Eliminated", "Eliminated's Agent", "Kill Type"])
     dataframes["eco_stats"] = pd.DataFrame(all_results["eco_stats"],
-                                            columns=["Tournament", "Stage", "Match Type", "Map", "Team", "Type", "Initiated", "Won"])
+                                            columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team", "Type", "Initiated", "Won"])
     dataframes["eco_rounds"] = pd.DataFrame(all_results["eco_rounds"],
-                                            columns=["Tournament", "Stage", "Match Type", "Map", "Round Number", "Team", "Credits", "Type", "Outcome"])
+                                            columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Round Number", "Team", "Credits", "Type", "Outcome"])
 
         
     end_time = time.time()
