@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import time
-from WebScraper import retrieve_urls
+from WebScraper.retrieve_urls import retrieve_urls
 from datetime import datetime
 import pandas as pd
 import asyncio
@@ -112,7 +112,7 @@ async def main():
     start_time = time.time()
 
     for file_name, dataframe in dataframes.items():
-        dataframe.to_csv(f"{file_name}.csv", encoding="utf-8", index=False)
+        dataframe.to_csv(f"matches/{file_name}.csv", encoding="utf-8", index=False)
 
     end_time = time.time()
 
