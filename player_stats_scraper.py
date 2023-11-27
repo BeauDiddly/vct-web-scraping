@@ -165,6 +165,4 @@ with open("players_stats.csv", "w", newline="") as players_stats_file:
 
 
 
-#only on all agents. Need to get on idnividual agents
-
                     
