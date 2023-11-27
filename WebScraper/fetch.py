@@ -60,6 +60,7 @@ async def generate_urls_combination(tournament_name, url, stages_filter, session
 
 async def scraping_matches_data(tournament_name, cards, session):
     result = {"scores": [],
+              "maps_played": [],
               "maps_scores": [],
               "draft_phase": [],
               "overview": [],
@@ -109,14 +110,16 @@ async def scraping_matches_data(tournament_name, cards, session):
             
             maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
             for div in maps_id_divs:
-                if div.get("data-game-id"):
+                if div.get("data-game-id") and div.get("data-disabled") == "0":
                     id = div.get("data-game-id")
-                else:
-                    id = ""
-                map = re.sub(r"\d+|\t|\n", "", div.text.strip())
-                maps_id[id] = map
+                    map = re.sub(r"\d+|\t|\n", "", div.text.strip())
+                    maps_id[id] = map
 
-            
+            for id, map in maps_id.items():
+                if map != "All Maps":
+                    result["maps_played"].append([tournament_name, stage_name, match_type_name, match_name, map])
+
+
             overview_stats = match_soup.find_all("div", class_="vm-stats-game")
 
             overview_tables = overview_stats[0].find_all("table")
@@ -180,7 +183,7 @@ async def scraping_matches_data(tournament_name, cards, session):
                                               rt_overtime_score, duration])
 
 
-                
+            
 
             overview_dict = {}
             for index, stats in enumerate(overview_stats):

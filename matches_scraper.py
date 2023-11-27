@@ -48,14 +48,15 @@ async def main():
 
     dataframes = {}
     all_results = {"scores": [],
-                "maps_scores": [],
-                "draft_phase": [],
-                "overview": [],
-                "kills": [],
-                "kills_stats": [],
-                "rounds_kills": [],
-                "eco_stats": [],
-                "eco_rounds": []}
+                   "maps_played": [],
+                   "maps_scores": [],
+                   "draft_phase": [],
+                   "overview": [],
+                   "kills": [],
+                   "kills_stats": [],
+                   "rounds_kills": [],
+                   "eco_stats": [],
+                   "eco_rounds": []}
 
     async with aiohttp.ClientSession() as session:
         tasks = [scraping_matches_data(tournament_name, cards, session) for tournament_name, cards in matches_cards.items()]
@@ -68,6 +69,8 @@ async def main():
 
     dataframes["scores"] = pd.DataFrame(all_results["scores"],
                                         columns=["Tournament", "Stage", "Match Type", "Match Name", "Winner", "Loser", "Winner's Score", "Loser's Score"])
+    dataframes["maps_played"] = pd.DataFrame(all_results["maps_played"],
+                                             columns=["Tournament", "Stage", "Match Type", "Match Name", "Map"])
     dataframes["maps_scores"] = pd.DataFrame(all_results["maps_scores"],
                                                 columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team A", "Team A's Score",
                                                         "Team A's Attack Score", "Team A's Defender Score", "Team A's Overtime Score",
