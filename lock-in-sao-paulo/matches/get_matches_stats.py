@@ -8,7 +8,11 @@ from datetime import datetime
 import pandas as pd
 import asyncio
 import aiohttp
+import sys
 
+
+class MaxRentriesReached(Exception):
+    pass
 
 overview_stats_titles = ["", "", "Rating", "Average Combat Score", "Kills", "Deaths", "Assists", "Kills - Deaths (KD)",
                         "Kill, Assist, Trade, Survive %", "Average Damage per Round", "Headshot %", "First Kills",
@@ -20,8 +24,18 @@ specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
 eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", "$$$": "Full buy: 20k+"}
 
 async def fetch(url, session):
-    async with session.get(url, timeout=10) as response:
-        return await response.text()
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            async with session.get(url, timeout=30) as response:
+                if response.status == 200:
+                    return await response.text()
+        except asyncio.TimeoutError:
+            print(f"Timeout error for URL: {url}, retrying.....")
+        await asyncio.sleep(2 ** attempt)
+    else:
+        # print(f"Max retries reached for URL: {url}")
+        raise MaxRentriesReached(f"Max retries reached for URL: {url}")
 
 async def scraping_data(tournament_name, cards, session):
     result = {"scores": [],
@@ -59,10 +73,13 @@ async def scraping_data(tournament_name, cards, session):
             match_name = f"{team_a} vs {team_b}"
 
             result["scores"].append([tournament_name, stage_name, match_type_name, winner,loser, winner_score, loser_score])
-            await asyncio.sleep(.5)
             print("Starting collecting for ",tournament_name, stage_name, match_type_name, match_name)
             url = module.get("href")
-            match_page = await fetch(f'https://vlr.gg{url}', session)
+            try:
+                match_page = await fetch(f'https://vlr.gg{url}', session)
+            except MaxRentriesReached as e:
+                print(f"Error: {e}")
+                sys.exit(1)
             match_soup = BeautifulSoup(match_page, "html.parser")
 
             maps_id = {}
@@ -218,9 +235,11 @@ async def scraping_data(tournament_name, cards, session):
                                                      acs[side], kills[side], deaths[side], assists[side], kills_deaths_fd[side],
                                                      kats[side], adr[side], headshot[side], first_kills[side], first_deaths[side],
                                                      kills_deaths_fkd[side], side])
-
-            await asyncio.sleep(.5)
-            performance_page = await fetch(f'https://vlr.gg{url}/?game=all&tab=performance', session)
+            try:
+                performance_page = await fetch(f'https://vlr.gg{url}/?game=all&tab=performance', session)
+            except MaxRentriesReached as e:
+                print(f"Error: {e}")
+                sys.exit(1)
             performance_soup = BeautifulSoup(performance_page, "html.parser")
             performance_stats_div = performance_soup.find_all("div", class_="vm-stats-game")
 
@@ -322,9 +341,11 @@ async def scraping_data(tournament_name, cards, session):
             except Exception as e:
                 print(e)
                 print(tournament_name, stage_name, match_type_name, match_name, "does not contain any data under their performance page. Either their page was empty or something went wrong during the scraping")
-
-            await asyncio.sleep(.5)
-            economy_page = await fetch(f'https://vlr.gg{url}/?game=all&tab=economy', session)
+            try:
+                economy_page = await fetch(f'https://vlr.gg{url}/?game=all&tab=economy', session)
+            except MaxRentriesReached as e:
+                print(f"Error: {e}")
+                sys.exit(1)
             economy_soup = BeautifulSoup(economy_page, "html.parser")
 
             economy_stats_div = economy_soup.find_all("div", class_="vm-stats-game")
@@ -402,7 +423,7 @@ async def scraping_data(tournament_name, cards, session):
                         
             else:
                 print(tournament_name, stage_name, match_type_name, match_name, "does not contain any data under their economy page")
-            return result
+    return result
 
 
 async def main():
@@ -451,72 +472,97 @@ async def main():
         matches_cards[tournament] = modules
 
     dataframes = {}
-        
+    all_results = {"scores": [],
+                "maps_scores": [],
+                "draft_phase": [],
+                "overview": [],
+                "kills": [],
+                "kills_stats": [],
+                "rounds_kills": [],
+                "eco_stats": [],
+                "eco_rounds": []}
+
+    # for key, value in matches_cards.items():
+    #     print(len(value))
     async with aiohttp.ClientSession() as session:
         tasks = [scraping_data(tournament_name, cards, session) for tournament_name, cards in matches_cards.items()]
         results = await asyncio.gather(*tasks)
 
-        for result in results:
-            scores = result["scores"]
-            maps_scores = result["maps_scores"]
-            draft_phase = result["draft_phase"]
-            overview = result["overview"]
-            kills = result["kills"]
-            kills_stats = result["kills_stats"]
-            rounds_kills = result["rounds_kills"]
-            eco_stats = result["eco_stats"]
-            eco_rounds = result["eco_rounds"]
-            dataframes["scores"] = pd.DataFrame(scores,
-                                                columns=["Tournament", "Stage", "Match Type", "Winner", "Loser", "Winner's Score", "Loser's Score"])
-            dataframes["maps_scores"] = pd.DataFrame(maps_scores,
-                                                     columns=["Tournament", "Stage", "Match Type", "Map", "Team A", "Team A's Score",
-                                                               "Team A's Attack Score", "Team A's Defender Score", "Team A's Overtime Score",
-                                                               "Team B", "Team B's Score", "Team B's Attack Score", "Team B' Defender Score",
-                                                               "Team B's Overtime Score", "Duration"])
-            dataframes["draft_phase"] = pd.DataFrame(draft_phase,
-                                                     columns=["Tournament", "Stage", "Match Type", "Team", "Action", "Map"])
-            dataframes["overview"] = pd.DataFrame(overview,
-                                                  columns=["Tournament", "Stage", "Match Type", "Map", "Player", "Team",
-                                                           "Agents", "Rating", "Average Combat Score", "Kills", "Deaths",
-                                                           "Assists", "Kill - Deaths (KD)", "Kill, Assist, Trade, Survive %",
-                                                           "Average Damage per Round", "Headshot %", "First Kills", "First Deaths",
-                                                            "Kills - Deaths (FKD)", "Side"])
-            dataframes["kills"] = pd.DataFrame(kills,
-                                               columns=["Tournament", "Stage", "Match Type", "Map", "Player's Team",
-                                                        "Player", "Enemy's Team", "Enemy", "Player's Kills", "Enemy's Kills",
-                                                        "Difference", "Kill Type"])
-            dataframes["kills_stats"] = pd.DataFrame(kills_stats,
-                                                     columns=["Tournament", "Stage", "Match Type", "Map", "Team",
-                                                              "Player", "Agent", "2K", "3k", "4k", "5k", "1v1",
-                                                              "1v2", "1v3", "1v4", "1v5", "Econ", "Spike Plants",
-                                                              "Spike Defuse"])
-            dataframes["rounds_kills"] = pd.DataFrame(rounds_kills,
-                                                      columns=["Tournament", "Stage", "Match Type", "Map", "Round Number",
-                                                               "Eliminator's Team", "Eliminator", "Eliminator's Agent", 
-                                                               "Eliminated Team", "Eliminated", "Eliminated's Agent", "Kill Type"])
-            dataframes["eco_stats"] = pd.DataFrame(eco_stats,
-                                                   columns=["Tournament", "Stage", "Match Type", "Map", "Team", "Type", "Initiated", "Won"])
-            dataframes["eco_rounds"] = pd.DataFrame(eco_rounds,
-                                                    columns=["Tournament", "Stage", "Match Type", "Map", "Round Number", "Team", "Credits", "Type", "Outcome"])
-        for file_name, dataframe in dataframes.items():
-            dataframe.to_csv(f"{file_name}.csv", encoding="utf-8", index=False)
+    for result in results:
+        for name, data in result.items():
+            all_results[name].extend(data)
+
+        # scores = result["scores"]
+        # maps_scores = result["maps_scores"]
+        # draft_phase = result["draft_phase"]
+        # overview = result["overview"]
+        # kills = result["kills"]
+        # kills_stats = result["kills_stats"]
+        # rounds_kills = result["rounds_kills"]
+        # eco_stats = result["eco_stats"]
+        # eco_rounds = result["eco_rounds"]
+
+        # all_results["scores"].extend(scores)
+
+    dataframes["scores"] = pd.DataFrame(all_results["scores"],
+                                        columns=["Tournament", "Stage", "Match Type", "Winner", "Loser", "Winner's Score", "Loser's Score"])
+    dataframes["maps_scores"] = pd.DataFrame(all_results["maps_scores"],
+                                                columns=["Tournament", "Stage", "Match Type", "Map", "Team A", "Team A's Score",
+                                                        "Team A's Attack Score", "Team A's Defender Score", "Team A's Overtime Score",
+                                                        "Team B", "Team B's Score", "Team B's Attack Score", "Team B' Defender Score",
+                                                        "Team B's Overtime Score", "Duration"])
+    dataframes["draft_phase"] = pd.DataFrame(all_results["draft_phase"],
+                                                columns=["Tournament", "Stage", "Match Type", "Team", "Action", "Map"])
+    dataframes["overview"] = pd.DataFrame(all_results["overview"],
+                                            columns=["Tournament", "Stage", "Match Type", "Map", "Player", "Team",
+                                                    "Agents", "Rating", "Average Combat Score", "Kills", "Deaths",
+                                                    "Assists", "Kill - Deaths (KD)", "Kill, Assist, Trade, Survive %",
+                                                    "Average Damage per Round", "Headshot %", "First Kills", "First Deaths",
+                                                    "Kills - Deaths (FKD)", "Side"])
+    dataframes["kills"] = pd.DataFrame(all_results["kills"],
+                                        columns=["Tournament", "Stage", "Match Type", "Map", "Player's Team",
+                                                "Player", "Enemy's Team", "Enemy", "Player's Kills", "Enemy's Kills",
+                                                "Difference", "Kill Type"])
+    dataframes["kills_stats"] = pd.DataFrame(all_results["kills_stats"],
+                                                columns=["Tournament", "Stage", "Match Type", "Map", "Team",
+                                                        "Player", "Agent", "2K", "3k", "4k", "5k", "1v1",
+                                                        "1v2", "1v3", "1v4", "1v5", "Econ", "Spike Plants",
+                                                        "Spike Defuse"])
+    dataframes["rounds_kills"] = pd.DataFrame(all_results["rounds_kills"],
+                                                columns=["Tournament", "Stage", "Match Type", "Map", "Round Number",
+                                                        "Eliminator's Team", "Eliminator", "Eliminator's Agent", 
+                                                        "Eliminated Team", "Eliminated", "Eliminated's Agent", "Kill Type"])
+    dataframes["eco_stats"] = pd.DataFrame(all_results["eco_stats"],
+                                            columns=["Tournament", "Stage", "Match Type", "Map", "Team", "Type", "Initiated", "Won"])
+    dataframes["eco_rounds"] = pd.DataFrame(all_results["eco_rounds"],
+                                            columns=["Tournament", "Stage", "Match Type", "Map", "Round Number", "Team", "Credits", "Type", "Outcome"])
 
         
     end_time = time.time()
+    elasped_time = end_time - start_time
 
-    print(f"Datascraping time: {end_time - start_time} seconds")
+    hours, remainder = divmod(elasped_time, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    print(f"Datascraping time: {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds")
 
 
     start_time = time.time()
 
-
-
+    for file_name, dataframe in dataframes.items():
+        dataframe.to_csv(f"{file_name}.csv", encoding="utf-8", index=False)
 
     end_time = time.time()
 
-    print(f"Data to CSV time: {end_time - start_time} seconds")
+    elasped_time = end_time - start_time
+
+    hours, remainder = divmod(elasped_time, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    print(f"Data to CSV time: {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds")
 
     now = datetime.now()
+
 
     current_time = now.strftime("%H:%M:%S")
     print("End Time =", current_time)
