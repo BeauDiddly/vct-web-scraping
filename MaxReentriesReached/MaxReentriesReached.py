@@ -1,0 +1,3 @@
+class MaxReentriesReached(Exception):
+    pass
+
