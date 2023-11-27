@@ -2,17 +2,13 @@ import requests
 from bs4 import BeautifulSoup, Tag, NavigableString, Comment
 import re
 import time
-import pprint
-import csv
+from WebScraper.fetch import fetch
 from datetime import datetime
 import pandas as pd
 import asyncio
 import aiohttp
 import sys
-
-
-class MaxRentriesReached(Exception):
-    pass
+from MaxReentriesReached.MaxReentriesReached import MaxReentriesReached
 
 overview_stats_titles = ["", "", "Rating", "Average Combat Score", "Kills", "Deaths", "Assists", "Kills - Deaths (KD)",
                         "Kill, Assist, Trade, Survive %", "Average Damage per Round", "Headshot %", "First Kills",
@@ -23,19 +19,7 @@ overview, performance, economy = "Overview", "Performance", "Economy"
 specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
 eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", "$$$": "Full buy: 20k+"}
 
-async def fetch(url, session):
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            async with session.get(url, timeout=30) as response:
-                if response.status == 200:
-                    return await response.text()
-        except asyncio.TimeoutError:
-            print(f"Timeout error for URL: {url}, retrying.....")
-        await asyncio.sleep(2 ** attempt)
-    else:
-        # print(f"Max retries reached for URL: {url}")
-        raise MaxRentriesReached(f"Max retries reached for URL: {url}")
+
 
 async def scraping_data(tournament_name, cards, session):
     result = {"scores": [],
@@ -77,7 +61,7 @@ async def scraping_data(tournament_name, cards, session):
             url = module.get("href")
             try:
                 match_page = await fetch(f'https://vlr.gg{url}', session)
-            except MaxRentriesReached as e:
+            except MaxReentriesReached as e:
                 print(f"Error: {e}")
                 sys.exit(1)
             match_soup = BeautifulSoup(match_page, "html.parser")
@@ -237,7 +221,7 @@ async def scraping_data(tournament_name, cards, session):
                                                      kills_deaths_fkd[side], side])
             try:
                 performance_page = await fetch(f'https://vlr.gg{url}/?game=all&tab=performance', session)
-            except MaxRentriesReached as e:
+            except MaxReentriesReached as e:
                 print(f"Error: {e}")
                 sys.exit(1)
             performance_soup = BeautifulSoup(performance_page, "html.parser")
@@ -343,7 +327,7 @@ async def scraping_data(tournament_name, cards, session):
                 print(tournament_name, stage_name, match_type_name, match_name, "does not contain any data under their performance page. Either their page was empty or something went wrong during the scraping")
             try:
                 economy_page = await fetch(f'https://vlr.gg{url}/?game=all&tab=economy', session)
-            except MaxRentriesReached as e:
+            except MaxReentriesReached as e:
                 print(f"Error: {e}")
                 sys.exit(1)
             economy_soup = BeautifulSoup(economy_page, "html.parser")
