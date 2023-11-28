@@ -58,6 +58,8 @@ async def main():
     
     dataframes = {}
 
+
+
     for result in results:
         for tournament_name, stages in result.items():
             for stage_name, match_types in stages.items():
@@ -75,18 +77,19 @@ async def main():
                             all_results["agents_pick_rates"].append([tournament_name, stage_name, match_type_name, map_name, agent_name, pick_rate])
                     
                     for map_name, teams in teams_pick_rates.items():
-                        for team_name, agents in teams.items():
+                        for team_name, info in teams.items():
+                            agents = info["Agents"]
+                            count = info["Total Maps Played"]
                             for agent in agents:
-                                all_results["teams_picked_agents"].append([tournament_name, stage_name, match_type_name, map_name, team_name, agent])
+                                all_results["teams_picked_agents"].append([tournament_name, stage_name, match_type_name, map_name, team_name, agent, count])
     
-    print(all_results["maps_stats"])
     dataframes["maps_stats"] = pd.DataFrame(all_results["maps_stats"],
                                            columns=["Tournament", "Stage", "Match Type", "Map", "Total Map Played",
                                                     "Attack Side Win Percentage", "Defender Side Win Percentage"])
     dataframes["agents_pick_rates"] = pd.DataFrame(all_results["agents_pick_rates"],
                                                    columns=["Tournament", "Stage", "Match Type", "Map", "Agent", "Pick Rate"])
     dataframes["teams_picked_agents"] = pd.DataFrame(all_results["teams_picked_agents"],
-                                                     columns=["Tournament", "Stage", "Match Type", "Map", "Team", "Agent Picked"])
+                                                     columns=["Tournament", "Stage", "Match Type", "Map", "Team", "Agent Picked", "Total Maps Played"])
 
     end_time = time.time()
     elasped_time = end_time - start_time
