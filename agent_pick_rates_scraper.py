@@ -77,19 +77,39 @@ async def main():
                             all_results["agents_pick_rates"].append([tournament_name, stage_name, match_type_name, map_name, agent_name, pick_rate])
                     
                     for map_name, teams in teams_pick_rates.items():
-                        for team_name, info in teams.items():
-                            agents = info["Agents"]
-                            count = info["Total Maps Played"]
-                            for agent in agents:
-                                all_results["teams_picked_agents"].append([tournament_name, stage_name, match_type_name, map_name, team_name, agent, count])
+                        for team_name, values in teams.items():
+                            total_maps = values["Total Maps Played"]
+                            if "won" in values:
+                                for agent, times_played in values["won"]:
+                                    all_results["teams_picked_agents"].append([])
     
+
     dataframes["maps_stats"] = pd.DataFrame(all_results["maps_stats"],
                                            columns=["Tournament", "Stage", "Match Type", "Map", "Total Map Played",
                                                     "Attack Side Win Percentage", "Defender Side Win Percentage"])
     dataframes["agents_pick_rates"] = pd.DataFrame(all_results["agents_pick_rates"],
                                                    columns=["Tournament", "Stage", "Match Type", "Map", "Agent", "Pick Rate"])
     dataframes["teams_picked_agents"] = pd.DataFrame(all_results["teams_picked_agents"],
-                                                     columns=["Tournament", "Stage", "Match Type", "Map", "Team", "Agent Picked", "Total Maps Played"])
+                                                     columns=["Tournament", "Stage", "Match Type", "Map", "Team", "Agent Picked",
+                                                            "Times Won", "Times Lost", "Total Maps Played"])
+    
+    # unique_df = dataframes["teams_picked_agents"].drop_duplicates(subset=["Tournament, Stage", "Match Type", "Team"])
+
+    # sum_df = unique_df.groupby(["Tournament", "Stage", "Match Type", "Team"])['Total Maps Played'].sum().reset_index(name='Total Matches Played')
+
+
+    # df = pd.merge(df, sum_df, on=["Tournament", "Stage", "Match Type", "Team"], how="left")
+
+    # df_grouped = dataframes["teams_picked_agents"].groupby(["Tournament", "Stage", "Match Type", "Team", "Agent Picked"])
+    # df_grouped["Overall Matches Played"] = df_grouped["Total Maps Played"].transform("sum")
+    # overall_sum = df_grouped["Total Maps Played"].sum().reset_index(name="Overall Matches Played")
+
+    # df = pd.merge(df, overall_sum, on=["Tournament", "S"])
+
+
+    # df_grouped.to_csv(f"agents/df_grouped.csv", encoding="utf-8", index=False)
+    # df.to_csv(f"agents/overall_sum.csv", encoding="utf-8", index=False)
+
 
     end_time = time.time()
     elasped_time = end_time - start_time

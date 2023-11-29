@@ -459,9 +459,15 @@ async def scraping_agents_data(tournament_name, stages, session):
     result = {}
     tournament_dict = result.setdefault(tournament_name, {})
     for stage_name, match_types in stages.items():
+        if tournament_name != "EMEA Last Chance Qualifier":
+            break
         stage_dict = tournament_dict.setdefault(stage_name, {})
+        total_by_stage_dict = stage_dict.setdefault("Total", {"Total Matches": {},
+                                                             "Total Outcomes": {}})
         for match_type_name, url in match_types.items():
             match_type_dict = stage_dict.setdefault(match_type_name, {})
+            total_by_match_type_dict = match_type_dict.setdefault("Total", {"Total Matches": {},
+                                                                            "Total Outcomes": {}})
             maps_stats_dict = match_type_dict.setdefault("Maps Stats", {})
             agents_pick_rates_dict = match_type_dict.setdefault("Agents Pick Rates", {})
             teams_pick_rates_dict = match_type_dict.setdefault("Teams Pick Rates", {})
@@ -511,6 +517,8 @@ async def scraping_agents_data(tournament_name, stages, session):
                 all_tr = table.find_all("tr")
                 logo, map = table.find("tr").find("th").text.replace("\t", "").split()
                 map_dict = teams_pick_rates_dict.setdefault(map, {})
+                total_by_map_dict = map_dict.setdefault("Total", {"Total Matches": {},
+                                                                  "Total Outcomes": {}})
                 teams_pick_rate_tr = table.find_all("tr")[1:]
                 for tr in teams_pick_rate_tr:
                     tr_class = tr.get("class")
@@ -521,18 +529,55 @@ async def scraping_agents_data(tournament_name, stages, session):
                         filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
                         contained_any_agents = any(td.has_attr('class') and ('mod-picked' in td['class']) for td in filtered_tds)
                         if contained_any_agents:
-                            for index, td in enumerate(filtered_tds):
-                                td_class = td.get("class") or ""
-                                a_tag = td.find("a")
-                                if a_tag and a_tag.find_all("img"):
-                                    team = a_tag.text.strip()
-                                    team_dict = map_dict.setdefault(team, {})
-                                    agents_dict = team_dict.setdefault("Agents", set())
-                                    team_dict["Total Maps Played"] = 0
-                                elif len(td_class) == 1:
-                                    agent = table_titles[index]
-                                    agents_dict.add(agent)
+                            a_tag = filtered_tds[0].find("a")
+                            team = a_tag.text.strip()
+                            # agents_dict = team_dict.setdefault("Agents", {})
+                    #         for index, td in enumerate(filtered_tds):
+                    #             td_class = td.get("class") or ""
+                    #             a_tag = td.find("a")
+                    #             if a_tag and a_tag.find_all("img"):
+                    #                 team = a_tag.text.strip()
+                    #                 team_dict = map_dict.setdefault(team, {})
+                    #                 agents_dict = team_dict.setdefault("Agents", {})
+                    #                 team_dict["Total Maps Played"] = 0
+                    #             elif len(td_class) == 1:
+                    #                 agent = table_titles[index]
+                    #                 agents_dict[agent] = agents_dict.get(agent, 0) + 1
                     elif "mod-dropdown" in class_name:
-                        team_dict["Total Maps Played"] += 1
+                        all_tds = tr.find_all("td")
+                        filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
+                        for index, td in enumerate(filtered_tds):
+                            td_class = td.get("class") or ""
+                            class_name = "".join(td_class)
+                            if class_name == "mod-loss" or class_name == "mod-win":
+                                outcome = class_name.split("-")[-1]
+                            elif class_name == "mod-picked-lite":
+                                agent = table_titles[index]
+                                
+                                team_dict = total_by_map_dict["Total Outcomes"].setdefault(team, {})
+                                agent_dict = team_dict.setdefault(agent, {"win": 0, "loss": 0})
+                                agent_dict[outcome] += 1
+
+                                team_dict = total_by_match_type_dict["Total Outcomes"].setdefault(team, {})
+                                agent_dict = team_dict.setdefault(agent, {"win": 0, "loss": 0})
+                                agent_dict[outcome] += 1
+
+                                team_dict = total_by_stage_dict["Total Outcomes"].setdefault(team, {})
+                                agent_dict = team_dict.setdefault(agent, {"win": 0, "loss": 0})
+                                agent_dict[outcome] += 1
+
+                                # agent_dict = team_dict.setdefault(agent, {"win": 0, "loss": 0})
+                                # agent_dict[outcome] += 1
+                                # total_maps_dict[team] = total_maps_dict.get(team, 0) + 1
+                                # total_matches_by_match_type_dict[team] = total_matches_by_match_type_dict.get(team, 0) + 1
+                                # total_matches_by_stage_dict[team] = total_matches_by_stage_dict.get(team, 0) + 1
+                                # total_matches_by_tournament_dict[team] = total_matches_by_tournament_dict.get(team, 0) + 1
+                                # outcome_dict = team_dict.setdefault(outcome, {})
+                                # outcome_dict[agent] = outcome_dict.get(agent, 0) + 1
+                        # team_dict["Total Maps Played"] += 1
+                        total_by_map_dict["Total Matches"][team] = total_by_map_dict["Total Matches"].get(team, 0) + 1
+                        total_by_match_type_dict["Total Matches"][team] = total_by_match_type_dict["Total Matches"].get(team, 0) + 1
+                        total_by_stage_dict["Total Matches"][team] = total_by_stage_dict["Total Matches"].get(team, 0) + 1
+    print(result)
                     
     return result
