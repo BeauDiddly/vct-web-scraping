@@ -458,16 +458,20 @@ async def scraping_agents_data(tournament_name, stages, session):
     pattern = r'/(\w+)\.png'
     result = {}
     tournament_dict = result.setdefault(tournament_name, {})
+    # total_matches_by_tournament_dict = result["Total Matches"].setdefault(tournament_name, {"Total Matches": 0})
+    # total_outcomes_by_tournament_dict = result["Total Outcomes"].setdefault(tournament_name, {"Total Outcomes": {}})
     for stage_name, match_types in stages.items():
-        if tournament_name != "EMEA Last Chance Qualifier":
-            break
         stage_dict = tournament_dict.setdefault(stage_name, {})
-        total_by_stage_dict = stage_dict.setdefault("Total", {"Total Matches": {},
-                                                             "Total Outcomes": {}})
+        # total_matches_by_stage_dict = total_matches_by_tournament_dict.setdefault(stage_name, {"Total Matches": 0})
+        # total_outcomes_by_stage_dict = total_outcomes_by_stage_dict.setdefault(stage_name, {"Total Outcomes": {}})
+        # total_by_stage_dict = stage_dict.setdefault("Total", {"Total Matches": {},
+        #                                                      "Total Outcomes": {}})
         for match_type_name, url in match_types.items():
             match_type_dict = stage_dict.setdefault(match_type_name, {})
-            total_by_match_type_dict = match_type_dict.setdefault("Total", {"Total Matches": {},
-                                                                            "Total Outcomes": {}})
+            # total_matches_by_match_type_dict = total_matches_by_stage_dict.setdefault(match_type_name, {"Total Matches": 0})
+            # total_outcomes_by_match_type_dict = total_outcomes_by_stage_dict.setdefault(match_type_name, {"Total Outcomes": {}})
+            # total_by_match_type_dict = match_type_dict.setdefault("Total", {"Total Matches": {},
+            #                                                                 "Total Outcomes": {}})
             maps_stats_dict = match_type_dict.setdefault("Maps Stats", {})
             agents_pick_rates_dict = match_type_dict.setdefault("Agents Pick Rates", {})
             teams_pick_rates_dict = match_type_dict.setdefault("Teams Pick Rates", {})
@@ -517,8 +521,8 @@ async def scraping_agents_data(tournament_name, stages, session):
                 all_tr = table.find_all("tr")
                 logo, map = table.find("tr").find("th").text.replace("\t", "").split()
                 map_dict = teams_pick_rates_dict.setdefault(map, {})
-                total_by_map_dict = map_dict.setdefault("Total", {"Total Matches": {},
-                                                                  "Total Outcomes": {}})
+                # total_by_map_dict = map_dict.setdefault("Total", {"Total Matches": {},
+                #                                                   "Total Outcomes": {}})
                 teams_pick_rate_tr = table.find_all("tr")[1:]
                 for tr in teams_pick_rate_tr:
                     tr_class = tr.get("class")
@@ -554,17 +558,17 @@ async def scraping_agents_data(tournament_name, stages, session):
                             elif class_name == "mod-picked-lite":
                                 agent = table_titles[index]
                                 
-                                team_dict = total_by_map_dict["Total Outcomes"].setdefault(team, {})
-                                agent_dict = team_dict.setdefault(agent, {"win": 0, "loss": 0})
+                                team_dict = map_dict.setdefault(team, {"Total Maps Played": 0, "Total Outcomes": {}})
+                                agent_dict = team_dict["Total Outcomes"].setdefault(agent, {"win": 0, "loss": 0})
                                 agent_dict[outcome] += 1
 
-                                team_dict = total_by_match_type_dict["Total Outcomes"].setdefault(team, {})
-                                agent_dict = team_dict.setdefault(agent, {"win": 0, "loss": 0})
-                                agent_dict[outcome] += 1
+                                # team_dict = total_by_match_type_dict["Total Outcomes"].setdefault(team, {})
+                                # agent_dict = team_dict.setdefault(agent, {"win": 0, "loss": 0})
+                                # agent_dict[outcome] += 1
 
-                                team_dict = total_by_stage_dict["Total Outcomes"].setdefault(team, {})
-                                agent_dict = team_dict.setdefault(agent, {"win": 0, "loss": 0})
-                                agent_dict[outcome] += 1
+                                # team_dict = total_by_stage_dict["Total Outcomes"].setdefault(team, {})
+                                # agent_dict = team_dict.setdefault(agent, {"win": 0, "loss": 0})
+                                # agent_dict[outcome] += 1
 
                                 # agent_dict = team_dict.setdefault(agent, {"win": 0, "loss": 0})
                                 # agent_dict[outcome] += 1
@@ -575,9 +579,9 @@ async def scraping_agents_data(tournament_name, stages, session):
                                 # outcome_dict = team_dict.setdefault(outcome, {})
                                 # outcome_dict[agent] = outcome_dict.get(agent, 0) + 1
                         # team_dict["Total Maps Played"] += 1
-                        total_by_map_dict["Total Matches"][team] = total_by_map_dict["Total Matches"].get(team, 0) + 1
-                        total_by_match_type_dict["Total Matches"][team] = total_by_match_type_dict["Total Matches"].get(team, 0) + 1
-                        total_by_stage_dict["Total Matches"][team] = total_by_stage_dict["Total Matches"].get(team, 0) + 1
-    print(result)
+                        team_dict["Total Maps Played"] += 1
+                        # total_by_map_dict["Total Matches"][team] = total_by_map_dict["Total Matches"].get(team, 0) + 1
+                        # total_by_match_type_dict["Total Matches"][team] = total_by_match_type_dict["Total Matches"].get(team, 0) + 1
+                        # total_by_stage_dict["Total Matches"][team] = total_by_stage_dict["Total Matches"].get(team, 0) + 1
                     
     return result

@@ -63,25 +63,31 @@ async def main():
     for result in results:
         for tournament_name, stages in result.items():
             for stage_name, match_types in stages.items():
-                for match_type_name, stats in match_types.items():
-                    maps_stats = stats["Maps Stats"]
-                    agents_pick_rates = stats["Agents Pick Rates"]
-                    teams_pick_rates = stats["Teams Pick Rates"]
+                # total_matches_by_stage = stages[stage_name]["Total"]["Total Matches"]
+                # total_outcomes_by_stage = stages[stage_name]["Total"]["Total Outcomes"]
+                    for match_type_name, stats in match_types.items():
+                        if match_type_name != "Total":
+                        # total_matches_by_match_type = match_types[match_type_name]["Total"]["Total Matches"]
+                        # total_outcomes_by_match_type = match_types[match_type_name]["Total"]["Total Outcomes"]
+                            maps_stats = stats["Maps Stats"]
+                            agents_pick_rates = stats["Agents Pick Rates"]
+                            teams_pick_rates = stats["Teams Pick Rates"]
 
-                    for map_name, stats in maps_stats.items():
-                        combined_list = [tournament_name, stage_name, match_type_name, map_name] + list(stats.values())
-                        all_results["maps_stats"].append(combined_list)
-                    
-                    for map_name, agents in agents_pick_rates.items():
-                        for agent_name, pick_rate in agents.items():
-                            all_results["agents_pick_rates"].append([tournament_name, stage_name, match_type_name, map_name, agent_name, pick_rate])
-                    
-                    for map_name, teams in teams_pick_rates.items():
-                        for team_name, values in teams.items():
-                            total_maps = values["Total Maps Played"]
-                            if "won" in values:
-                                for agent, times_played in values["won"]:
-                                    all_results["teams_picked_agents"].append([])
+                            for map_name, stats in maps_stats.items():
+                                combined_list = [tournament_name, stage_name, match_type_name, map_name] + list(stats.values())
+                                all_results["maps_stats"].append(combined_list)
+                            
+                            for map_name, agents in agents_pick_rates.items():
+                                for agent_name, pick_rate in agents.items():
+                                    all_results["agents_pick_rates"].append([tournament_name, stage_name, match_type_name, map_name, agent_name, pick_rate])
+                            
+                            for map_name, teams in teams_pick_rates.items():
+                                    for team_name, totals in teams.items():
+                                         total_maps_played = totals["Total Maps Played"]
+                                         total_outcomes = totals["Total Outcomes"]
+                                         for agent, outcome in total_outcomes.items():
+                                              all_results["teams_picked_agents"].append([tournament_name, stage_name, match_type_name, map_name, team_name,
+                                                                                        agent, outcome["win"], outcome["loss"], total_maps_played])
     
 
     dataframes["maps_stats"] = pd.DataFrame(all_results["maps_stats"],
@@ -91,7 +97,10 @@ async def main():
                                                    columns=["Tournament", "Stage", "Match Type", "Map", "Agent", "Pick Rate"])
     dataframes["teams_picked_agents"] = pd.DataFrame(all_results["teams_picked_agents"],
                                                      columns=["Tournament", "Stage", "Match Type", "Map", "Team", "Agent Picked",
-                                                            "Times Won", "Times Lost", "Total Maps Played"])
+                                                            "Total Wins By Map", "Total Loss By Maps", "Total Maps Played"])
+    
+    
+
     
     # unique_df = dataframes["teams_picked_agents"].drop_duplicates(subset=["Tournament, Stage", "Match Type", "Team"])
 
