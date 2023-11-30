@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup, Tag
 from MaxReentriesReached.max_reentries_reached import MaxReentriesReached
 import pandas as pd
 import re
+import random
 
 overview_stats_titles = ["", "", "Rating", "Average Combat Score", "Kills", "Deaths", "Assists", "Kills - Deaths (KD)",
                         "Kill, Assist, Trade, Survive %", "Average Damage per Round", "Headshot %", "First Kills",
@@ -13,7 +14,12 @@ economy_stats_title = ["Pistol Won", "Eco (won)", "$ (won)", "$$ (won)", "$$$ (w
 overview, performance, economy = "Overview", "Performance", "Economy"
 specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
 eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", "$$$": "Full buy: 20k+"}
-
+all_agents = ["astra", "breach", "brimstone", "chamber", "cypher", "deadlock", "fade", "gekko", "harbor", "iso", "jett", "kayo",
+              "killjoy", "neon", "omen", "phoenix", "raze", "reyna", "sage", "skye", "sova", "viper", "yoru", "all"]
+stats_titles = ["", "", "Rounds Played", "Rating", "Average Combat Score", "Kills:Deaths", "Kill, Assist, Trade, Survive %",
+                "Average Damage per Round", "Kills Per Round", "Assists Per Round", "First Kills Per Round", "First Deaths Per Round", 
+                "Headshot %", "Clutch Success %", "Clutches (won/played)", "Maximum Kills in a Single Map", "Kills", "Deaths", "Assists",
+                "First Kills", "First Deaths"]
 
 async def fetch(url, session):
     max_retries = 3
@@ -32,7 +38,11 @@ async def fetch(url, session):
 
     
 async def generate_urls_combination(tournament_name, url, stages_filter, session):
-    page = await fetch(url, session)
+    try:
+        page = await fetch(url, session)
+    except MaxReentriesReached as e:
+        print(f"Error: {e}")
+        sys.exit(1)
     soup = BeautifulSoup(page, "html.parser")
 
     all_stages = soup.find("div", class_="wf-card mod-dark mod-scroll stats-filter").find("div").find_all("div", recursive=False)
@@ -453,7 +463,7 @@ async def scraping_matches_data(tournament_name, cards, session):
                 print(tournament_name, stage_name, match_type_name, match_name, "does not contain any data under their economy page")
     return result
 
-async def scraping_agents_data(tournament_name, stages, session):
+async def scraping_agents_data(tournament_name, stages, session): 
     global_table_titles = ["Map", "Total Played", "Attacker Side Win", "Defender Side Win"]
     pattern = r'/(\w+)\.png'
     result = {}
@@ -538,4 +548,80 @@ async def scraping_agents_data(tournament_name, stages, session):
                                 agent_dict[outcome] += 1
                         team_dict["Total Maps Played"] += 1
                     
+    return result
+
+async def scraping_players_stats(tournament_name, stages, session):
+    result = {}
+    global_players_agents = {}
+    pattern = r'/(\w+)\.png'
+    tournament_dict = result.setdefault(tournament_name, {})
+    for stage_name, match_types in stages.items():
+        stage_dict = tournament_dict.setdefault(stage_name, {})
+        for match_type_name, url in match_types.items():
+            match_type_dict = stage_dict.setdefault(match_type_name, {})
+            players_agents = {}
+            for agent in all_agents:
+                print(f"Collecting data for {agent} {tournament_name}, {stage_name}, {match_type_name}")
+                try:
+                    page = await fetch(f"{url}&min_rounds=0&agent={agent}", session)
+                except MaxReentriesReached as e:
+                    print(f"Error: {e}")
+                    sys.exit(1)
+                await asyncio.sleep(random.uniform(0, 1))
+                soup = BeautifulSoup(page, "html.parser")
+                stats_trs = soup.find_all("tr")[1:]
+
+                if len(stats_trs) == 1:
+                    continue
+
+                for tr in stats_trs:
+                    all_tds = tr.find_all("td")
+                    filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
+                    for index, td in enumerate(filtered_tds):
+                        td_class = td.get("class") or ""
+                        class_name = " ".join(td_class)
+                        if class_name == "mod-player mod-a":
+                            player_info = td.find("div").find_all("div")
+                            player, team = player_info[0].text, player_info[1].text
+                            team_dict = match_type_dict.setdefault(team, {})
+                            player_dict = team_dict.setdefault(player, {})
+                        elif class_name == "mod-agents":
+                            imgs = td.find("div").find_all("img")
+                            agents = ""
+                            player_agents_set = players_agents.setdefault(player, set())
+                            global_players_agents_set = global_players_agents.setdefault(player, set())
+                            if agent == "all" and len(players_agents[player]) > 1:
+                                agents = ", ".join(players_agents[player]).strip(", ")
+                            elif agent == "all" and len(players_agents[player]) == 1:
+                                break
+                            elif stage_name == "All" and match_type_name == "All" and agent == "all":
+                                agents = ", ".join(global_players_agents[player]).strip(", ")
+                            else:
+                                for img in imgs:
+                                    src = img.get("src")
+                                    match = re.search(pattern, src)
+                                    agent_name = match.group(1)
+                                    player_agents_set.add(agent_name)
+                                    agents += f"{agent}, "
+                                agents = agents.strip(", ")
+                            agents_dict = player_dict.setdefault(agents, {})
+                        elif class_name == "mod-rnd" or class_name == "mod-cl" or class_name == "":
+                            stat = td.text.strip()
+                            stat_name = stats_titles[index]
+                            if stat == "":
+                                stat = pd.NA
+                            agents_dict[stat_name] = stat
+                        elif class_name == "mod-color-sq mod-acs" or class_name ==  "mod-color-sq":
+                            stat = td.find("div").find("span").text.strip()
+                            stat_name = stats_titles[index]
+                            if stat == "":
+                                stat = pd.NA
+                            agents_dict[stat_name] = stat
+                        elif class_name == "mod-a mod-kmax":
+                            stat = td.find("a").text.strip()
+                            stat_name = stats_titles[index]
+                            if stat == "":
+                                stat = pd.NA
+                            agents_dict[stat_name] = stat
+                    global_players_agents[player] = global_players_agents[player] | players_agents[player]
     return result
