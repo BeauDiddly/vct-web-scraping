@@ -1,8 +1,6 @@
 import requests
-from bs4 import BeautifulSoup, Tag, NavigableString
-import re
+from bs4 import BeautifulSoup
 import time
-import csv
 import asyncio
 import pandas as pd
 import time
@@ -10,21 +8,6 @@ from datetime import datetime
 from WebScraper.fetch import generate_urls_combination, scraping_agents_data
 from WebScraper.retrieve_urls import retrieve_urls
 import aiohttp
-# url = f"https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16339.16332.16334.16335.16336.16337"
-
-# urls = {"all_stages": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo",
-#         "semi_finals": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16339.16332.16333.16334.16335.16336.16337",
-#         "grand_finals": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16332.16333.16334.16335.16336.16337",
-#         "playoffs": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16332.16333.16334.16335.16336.16337",
-#         "alpha_round_of_sixteen": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16339.16333.16334.16335.16336.16337",
-#         "alpha_quarterfinals": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16339.16332.16334.16335.16336.16337",
-#         "alpha_semifinals": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16339.16332.16333.16335.16336.16337",
-#         "alpha": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16339.16335.16336.16337",
-#         "omega_round_of_sixteen": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16339.16332.16333.16334.16336.16337",
-#         "omega_quarterfinals": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16339.16332.16333.16334.16335.16337",
-#         "omega_semifinals": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16339.16332.16333.16334.16335.16336",
-#         "omega": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16339.16332.16333.16334",
-#         "bracket_stage": "https://www.vlr.gg/event/agents/1188/champions-tour-2023-lock-in-s-o-paulo?exclude=16338.16339"}
 async def main():
     start_time = time.time()
 
@@ -63,12 +46,8 @@ async def main():
     for result in results:
         for tournament_name, stages in result.items():
             for stage_name, match_types in stages.items():
-                # total_matches_by_stage = stages[stage_name]["Total"]["Total Matches"]
-                # total_outcomes_by_stage = stages[stage_name]["Total"]["Total Outcomes"]
                     for match_type_name, stats in match_types.items():
                         if match_type_name != "Total":
-                        # total_matches_by_match_type = match_types[match_type_name]["Total"]["Total Matches"]
-                        # total_outcomes_by_match_type = match_types[match_type_name]["Total"]["Total Outcomes"]
                             maps_stats = stats["Maps Stats"]
                             agents_pick_rates = stats["Agents Pick Rates"]
                             teams_pick_rates = stats["Teams Pick Rates"]
@@ -101,23 +80,6 @@ async def main():
     
     
 
-    
-    # unique_df = dataframes["teams_picked_agents"].drop_duplicates(subset=["Tournament, Stage", "Match Type", "Team"])
-
-    # sum_df = unique_df.groupby(["Tournament", "Stage", "Match Type", "Team"])['Total Maps Played'].sum().reset_index(name='Total Matches Played')
-
-
-    # df = pd.merge(df, sum_df, on=["Tournament", "Stage", "Match Type", "Team"], how="left")
-
-    # df_grouped = dataframes["teams_picked_agents"].groupby(["Tournament", "Stage", "Match Type", "Team", "Agent Picked"])
-    # df_grouped["Overall Matches Played"] = df_grouped["Total Maps Played"].transform("sum")
-    # overall_sum = df_grouped["Total Maps Played"].sum().reset_index(name="Overall Matches Played")
-
-    # df = pd.merge(df, overall_sum, on=["Tournament", "S"])
-
-
-    # df_grouped.to_csv(f"agents/df_grouped.csv", encoding="utf-8", index=False)
-    # df.to_csv(f"agents/overall_sum.csv", encoding="utf-8", index=False)
 
 
     end_time = time.time()
