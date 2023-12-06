@@ -86,8 +86,6 @@ async def scraping_matches_data(tournament_name, cards, session):
         match_type_name, stage_name = module.find("div", class_="match-item-event text-of").text.strip().splitlines()
         match_type_name = match_type_name.strip("\t")
         stage_name = stage_name.strip("\t")
-        if tournament_name != "Pacific League":
-            break
         if match_type_name == "Showmatch":
             continue
         else:
