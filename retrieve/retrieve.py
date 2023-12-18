@@ -5,6 +5,6 @@ def retrieve_foreign_key(curr, foreign_key, table, column_name, column_value):
     execute_query(curr, sql)
     result = curr.fetchone()
     if result:
-        print(result[0])
+        return result[0]
     else:
-        print("Doesnt exist")
+        return ""
