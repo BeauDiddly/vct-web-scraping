@@ -70,7 +70,7 @@ def add_agents(curr, unique_ids):
 def add_drafts(curr):
    drafts = pd.read_csv("matches/draft_phase.csv")
    for index, row in drafts.iterrows():
-      query = "INSERT INTO draft ()"
+      query = "INSERT INTO draft (tournament_id, stage_id, match_type_id, match_id, team_id, action, map_id) VALUES (%s, %s, %s, %s, %s, %s, %s);"
       tournament = row["Tournament"]
       stage = row["Stage"]
       match_type = row["Match Type"]
@@ -81,6 +81,8 @@ def add_drafts(curr):
       tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
       stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
       match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
-      match_name_id = retrieve_foreign_key(curr, "match_name_id", "match", "match_name", match_name)
+      match_name_id = retrieve_foreign_key(curr, "match_id", "match", "match_name", match_name)
       team_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", team)
       map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
+      data = (tournament_id, stage_id, match_type_id, match_name_id, team_id, action, map_id)
+      execute_query(curr, query, data)

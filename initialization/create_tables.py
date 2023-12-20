@@ -85,13 +85,13 @@ def create_draft_phase_table(curr):
    sql = """
       CREATE TABLE IF NOT EXISTS draft (
          draft_id SERIAL PRIMARY KEY,
-         tournament_id INT REFERENCES Tournament(TournamentID),
-         stage_id INT REFERENCES Stage(StageID),
-         match_type_id INT REFERENCES MatchType(MatchTypeID),
-         match_id INT REFERENCES MatchName(MatchNameID),
-         team_id INT REFERENCES Team(TeamID),
+         tournament_id INT REFERENCES tournament(tournament_id),
+         stage_id INT REFERENCES stage(stage_id),
+         match_type_id INT REFERENCES match_type(match_type_id),
+         match_id INT REFERENCES match(match_id),
+         team_id INT REFERENCES team(team_id),
          action VARCHAR(255),
-         map_id INT REFERENCES Map(MapID)
+         map_id INT REFERENCES map(map_id)
       )
    """
    execute_query(curr, sql)
