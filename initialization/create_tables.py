@@ -112,6 +112,7 @@ def create_eco_rounds_table(curr):
          outcome VARCHAR(255)
       )
    """
+   execute_query(curr, sql)
 
 def create_eco_stats_table(curr):
    sql = """
@@ -122,11 +123,13 @@ def create_eco_stats_table(curr):
          match_type_id INT REFERENCES match_type(match_type_id),
          match_id INT REFERENCES match(match_id),
          map_id INT REFERENCES map(map_id),
+         team_id INT REFERENCES team(team_id),
          eco_type VARCHAR(255),
          initiated INT NULL,
          won INT
       )
    """
+   execute_query(curr, sql)
 
 def create_kills_table(curr):
    sql = """
@@ -147,10 +150,11 @@ def create_kills_table(curr):
          kill_type VARCHAR(255)
       )
    """
+   execute_query(curr, sql)
 
 def create_kills_stats_table(curr):
    sql = """
-      CREATE TABLE IF NOT EXISTS kill_stats (
+      CREATE TABLE IF NOT EXISTS kills_stats (
          kill_stat_id SERIAL PRIMARY KEY
          tournament_id INT REFERENCES tournament(tournament_id),
          stage_id INT REFERENCES stage(stage_id),
@@ -174,6 +178,7 @@ def create_kills_stats_table(curr):
          spike_defuse INT
       )
    """
+   execute_query(curr, sql)
 
 def create_maps_played_table(curr):
    sql = """
@@ -186,6 +191,7 @@ def create_maps_played_table(curr):
          map_id INT REFERENCES map(map_id),
       )
    """
+   execute_query(curr, sql)
 
 def create_maps_scores_table(curr):
    sql = """
@@ -209,6 +215,7 @@ def create_maps_scores_table(curr):
          duration INT NULL
       )
    """
+   execute_query(curr, sql)
 
 def create_overview_table(curr):
    sql = """
@@ -237,6 +244,7 @@ def create_overview_table(curr):
          side VARCHAR(255)
       )
    """
+   execute_query(curr, sql)
 
 def create_rounds_kills_table(curr):
    sql = """
@@ -257,6 +265,7 @@ def create_rounds_kills_table(curr):
          kill_type VARCHAR(255)
       )
    """
+   execute_query(curr, sql)
 
 def create_scores_table(curr):
    sql = """
@@ -272,3 +281,4 @@ def create_scores_table(curr):
          loser_score INT
       )
    """
+   execute_query(curr, sql)
