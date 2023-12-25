@@ -331,9 +331,9 @@ def add_overview(curr):
       deaths = row["Deaths"]
       assists = row["Assists"]
       kill_deaths = row["Kill - Deaths (KD)"]
-      kast = row["Kill, Assist, Trade, Survive %"]
+      kast = float(row["Kill, Assist, Trade, Survive %"].strip("%")) / 100.0
       adr = row["Average Damage per Round"]
-      headshot_percentage = row["Headshot %"]
+      headshot_percentage = float(row["Headshot %"].strip("%")) / 100.0
       first_kills = row["First Kills"]
       first_deaths = row["First Deaths"]
       fkd = row["Kills - Deaths (FKD)"]
@@ -420,3 +420,4 @@ def add_scores(curr):
               winner_id, loser_id,
               winner_score, loser_score)
       execute_query(curr, query, data)
+   
