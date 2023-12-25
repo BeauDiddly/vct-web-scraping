@@ -3,87 +3,87 @@ import pandas as pd
 
 
 def create_tournament_table(curr):
-   sql = """
-      CREATE TABLE IF NOT EXISTS tournament (
+   query = """
+      CREATE TABLE IF NOT EXISTS tournaments (
       tournament_id INT PRIMARY KEY,
       tournament_name VARCHAR(255) UNIQUE NOT NULL
    )
    """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 
 def create_stage_table(curr):
-   sql = """
-      CREATE TABLE IF NOT EXISTS stage (
+   query = """
+      CREATE TABLE IF NOT EXISTS stages (
          stage_id INT PRIMARY KEY,
          stage_name VARCHAR(255) UNIQUE NOT NULL
       )
       """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 def create_match_type_table(curr):
-   sql = """
-      CREATE TABLE IF NOT EXISTS match_type (
+   query = """
+      CREATE TABLE IF NOT EXISTS match_types (
          match_type_id INT PRIMARY KEY,
          match_type_name VARCHAR(255) UNIQUE NOT NULL
       )
       """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 
 def create_match_name_table(curr):
-   sql = """
-   CREATE TABLE IF NOT EXISTS match (
+   query = """
+   CREATE TABLE IF NOT EXISTS matches (
       match_id INT PRIMARY KEY,
       match_name VARCHAR(255) UNIQUE NOT NULL
    )
    """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 
 def create_map_table(curr):
-   sql = """
-   CREATE TABLE IF NOT EXISTS map (
+   query = """
+   CREATE TABLE IF NOT EXISTS maps (
       map_id INT PRIMARY KEY,
       map_name VARCHAR(255) UNIQUE NOT NULL
    )
    """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 
 def create_team_table(curr):
-   sql = """
-      CREATE TABLE IF NOT EXISTS team (
+   query = """
+      CREATE TABLE IF NOT EXISTS teams (
          team_id INT PRIMARY KEY,
          team_name VARCHAR(255) UNIQUE NOT NULL
       )
       """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 
 def create_player_table(curr):
-   sql = """
-      CREATE TABLE IF NOT EXISTS player (
+   query = """
+      CREATE TABLE IF NOT EXISTS players (
          player_id INT PRIMARY KEY,
          player_name VARCHAR(255) UNIQUE NOT NULL
       )
       """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 
 def create_agent_table(curr):
-   sql = """
-      CREATE TABLE IF NOT EXISTS agent (
+   query = """
+      CREATE TABLE IF NOT EXISTS agents (
          agent_id INT PRIMARY KEY,
          agent_name VARCHAR(255) UNIQUE NOT NULL
       )
       """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 
 def create_draft_phase_table(curr):
-   sql = """
-      CREATE TABLE IF NOT EXISTS draft (
+   query = """
+      CREATE TABLE IF NOT EXISTS drafts (
          draft_id SERIAL PRIMARY KEY,
          tournament_id INT REFERENCES tournament(tournament_id),
          stage_id INT REFERENCES stage(stage_id),
@@ -94,10 +94,10 @@ def create_draft_phase_table(curr):
          map_id INT REFERENCES map(map_id)
       )
    """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 def create_eco_rounds_table(curr):
-   sql = """
+   query = """
       CREATE TABLE IF NOT EXISTS eco_rounds (
          eco_round_id SERIAL PRIMARY KEY,
          tournament_id INT REFERENCES tournament(tournament_id),
@@ -112,10 +112,10 @@ def create_eco_rounds_table(curr):
          outcome VARCHAR(255)
       )
    """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 def create_eco_stats_table(curr):
-   sql = """
+   query = """
       CREATE TABLE IF NOT EXISTS eco_stats (
          eco_stat_id SERIAL PRIMARY KEY,
          tournament_id INT REFERENCES tournament(tournament_id),
@@ -129,10 +129,10 @@ def create_eco_stats_table(curr):
          won INT
       )
    """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 def create_kills_table(curr):
-   sql = """
+   query = """
       CREATE TABLE IF NOT EXISTS kills (
          kill_id SERIAL PRIMARY KEY,
          tournament_id INT REFERENCES tournament(tournament_id),
@@ -150,10 +150,10 @@ def create_kills_table(curr):
          kill_type VARCHAR(255)
       )
    """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 def create_kills_stats_table(curr):
-   sql = """
+   query = """
       CREATE TABLE IF NOT EXISTS kills_stats (
          kill_stat_id SERIAL PRIMARY KEY
          tournament_id INT REFERENCES tournament(tournament_id),
@@ -178,10 +178,10 @@ def create_kills_stats_table(curr):
          spike_defuse INT
       )
    """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 def create_maps_played_table(curr):
-   sql = """
+   query = """
       CREATE TABLE IF NOT EXISTS maps_played (
          map_played_id SERIAL PRIMARY KEY,
          tournament_id INT REFERENCES tournament(tournament_id),
@@ -191,10 +191,10 @@ def create_maps_played_table(curr):
          map_id INT REFERENCES map(map_id),
       )
    """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 def create_maps_scores_table(curr):
-   sql = """
+   query = """
       CREATE TABLE IF NOT EXISTS maps_scores (
          map_score_id SERIAL PRIMARY KEY,
          tournament_id INT REFERENCES tournament(tournament_id),
@@ -215,10 +215,10 @@ def create_maps_scores_table(curr):
          duration INT NULL
       )
    """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 def create_overview_table(curr):
-   sql = """
+   query = """
       CREATE TABLE IF NOT EXISTS overview (
          overview_id SERIAL PRIMARY KEY,
          tournament_id INT REFERENCES tournament(tournament_id),
@@ -244,10 +244,10 @@ def create_overview_table(curr):
          side VARCHAR(255)
       )
    """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 def create_rounds_kills_table(curr):
-   sql = """
+   query = """
       CREATE TABLE IF NOT EXISTS rounds_kills (
          round_kill_id SERIAL PRIMARY KEY,
          tournament_id INT REFERENCES tournament(tournament_id),
@@ -265,10 +265,10 @@ def create_rounds_kills_table(curr):
          kill_type VARCHAR(255)
       )
    """
-   execute_query(curr, sql)
+   execute_query(curr, query)
 
 def create_scores_table(curr):
-   sql = """
+   query = """
       CREATE TABLE IF NOT EXISTS scores (
          score_id SERIAL PRIMARY KEY,
          tournament_id INT REFERENCES tournament(tournament_id),
@@ -281,4 +281,4 @@ def create_scores_table(curr):
          loser_score INT
       )
    """
-   execute_query(curr, sql)
+   execute_query(curr, query)
