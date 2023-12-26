@@ -497,4 +497,69 @@ def add_teams_picked_agents(curr):
       data = (tournament_id, stage_id, match_type_id, map_id, team_id, agent_id, total_wins_by_map, total_loss_by_map, total_maps_played)
 
       execute_query(curr, query, data)
+
+
+def add_players_stats(curr):
+   players_stats = pd.read_csv("agents/players_stats.csv")
+   query = """
+      INSERT INTO players_stats (
+         tournament_id, stage_id, match_type_id, player_id, team_id, agents_id,
+         rounds_played, rating, average_combat_score, kills_deaths, kast, adr,
+         kills_per_round, assists_per_round, first_kills_per_round, first_deaths_per_round,
+         headshot_percentage, clutch_success, clutches_won, clutches_played, mksp,
+         kills, deaths, assists, first_kills, first_deaths
+      );
+   """
+   for index, row in players_stats.iterrows():
+      tournament = row["Tournament"]
+      stage = row["Stage"]
+      match_type = row["Match Type"]
+      player = row["Player"]
+      team = row["Team"]
+      agents = row["Agents"]
+      rounds_played = row["Rounds Played"]
+      rating = row["Rating"]
+      average_combat_score = row["Average Combat Score"]
+      kills_deaths = row["Kills:Deaths"]
+      kast = float(row["Kill, Assist, Trade, Survive %"].split("%")) / 100.0
+      adr = row["Average Damage per Round"]
+      kills_per_round = row["Kills Per Round"]
+      assists_per_round = row["Assists Per Round"]
+      first_kills_per_round = row["First Kills Per Round"]
+      first_deaths_per_round = row["First Deaths Per Round"]
+      headshot_percentage = float(row["Headshot %"].strip("%")) / 100.0
       
+      clutch_success = row["Clutch Success %"]
+      if clutch_success:
+         clutch_success = float(clutch_success) / 100.0
+      else:
+         clutch_success = None
+
+      clutches = row["Clutches (won/played)"]
+
+      if clutches:
+         clutches_won, clutches_played = clutches.split("/")
+      else:
+         clutches_won, clutches_played = None, None
+
+      mksp = row["Maximum Kills in a Single Map"]
+      kills = row["Kills"]
+      deaths = row["Deaths"]
+      assists = row["Assists"]
+      first_kills = row["First Kills"]
+      first_deaths = row["First Deaths"]
+
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
+      player_id = retrieve_foreign_key(curr, "player_id", "player", "player_name", player)
+      team_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", team)
+      agent_id = retrieve_foreign_key(curr, "agent_id", "agent", "agent_name", agents)
+
+      data = (tournament_id, stage_id, match_type_id, player_id, team_id, agent_id,
+              rounds_played, rating, average_combat_score, kills_deaths, kast, adr,
+              kills_per_round, assists_per_round, first_kills_per_round, first_deaths_per_round,
+              headshot_percentage, clutch_success, clutches_won, clutches_played,
+              mksp, kills, deaths, assists, first_kills, first_deaths)
+      
+      execute_query(curr, query, data)

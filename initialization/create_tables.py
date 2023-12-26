@@ -313,7 +313,7 @@ def create_maps_stats_table(curr):
    """
    execute_query(curr, query)
 
-def create_teams_picked_agents(curr):
+def create_teams_picked_agents_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS teams_picked_agents (
          team_picked_agent_id SERIAL PRIMARY KEY,
@@ -330,3 +330,35 @@ def create_teams_picked_agents(curr):
    """
    execute_query(curr, query)
 
+def create_players_stats_table(curr):
+   query = """
+      CREATE TABLE IF NOT EXISTS players_stats (
+         player_stat_id SERIAL PRIMARY KEY,
+         tournament_id INT REFERENCES tournaments(tournament_id),
+         stage_id INT REFERENCES stages(stage_id),
+         match_type_id INT REFERENCES match_types(match_type_id),
+         player_id INT REFERENCES players(player_id),
+         team_id INT REFERENCES teams(team_id),
+         agents_id INT REFERENCES agents(agent_id),
+         rounds_played INT
+         rating DECIMAL,
+         average_combat_score INT,
+         kill_deaths DECIMAL,
+         kast DECIMAL,
+         adr DECIMAL,
+         kills_per_round DECIMAL,
+         assists_per_round DECIMAL,
+         first_kills_per_round DECIMAL,
+         first_deaths_per_round DECIMAL,
+         headshot_percentage DECIMAL,
+         clutch_success DECIMAL NULL,
+         clutches_won INT NULL,
+         clutches_played INT NULL,
+         mksp INT,
+         kills INT,
+         deaths INT,
+         assists INT,
+         first_kills INT,
+         first_deaths INT
+      );
+   """
