@@ -71,12 +71,12 @@ async def main():
 
     dataframes["maps_stats"] = pd.DataFrame(all_results["maps_stats"],
                                            columns=["Tournament", "Stage", "Match Type", "Map", "Total Map Played",
-                                                    "Attack Side Win Percentage", "Defender Side Win Percentage"])
+                                                    "Attacker Side Win Percentage", "Defender Side Win Percentage"])
     dataframes["agents_pick_rates"] = pd.DataFrame(all_results["agents_pick_rates"],
                                                    columns=["Tournament", "Stage", "Match Type", "Map", "Agent", "Pick Rate"])
     dataframes["teams_picked_agents"] = pd.DataFrame(all_results["teams_picked_agents"],
                                                      columns=["Tournament", "Stage", "Match Type", "Map", "Team", "Agent Picked",
-                                                            "Total Wins By Map", "Total Loss By Maps", "Total Maps Played"])
+                                                            "Total Wins By Map", "Total Loss By Map", "Total Maps Played"])
     
     
 
