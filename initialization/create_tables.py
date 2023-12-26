@@ -343,7 +343,7 @@ def create_players_stats_table(curr):
          rounds_played INT
          rating DECIMAL,
          average_combat_score INT,
-         kill_deaths DECIMAL,
+         kills_deaths DECIMAL,
          kast DECIMAL,
          adr DECIMAL,
          kills_per_round DECIMAL,
