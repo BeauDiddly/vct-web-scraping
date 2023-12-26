@@ -371,7 +371,7 @@ def add_rounds_kills(curr):
       eliminator_team = row["Eliminator's Team"]
       eliminator = row["Eliminator"]
       eliminator_agent = row["Eliminator's Agent"]
-      eliminated_team = row["Eliminated Team"]
+      eliminated_team = row["Eliminated's Team"]
       eliminated = row["Eliminated"]
       eliminated_agent = row["Eliminated's Team"]
       kill_type = row["Kill Type"]
@@ -421,3 +421,80 @@ def add_scores(curr):
               winner_score, loser_score)
       execute_query(curr, query, data)
    
+
+def add_agents_pick_rates(curr):
+   pick_rates = pd.read_csv("agents/agents_pick_rates.csv")
+   query = """
+      INSERT INTO agents_pick_rates (
+         tournament_id, stage_id, match_type_id, map_id,
+         agent_id, pick_rate
+      );
+   """
+   for index, row in pick_rates.iterrows():
+      tournament = row["Tournament"]
+      stage = row["Stage"]
+      match_type = row["Match Type"]
+      map = row["Map"]
+      agent = row["Agent"]
+      pick_rate = float(row["Pick Rate"]) / 100.0
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
+      map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
+      agent_id = retrieve_foreign_key(curr, "agent_id", "agent", "agent_name", agent)
+      data = (tournament_id, stage_id, match_type_id, map_id, agent_id, pick_rate)
+      execute_query(curr, query, data)
+
+def add_maps_stats(curr):
+   maps_stats = pd.read_csv("agents/maps_stats.csv")
+   query = """
+      INSERT INTO maps_stats (
+         tournament_id, stage_id, match_type_id, map_id, 
+         total_maps_played, attacker_win_percentage, defender_win_percentage
+      );
+   """
+   for index, row in maps_stats.iterrows():
+      tournament = row["Tournament"]
+      stage = row["Stage"]
+      match_type = row["Match Type"]
+      map = row["Map"]
+      total_maps_played = row["Total Maps Played"]
+      attacker_win_percentage = float(row["Attacker Side Win Percentage"]) / 100.0
+      defender_win_percentage = float(row["Defender Side Win Percentage"]) / 100.0
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
+      map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
+
+      data = (tournament_id, stage_id, match_type_id, map_id, total_maps_played, attacker_win_percentage, defender_win_percentage)
+      execute_query(curr, query, data)
+
+def add_teams_picked_agents(curr):
+   teams_picked_agents = pd.read_csv("agents/teams_picked_agents.csv")
+   query = """
+      INSERT INTO teams_picked_agents (
+         tournament_id, stage_id, match_type_id, map_id, team_id, 
+         agent_id, total_wins_by_maps, total_loss_by_maps, total_maps_played
+      );
+   """
+   for index, row in teams_picked_agents.iterrows():
+      tournament = row["Tournament"]
+      stage = row["Stage"]
+      match_type = row["Match Type"]
+      map = row["Map"]
+      team = row["Team"]
+      agent = row["Agent"]
+      total_wins_by_map = row["Total Wins By Map"]
+      total_loss_by_map = row["Total Loss By Map"]
+      total_maps_played = row["Total Maps Played"]
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
+      map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
+      team_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", team)
+      agent_id = retrieve_foreign_key(curr, "agent_id", "agent", "agent_name", agent)
+
+      data = (tournament_id, stage_id, match_type_id, map_id, team_id, agent_id, total_wins_by_map, total_loss_by_map, total_maps_played)
+
+      execute_query(curr, query, data)
+      

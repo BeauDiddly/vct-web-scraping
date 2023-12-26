@@ -5,9 +5,9 @@ import pandas as pd
 def create_tournament_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS tournaments (
-      tournament_id INT PRIMARY KEY,
-      tournament_name VARCHAR(255) UNIQUE NOT NULL
-   )
+         tournament_id INT PRIMARY KEY,
+         tournament_name VARCHAR(255) UNIQUE NOT NULL
+   );
    """
    execute_query(curr, query)
 
@@ -17,7 +17,7 @@ def create_stage_table(curr):
       CREATE TABLE IF NOT EXISTS stages (
          stage_id INT PRIMARY KEY,
          stage_name VARCHAR(255) UNIQUE NOT NULL
-      )
+      );
       """
    execute_query(curr, query)
 
@@ -26,7 +26,7 @@ def create_match_type_table(curr):
       CREATE TABLE IF NOT EXISTS match_types (
          match_type_id INT PRIMARY KEY,
          match_type_name VARCHAR(255) UNIQUE NOT NULL
-      )
+      );
       """
    execute_query(curr, query)
 
@@ -36,7 +36,7 @@ def create_match_name_table(curr):
    CREATE TABLE IF NOT EXISTS matches (
       match_id INT PRIMARY KEY,
       match_name VARCHAR(255) UNIQUE NOT NULL
-   )
+   );
    """
    execute_query(curr, query)
 
@@ -46,7 +46,7 @@ def create_map_table(curr):
    CREATE TABLE IF NOT EXISTS maps (
       map_id INT PRIMARY KEY,
       map_name VARCHAR(255) UNIQUE NOT NULL
-   )
+   );
    """
    execute_query(curr, query)
 
@@ -56,7 +56,7 @@ def create_team_table(curr):
       CREATE TABLE IF NOT EXISTS teams (
          team_id INT PRIMARY KEY,
          team_name VARCHAR(255) UNIQUE NOT NULL
-      )
+      );
       """
    execute_query(curr, query)
 
@@ -66,7 +66,7 @@ def create_player_table(curr):
       CREATE TABLE IF NOT EXISTS players (
          player_id INT PRIMARY KEY,
          player_name VARCHAR(255) UNIQUE NOT NULL
-      )
+      );
       """
    execute_query(curr, query)
 
@@ -76,7 +76,7 @@ def create_agent_table(curr):
       CREATE TABLE IF NOT EXISTS agents (
          agent_id INT PRIMARY KEY,
          agent_name VARCHAR(255) UNIQUE NOT NULL
-      )
+      );
       """
    execute_query(curr, query)
 
@@ -92,7 +92,7 @@ def create_draft_phase_table(curr):
          team_id INT REFERENCES teams(team_id),
          action VARCHAR(255),
          map_id INT REFERENCES maps(map_id)
-      )
+      );
    """
    execute_query(curr, query)
 
@@ -110,7 +110,7 @@ def create_eco_rounds_table(curr):
          credits VARCHAR(255),
          eco_type VARCHAR(255),
          outcome VARCHAR(255)
-      )
+      );
    """
    execute_query(curr, query)
 
@@ -127,7 +127,7 @@ def create_eco_stats_table(curr):
          eco_type VARCHAR(255),
          initiated INT NULL,
          won INT
-      )
+      );
    """
    execute_query(curr, query)
 
@@ -148,7 +148,7 @@ def create_kills_table(curr):
          enemy_kills INT,
          difference INT,
          kill_type VARCHAR(255)
-      )
+      );
    """
    execute_query(curr, query)
 
@@ -176,7 +176,7 @@ def create_kills_stats_table(curr):
          econ INT,
          spike_plants INT,
          spike_defuse INT
-      )
+      );
    """
    execute_query(curr, query)
 
@@ -189,7 +189,7 @@ def create_maps_played_table(curr):
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
          map_id INT REFERENCES maps(map_id),
-      )
+      );
    """
    execute_query(curr, query)
 
@@ -213,7 +213,7 @@ def create_maps_scores_table(curr):
          team_b_defender_score INT,
          team_b_overtime_score INT NULL,
          duration INT NULL
-      )
+      );
    """
    execute_query(curr, query)
 
@@ -242,7 +242,7 @@ def create_overview_table(curr):
          first_deaths INT,
          fkd INT,
          side VARCHAR(255)
-      )
+      );
    """
    execute_query(curr, query)
 
@@ -263,7 +263,7 @@ def create_rounds_kills_table(curr):
          eliminated_id INT REFERENCES players(player_id),
          eliminated_agent_id INT REFERENCES agents(agent_id),
          kill_type VARCHAR(255)
-      )
+      );
    """
    execute_query(curr, query)
 
@@ -279,22 +279,22 @@ def create_scores_table(curr):
          loser_id INT REFERENCES teams(team_id),
          winner_score INT,
          loser_score INT
-      )
+      );
    """
    execute_query(curr, query)
 
 def create_agents_pick_rates_table(curr):
    query = """
-      CREATE TABLE IF NOT EXISTS scores (
+      CREATE TABLE IF NOT EXISTS agents_pick_rates (
          pick_rate_id SERIAL PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
          map_id INT REFERENCES maps(map_id)
          match_id INT REFERENCES matches(match_id),
-         winner_id INT REFERENCES agents(agent_id),
+         agent_id INT REFERENCES agents(agent_id),
          pick_rate DECIMAL
-      )
+      );
    """
    execute_query(curr, query)
 
@@ -309,6 +309,24 @@ def create_maps_stats_table(curr):
       total_maps_played INT
       attacker_win_percentage DECIMAL
       defender_win_percentage DECIMAL
-      )
+      );
    """
    execute_query(curr, query)
+
+def create_teams_picked_agents(curr):
+   query = """
+      CREATE TABLE IF NOT EXISTS teams_picked_agents (
+         team_picked_agent_id SERIAL PRIMARY KEY,
+         tournament_id INT REFERENCES tournaments(tournament_id),
+         stage_id INT REFERENCES stages(stage_id),
+         match_type_id INT REFERENCES match_types(match_type_id),
+         map_id INT REFERENCES mas(map_id),
+         team_id INT REFERENCES teams(team_id),
+         agent_id REFERENCES agents(agent_id),
+         total_wins_by_map INT,
+         total_loss_by_map INT,
+         total_maps_played INT
+      );
+   """
+   execute_query(curr, query)
+
