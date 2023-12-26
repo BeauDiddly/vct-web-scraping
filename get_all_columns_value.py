@@ -11,7 +11,6 @@ def main():
     all_players = set(df['Player'])
     all_teams = set(df['Team'])
 
-    all_agents = {agent for agent in all_agents if "," not in agent}
 
     tournament_df = pd.DataFrame({'Tournament': list(all_tournaments)})
     stage_df = pd.DataFrame({'Stage': list(all_stages)})
