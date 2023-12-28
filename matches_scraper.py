@@ -90,7 +90,7 @@ async def main():
                                                 "Difference", "Kill Type"])
     dataframes["kills_stats"] = pd.DataFrame(all_results["kills_stats"],
                                                 columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team",
-                                                        "Player", "Agent", "2K", "3k", "4k", "5k", "1v1",
+                                                        "Player", "Agent", "2k", "3k", "4k", "5k", "1v1",
                                                         "1v2", "1v3", "1v4", "1v5", "Econ", "Spike Plants",
                                                         "Spike Defuse"])
     dataframes["rounds_kills"] = pd.DataFrame(all_results["rounds_kills"],
