@@ -74,7 +74,7 @@ async def main():
     dataframes["maps_scores"] = pd.DataFrame(all_results["maps_scores"],
                                                 columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team A", "Team A's Score",
                                                         "Team A's Attack Score", "Team A's Defender Score", "Team A's Overtime Score",
-                                                        "Team B", "Team B's Score", "Team B's Attack Score", "Team B' Defender Score",
+                                                        "Team B", "Team B's Score", "Team B's Attack Score", "Team B's Defender Score",
                                                         "Team B's Overtime Score", "Duration"])
     dataframes["draft_phase"] = pd.DataFrame(all_results["draft_phase"],
                                                 columns=["Tournament", "Stage", "Match Type", "Match Name", "Team", "Action", "Map"])
@@ -96,7 +96,7 @@ async def main():
     dataframes["rounds_kills"] = pd.DataFrame(all_results["rounds_kills"],
                                                 columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Round Number",
                                                         "Eliminator's Team", "Eliminator", "Eliminator's Agent", 
-                                                        "Eliminated Team", "Eliminated", "Eliminated's Agent", "Kill Type"])
+                                                        "Eliminated's Team", "Eliminated", "Eliminated's Agent", "Kill Type"])
     dataframes["eco_stats"] = pd.DataFrame(all_results["eco_stats"],
                                             columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team", "Type", "Initiated", "Won"])
     dataframes["eco_rounds"] = pd.DataFrame(all_results["eco_rounds"],
