@@ -68,14 +68,14 @@ async def main():
 
 
     dataframes["scores"] = pd.DataFrame(all_results["scores"],
-                                        columns=["Tournament", "Stage", "Match Type", "Match Name", "Winner", "Loser", "Winner's Score", "Loser's Score"])
+                                        columns=["Tournament", "Stage", "Match Type", "Match Name", "Winner", "Loser", "Winner Score", "Loser Score"])
     dataframes["maps_played"] = pd.DataFrame(all_results["maps_played"],
                                              columns=["Tournament", "Stage", "Match Type", "Match Name", "Map"])
     dataframes["maps_scores"] = pd.DataFrame(all_results["maps_scores"],
-                                                columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team A", "Team A's Score",
-                                                        "Team A's Attack Score", "Team A's Defender Score", "Team A's Overtime Score",
-                                                        "Team B", "Team B's Score", "Team B's Attack Score", "Team B's Defender Score",
-                                                        "Team B's Overtime Score", "Duration"])
+                                                columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team A", "Team A Score",
+                                                        "Team A Attacker Score", "Team A Defender Score", "Team A Overtime Score",
+                                                        "Team B", "Team B Score", "Team B Attacker Score", "Team B Defender Score",
+                                                        "Team B Overtime Score", "Duration"])
     dataframes["draft_phase"] = pd.DataFrame(all_results["draft_phase"],
                                                 columns=["Tournament", "Stage", "Match Type", "Match Name", "Team", "Action", "Map"])
     dataframes["overview"] = pd.DataFrame(all_results["overview"],
@@ -85,8 +85,8 @@ async def main():
                                                     "Average Damage per Round", "Headshot %", "First Kills", "First Deaths",
                                                     "Kills - Deaths (FKD)", "Side"])
     dataframes["kills"] = pd.DataFrame(all_results["kills"],
-                                        columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Player's Team",
-                                                "Player", "Enemy's Team", "Enemy", "Player's Kills", "Enemy's Kills",
+                                        columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Player Team",
+                                                "Player", "Enemy Team", "Enemy", "Player Kills", "Enemy Kills",
                                                 "Difference", "Kill Type"])
     dataframes["kills_stats"] = pd.DataFrame(all_results["kills_stats"],
                                                 columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team",
@@ -95,8 +95,8 @@ async def main():
                                                         "Spike Defuse"])
     dataframes["rounds_kills"] = pd.DataFrame(all_results["rounds_kills"],
                                                 columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Round Number",
-                                                        "Eliminator's Team", "Eliminator", "Eliminator's Agent", 
-                                                        "Eliminated's Team", "Eliminated", "Eliminated's Agent", "Kill Type"])
+                                                        "Eliminator Team", "Eliminator", "Eliminator Agent", 
+                                                        "Eliminated Team", "Eliminated", "Eliminated Agent", "Kill Type"])
     dataframes["eco_stats"] = pd.DataFrame(all_results["eco_stats"],
                                             columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team", "Type", "Initiated", "Won"])
     dataframes["eco_rounds"] = pd.DataFrame(all_results["eco_rounds"],
