@@ -196,6 +196,7 @@ async def scraping_matches_data(tournament_name, cards, session):
             
 
             overview_dict = {}
+            player_to_team = {}
             for index, stats in enumerate(overview_stats):
                 id = stats.get("data-game-id")
                 map = maps_id[id]
@@ -212,6 +213,7 @@ async def scraping_matches_data(tournament_name, cards, session):
                                 player, team = td.find("a").find_all("div")
                                 player, team =  player.text.strip(), team.text.strip()
                                 team = team_mapping[team]
+                                player_to_team[player] = team
                                 team_dict = map_dict.setdefault(team, {})
                                 player_dict = team_dict.setdefault(player, {})
                             elif class_name == "mod-agents":
@@ -330,7 +332,8 @@ async def scraping_matches_data(tournament_name, cards, session):
                                 result["kills"].append([tournament_name, stage_name, match_type_name, match_name, map, team, player,
                                                          team_b, player_b, player_a_kills, player_b_kills, difference,
                                                          kill_name])
-                               
+                
+
                 for id, tds_lists in players_kills.items():
                     map = maps_id[id]
                     for tds in tds_lists:
@@ -361,11 +364,11 @@ async def scraping_matches_data(tournament_name, cards, session):
                                                 round_stat = div.text.strip()
                                             else:
                                                 src = img.get("src")
-                                                agent = re.search(r'/(\w+)\.png', src).group(1)
-                                                victim = div.text.strip()
-                                                team = team_a_lookup.get(victim) or team_b_lookup.get(victim)
+                                                eliminated_agent = re.search(r'/(\w+)\.png', src).group(1)
+                                                eliminated = div.text.strip()
+                                                eliminated_team = player_to_team[eliminated]
                                                 result["rounds_kills"].append([tournament_name, stage_name, match_type_name, match_name, map, round_stat,
-                                                                                team, player, agent, team, victim, agent, stat_name])
+                                                                                team, player, agent, eliminated_team, eliminated, eliminated_agent, stat_name])
                             else:
                                 stat = td.text.strip()
                                 stat_name = performance_stats_title[index % len(performance_stats_title)]
