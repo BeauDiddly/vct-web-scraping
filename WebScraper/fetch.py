@@ -591,12 +591,12 @@ async def scraping_players_stats(tournament_name, stages, session):
                             agents = ""
                             player_agents_set = players_agents.setdefault(player, set())
                             global_players_agents_set = global_players_agents.setdefault(player, set())
-                            if agent == "all" and len(players_agents[player]) > 1:
-                                agents = ", ".join(players_agents[player]).strip(", ")
-                            elif agent == "all" and len(players_agents[player]) == 1:
-                                break
-                            elif stage_name == "All" and match_type_name == "All" and agent == "all":
-                                agents = ", ".join(global_players_agents[player]).strip(", ")
+                            if stage_name == "All" and match_type_name == "All":
+                                agents = ", ".join(global_players_agents_set).strip(", ")
+                            elif agent == "all" and len(player_agents_set) > 1:
+                                agents = ", ".join(player_agents_set).strip(", ")
+                            elif agent == "all" and len(player_agents_set) == 1:
+                                continue
                             else:
                                 for img in imgs:
                                     src = img.get("src")

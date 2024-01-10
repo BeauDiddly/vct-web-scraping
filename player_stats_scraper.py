@@ -23,12 +23,12 @@ async def main():
     urls = {}
 
     retrieve_urls(urls, tournament_cards, "/event/", "/event/stats/")
-
     filtered_urls = {}
 
     async with aiohttp.ClientSession() as session:
         tasks = [generate_urls_combination(tournament_name, url, filtered_urls, session) for tournament_name, url in urls.items()]
         await asyncio.gather(*tasks)
+
 
     async with aiohttp.ClientSession() as session:
         tasks = [scraping_players_stats(tournament_name, stages, session) for tournament_name, stages in filtered_urls.items()]
