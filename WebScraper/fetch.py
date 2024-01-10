@@ -501,7 +501,7 @@ async def scraping_agents_data(tournament_name, stages, session):
                     if not class_name:
                         map = td.text.strip().replace("\t", "")
                         if not map:
-                            map = "All"
+                            map = "All Maps"
                         else:
                             logo, map = map.split("\n")
                         map_stats_dict = maps_stats_dict.setdefault(map, {})
