@@ -24,7 +24,7 @@ def main():
     agents_df = pd.DataFrame({'Agents': list(all_agents)})
 
     tournament_df.to_csv("all_values/all_tournaments.csv", index=False)
-    stage_df.to_csv("all_values/all_stage.csv", index=False)
+    stage_df.to_csv("all_values/all_stages.csv", index=False)
     match_type_df.to_csv("all_values/all_match_types.csv", index=False)
     matches_df.to_csv("all_values/all_matches.csv", index=False)
     map_df.to_csv("all_values/all_maps.csv", index=False)
