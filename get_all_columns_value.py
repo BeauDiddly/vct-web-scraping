@@ -2,12 +2,14 @@ import pandas as pd
 
 def main():
     df = pd.read_csv("matches/overview.csv")
+    df_2 = pd.read_csv("players_stats/players_stats.csv")
+    df_3 = pd.read_csv("agents/agents_pick_rates.csv")
     all_tournaments = set(df['Tournament'])
     all_stages = set(df['Stage'])
     all_match_types = set(df['Match Type'])
     all_maps = set(df['Map'])
     all_matches = set(df['Match Name'])
-    all_agents = set(df['Agents'])
+    all_agents = set(df['Agents']) | set(df_2["Agents"]) | set(df_3["Agent"])
     all_players = set(df['Player'])
     all_teams = set(df['Team'])
 
