@@ -67,8 +67,8 @@ async def generate_urls_combination(tournament_name, url, stages_filter, session
             excluded_ids = ".".join(exclude_id for exclude_id in all_ids if exclude_id != id)
             filter_url = f"{url}?exclude={excluded_ids}"
             tournament_dict[stage_name][match_type] = filter_url
-    tournament_dict["All"] = {}
-    tournament_dict["All"]["All"] = f"{url}"
+    tournament_dict["All Stages"] = {}
+    tournament_dict["All Stages"]["All Match Types"] = f"{url}"
 
 async def scraping_matches_data(tournament_name, cards, session):
     result = {"scores": [],
