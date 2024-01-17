@@ -70,7 +70,7 @@ async def main():
     
 
     dataframes["maps_stats"] = pd.DataFrame(all_results["maps_stats"],
-                                           columns=["Tournament", "Stage", "Match Type", "Map", "Total Map Played",
+                                           columns=["Tournament", "Stage", "Match Type", "Map", "Total Maps Played",
                                                     "Attacker Side Win Percentage", "Defender Side Win Percentage"])
     dataframes["agents_pick_rates"] = pd.DataFrame(all_results["agents_pick_rates"],
                                                    columns=["Tournament", "Stage", "Match Type", "Map", "Agent", "Pick Rate"])
