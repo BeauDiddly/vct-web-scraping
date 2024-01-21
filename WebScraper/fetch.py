@@ -48,15 +48,16 @@ async def generate_urls_combination(tournament_name, url, stages_filter, session
     all_stages = soup.find("div", class_="wf-card mod-dark mod-scroll stats-filter").find("div").find_all("div", recursive=False)
     tournament_dict = stages_filter.setdefault(tournament_name, {})
     all_ids = ""
+    showmatch_id = ""
     for stage in all_stages:
-        # print(stage.find_all("div", recursive=False))
         stage_name_div, match_types_div = stage.find_all("div", recursive=False)
         stage_name = stage_name_div.find("div").text.strip()
         if stage_name == "Showmatch":
+            showmatch_id = match_types_div.find("div").get("data-subseries-id")
             continue
-        match_types_div = match_types_div.find_all("div")
+        match_types = match_types_div.find_all("div")
         stage_dict = tournament_dict.setdefault(stage_name, {})
-        for match_type in match_types_div:
+        for match_type in match_types:
             match_type_name = match_type.text.strip()
             id = match_type.get("data-subseries-id")
             stage_dict[match_type_name] = id
@@ -65,10 +66,10 @@ async def generate_urls_combination(tournament_name, url, stages_filter, session
     for stage_name, match_types in tournament_dict.items():
         for match_type, id in match_types.items():
             excluded_ids = ".".join(exclude_id for exclude_id in all_ids if exclude_id != id)
-            filter_url = f"{url}?exclude={excluded_ids}"
+            filter_url = f"{url}?exclude={excluded_ids}.{showmatch_id}"
             tournament_dict[stage_name][match_type] = filter_url
     tournament_dict["All Stages"] = {}
-    tournament_dict["All Stages"]["All Match Types"] = f"{url}"
+    tournament_dict["All Stages"]["All Match Types"] = f"{url}?exclude={showmatch_id}"
 
 async def scraping_matches_data(tournament_name, cards, session):
     result = {"scores": [],
