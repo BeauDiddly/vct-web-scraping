@@ -56,7 +56,8 @@ async def main():
                    "kills_stats": [],
                    "rounds_kills": [],
                    "eco_stats": [],
-                   "eco_rounds": []}
+                   "eco_rounds": [],
+                   "team_mapping": {}}
 
     async with aiohttp.ClientSession() as session:
         tasks = [scraping_matches_data(tournament_name, cards, session) for tournament_name, cards in matches_cards.items()]
@@ -64,7 +65,10 @@ async def main():
 
     for result in results:
         for name, data in result.items():
-            all_results[name].extend(data)
+            if name == "team_mapping":
+                all_results[name].update(data)
+            else:
+                all_results[name].extend(data)
 
 
     dataframes["scores"] = pd.DataFrame(all_results["scores"],
@@ -101,6 +105,8 @@ async def main():
                                             columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team", "Type", "Initiated", "Won"])
     dataframes["eco_rounds"] = pd.DataFrame(all_results["eco_rounds"],
                                             columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Round Number", "Team", "Credits", "Type", "Outcome"])
+    dataframes["team_mapping"] = pd.DataFrame(list(all_results["team_mapping"].items()),
+                                              columns=["Abbreviated", "Full Name"])
 
         
     end_time = time.time()

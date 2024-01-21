@@ -286,11 +286,8 @@ async def scraping_matches_data(tournament_name, cards, session):
             try:
                 team_b_div = performance_stats_div[0].find("div").find("tr").find_all("div", class_="team")
                 team_b_players = [""]
-                team_b_lookup = {}
-                team_a_lookup = {}
                 for player in team_b_div:
                     player, team = player.text.strip().replace("\t", "").split("\n")
-                    team_b_lookup[player] = team_b
                     team_b_players.append(player)
                 players_to_players_kills = {}
                 players_kills = {}
@@ -323,7 +320,6 @@ async def scraping_matches_data(tournament_name, cards, session):
                                 player, team = td.text.strip().replace("\t", "").split("\n")
                                 kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
                                 team = team_mapping[team]
-                                team_a_lookup[player] = team
                             else:
                                 kills_div = td.find("div").find_all("div")
                                 player_a_kills, player_b_kills, difference = kills_div[0].text.strip(), kills_div[1].text.strip(), kills_div[2].text.strip()
@@ -463,6 +459,7 @@ async def scraping_matches_data(tournament_name, cards, session):
                         
             else:
                 print(tournament_name, stage_name, match_type_name, match_name, "does not contain any data under their economy page")
+    result["team_mapping"] = team_mapping
     return result
 
 async def scraping_agents_data(tournament_name, stages, session): 
