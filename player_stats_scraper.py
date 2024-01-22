@@ -16,6 +16,7 @@ async def main():
 
     current_time = now.strftime("%H:%M:%S")
     print("Current Time =", current_time)
+    team_df = pd.read_csv("matches/team_mapping.csv")
     url = "https://www.vlr.gg/vct-2023"
     page = requests.get(url)
     soup = BeautifulSoup(page.content, "html.parser")
@@ -24,6 +25,9 @@ async def main():
 
     retrieve_urls(urls, tournament_cards, "/event/", "/event/stats/")
     filtered_urls = {}
+    team_mapping = dict(zip(team_df["Abbreviated"], team_df["Full Name"]))
+
+
 
     async with aiohttp.ClientSession() as session:
         tasks = [generate_urls_combination(tournament_name, url, filtered_urls, session) for tournament_name, url in urls.items()]
@@ -31,7 +35,7 @@ async def main():
 
 
     async with aiohttp.ClientSession() as session:
-        tasks = [scraping_players_stats(tournament_name, stages, session) for tournament_name, stages in filtered_urls.items()]
+        tasks = [scraping_players_stats(tournament_name, stages, team_mapping, session) for tournament_name, stages in filtered_urls.items()]
         results = await asyncio.gather(*tasks)
     
     all_result = []

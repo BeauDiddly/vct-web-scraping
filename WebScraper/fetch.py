@@ -549,7 +549,7 @@ async def scraping_agents_data(tournament_name, stages, session):
                     
     return result
 
-async def scraping_players_stats(tournament_name, stages, session):
+async def scraping_players_stats(tournament_name, stages, team_napping, session):
     result = {}
     global_players_agents = {}
     pattern = r'/(\w+)\.png'
@@ -582,6 +582,7 @@ async def scraping_players_stats(tournament_name, stages, session):
                         if class_name == "mod-player mod-a":
                             player_info = td.find("div").find_all("div")
                             player, team = player_info[0].text, player_info[1].text
+                            team = team_napping[team]
                             team_dict = match_type_dict.setdefault(team, {})
                             player_dict = team_dict.setdefault(player, {})
                         elif class_name == "mod-agents":
