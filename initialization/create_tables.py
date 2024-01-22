@@ -2,7 +2,7 @@ from Connect.execute_query import execute_query
 import pandas as pd
 
 
-def create_tournament_table(curr):
+def create_tournaments_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS tournaments (
          tournament_id INT PRIMARY KEY,
@@ -12,7 +12,7 @@ def create_tournament_table(curr):
    execute_query(curr, query)
 
 
-def create_stage_table(curr):
+def create_stages_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS stages (
          stage_id INT PRIMARY KEY,
@@ -21,7 +21,7 @@ def create_stage_table(curr):
       """
    execute_query(curr, query)
 
-def create_match_type_table(curr):
+def create_match_types_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS match_types (
          match_type_id INT PRIMARY KEY,
@@ -31,7 +31,7 @@ def create_match_type_table(curr):
    execute_query(curr, query)
 
 
-def create_match_name_table(curr):
+def create_matches_table(curr):
    query = """
    CREATE TABLE IF NOT EXISTS matches (
       match_id INT PRIMARY KEY,
@@ -41,7 +41,7 @@ def create_match_name_table(curr):
    execute_query(curr, query)
 
 
-def create_map_table(curr):
+def create_maps_table(curr):
    query = """
    CREATE TABLE IF NOT EXISTS maps (
       map_id INT PRIMARY KEY,
@@ -51,7 +51,7 @@ def create_map_table(curr):
    execute_query(curr, query)
 
 
-def create_team_table(curr):
+def create_teams_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS teams (
          team_id INT PRIMARY KEY,
@@ -61,7 +61,7 @@ def create_team_table(curr):
    execute_query(curr, query)
 
 
-def create_player_table(curr):
+def create_players_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS players (
          player_id INT PRIMARY KEY,
@@ -71,7 +71,7 @@ def create_player_table(curr):
    execute_query(curr, query)
 
 
-def create_agent_table(curr):
+def create_agents_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS agents (
          agent_id INT PRIMARY KEY,
@@ -155,7 +155,7 @@ def create_kills_table(curr):
 def create_kills_stats_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS kills_stats (
-         kill_stat_id SERIAL PRIMARY KEY
+         kill_stat_id SERIAL PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
@@ -188,7 +188,7 @@ def create_maps_played_table(curr):
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
-         map_id INT REFERENCES maps(map_id),
+         map_id INT REFERENCES maps(map_id)
       );
    """
    execute_query(curr, query)
@@ -212,7 +212,7 @@ def create_maps_scores_table(curr):
          team_b_attack_score INT,
          team_b_defender_score INT,
          team_b_overtime_score INT NULL,
-         duration INT NULL
+         duration INTERVAL NULL
       );
    """
    execute_query(curr, query)
@@ -229,18 +229,18 @@ def create_overview_table(curr):
          player_id INT REFERENCES players(player_id),
          team_id INT REFERENCES teams(team_id),
          agent_id INT REFERENCES agents(agent_id),
-         rating INT,
-         average_combat_score INT,
-         kills INT,
-         deaths INT,
-         assists INT,
-         kill_deaths INT,
-         kast_percentage DECIMAL,
-         adr INT,
-         headshot_percentage DECIMAL,
-         first_kills INT,
-         first_deaths INT,
-         fkd INT,
+         rating INT NULL,
+         average_combat_score INT NULL,
+         kills INT NULL,
+         deaths INT NULL,
+         assists INT NULL,
+         kill_deaths INT NULL,
+         kast_percentage DECIMAL NULL,
+         adr INT NULL,
+         headshot_percentage DECIMAL NULL,
+         first_kills INT NULL,
+         first_deaths INT NULL,
+         fkd INT NULL,
          side VARCHAR(255)
       );
    """
@@ -255,7 +255,7 @@ def create_rounds_kills_table(curr):
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
          map_id INT REFERENCES maps(map_id),
-         round_number INT,
+         round_number VARCHAR(255),
          eliminator_team_id INT REFERENCES teams(team_id),
          eliminator_id INT REFERENCES players(player_id),
          eliminator_agent_id INT REFERENCES agents(agent_id),
@@ -290,7 +290,7 @@ def create_agents_pick_rates_table(curr):
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
-         map_id INT REFERENCES maps(map_id)
+         map_id INT REFERENCES maps(map_id),
          match_id INT REFERENCES matches(match_id),
          agent_id INT REFERENCES agents(agent_id),
          pick_rate DECIMAL
@@ -305,9 +305,9 @@ def create_maps_stats_table(curr):
       tournament_id INT REFERENCES tournaments(tournament_id),
       stage_id INT REFERENCES stages(stage_id),
       match_type_id INT REFERENCES match_types(match_type_id),
-      map_id INT REFERENCES mas(map_id),
-      total_maps_played INT
-      attacker_win_percentage DECIMAL
+      map_id INT REFERENCES maps(map_id),
+      total_maps_played INT,
+      attacker_win_percentage DECIMAL,
       defender_win_percentage DECIMAL
       );
    """
@@ -320,9 +320,9 @@ def create_teams_picked_agents_table(curr):
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
-         map_id INT REFERENCES mas(map_id),
+         map_id INT REFERENCES maps(map_id),
          team_id INT REFERENCES teams(team_id),
-         agent_id REFERENCES agents(agent_id),
+         agent_id INT REFERENCES agents(agent_id),
          total_wins_by_map INT,
          total_loss_by_map INT,
          total_maps_played INT
@@ -340,7 +340,7 @@ def create_players_stats_table(curr):
          player_id INT REFERENCES players(player_id),
          team_id INT REFERENCES teams(team_id),
          agents_id INT REFERENCES agents(agent_id),
-         rounds_played INT
+         rounds_played INT,
          rating DECIMAL,
          average_combat_score INT,
          kills_deaths DECIMAL,
@@ -362,3 +362,28 @@ def create_players_stats_table(curr):
          first_deaths INT
       );
    """
+   execute_query(curr, query)
+
+def create_all_tables(curr):
+   create_tournaments_table(curr)
+   create_agents_table(curr)
+   create_maps_table(curr)
+   create_matches_table(curr)
+   create_match_types_table(curr)
+   create_stages_table(curr)
+   create_teams_table(curr)
+   create_players_table(curr)
+   create_draft_phase_table(curr)
+   create_eco_rounds_table(curr)
+   create_eco_stats_table(curr)
+   create_kills_table(curr)
+   create_kills_stats_table(curr)
+   create_maps_played_table(curr)
+   create_maps_scores_table(curr)
+   create_overview_table(curr)
+   create_rounds_kills_table(curr)
+   create_scores_table(curr)
+   create_agents_pick_rates_table(curr)
+   create_maps_stats_table(curr)
+   create_teams_picked_agents_table(curr)
+   create_players_stats_table(curr)

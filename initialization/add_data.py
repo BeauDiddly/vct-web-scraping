@@ -2,6 +2,7 @@ from Connect.execute_query import execute_query
 import pandas as pd
 from retrieve.retrieve import retrieve_foreign_key
 from generate.generate_unique_id import generate_unique_id
+from checking.check_values import check_na
 
 def add_tournaments(curr, unique_ids):
    tournaments = pd.read_csv("all_values/all_tournaments.csv")
@@ -27,7 +28,7 @@ def add_match_types(curr, unique_ids):
       data = (id, match_type)
       execute_query(curr, query, data)
 
-def add_match_names(curr, unique_ids):
+def add_matches(curr, unique_ids):
    match_names = pd.read_csv("all_values/all_matches.csv")
    for index, match_name in match_names["Match Name"].items():
       id = generate_unique_id(unique_ids)
@@ -74,7 +75,8 @@ def add_drafts(curr):
          tournament_id, stage_id, match_type_id, match_id,
          team_id, action, map_id
       ) VALUES (
-         %s, %s, %s, %s, %s, %s, %s
+         %s, %s, %s, %s,
+         %s, %s, %s
       );
    """
    for index, row in drafts.iterrows():
@@ -85,12 +87,12 @@ def add_drafts(curr):
       team = row["Team"]
       action = row["Action"]
       map = row["Map"]
-      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
-      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
-      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
-      match_id = retrieve_foreign_key(curr, "match_id", "match", "match_name", match_name)
-      team_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", team)
-      map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
+      match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
+      team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team)
+      map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
       data = (tournament_id, stage_id, match_type_id, match_id, team_id, action, map_id)
       execute_query(curr, query, data)
 
@@ -101,7 +103,8 @@ def add_eco_rounds(curr):
          tournament_id, stage_id, match_type_id, match_id, map_id,
          round_number, team_id, credits, eco_type, outcome
       ) VALUES (
-         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+         %s, %s, %s, %s, %s,
+         %s, %s, %s, %s, %s
       );
    """
    for index, row in eco_rounds.iterrows():
@@ -115,17 +118,15 @@ def add_eco_rounds(curr):
       credits = row["Credits"]
       eco_type = row["Type"]
       outcome = row["Outcome"]
-      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
-      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
-      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
-      match_id = retrieve_foreign_key(curr, "match_id", "match", "match_name", match_name)
-      team_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", team)
-      map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
+      match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
+      team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team)
+      map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
       data = (tournament_id, stage_id, match_type_id, match_id, map_id, round_number, team_id, credits, eco_type, outcome)
       execute_query(curr, query, data)
       
-      
-
 def add_eco_stats(curr):
    eco_stats = pd.read_csv("matches/eco_stats.csv")
    query = """
@@ -133,7 +134,8 @@ def add_eco_stats(curr):
          tournament_id, stage_id, match_type_id, match_id, map_id,
          team_id, eco_type, initiated, won
       ) VALUES (
-         %s, %s, %s, %s, %s, %s, %s, %s
+         %s, %s, %s, %s, %s,
+         %s, %s, %s, %s
       );
    """
    for index, row in eco_stats.iterrows():
@@ -144,14 +146,14 @@ def add_eco_stats(curr):
       map = row["Map"]
       team = row["Team"]
       eco_type = row["Type"]
-      initiated = row["Initiated"]
+      initiated = check_na(row["Initiated"], "int")
       won = row["Won"]
-      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
-      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
-      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
-      match_id = retrieve_foreign_key(curr, "match_id", "match", "match_name", match_name)
-      team_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", team)
-      map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
+      match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
+      team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team)
+      map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
       data = (tournament_id, stage_id, match_type_id, match_id, map_id, team_id, eco_type, initiated, won)
       execute_query(curr, query, data)
       
@@ -165,7 +167,10 @@ def add_kills(curr):
          enemy_team_id, enemy_id,
          player_kills, enemy_kills, difference, kill_type
       ) VALUES (
-         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+         %s, %s, %s, %s, %s,
+         %s, %s,
+         %s, %s,
+         %s, %s, %s, %s
       );
    """
    for index, row in kills.iterrows():
@@ -174,23 +179,26 @@ def add_kills(curr):
       match_type = row["Match Type"]
       match_name = row["Match Name"]
       map = row["Map"]
-      player_team = row["Player's Team"]
+      player_team = row["Player Team"]
       player = row["Player"]
-      enemy_team = row["Enemy's Team"]
+      enemy_team = row["Enemy Team"]
       enemy = row["Enemy"]
-      player_kills = row["Player's Kills"]
-      enemy_kills = row["Enemy's Kills"]
-      difference = row["Difference"]
+      player_kills = check_na(row["Player's Kills"], "int")
+
+      enemy_kills = check_na(row["Enemy's Kills"], "int")
+      
+      difference = check_na(row["Difference"], "int")
+
       kill_type = row["Kill Type"]
-      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
-      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
-      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
-      match_id = retrieve_foreign_key(curr, "match_id", "match", "match_name", match_name)
-      map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
-      player_team_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", player_team)
-      player_id = retrieve_foreign_key(curr, "player_id", "player", "player_name", player)
-      enemy_team_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", enemy_team)
-      enemy_id = retrieve_foreign_key(curr, "player_id", "player", "player_name", enemy)
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
+      match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
+      map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
+      player_team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", player_team)
+      player_id = retrieve_foreign_key(curr, "player_id", "players", "player_name", player)
+      enemy_team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", enemy_team)
+      enemy_id = retrieve_foreign_key(curr, "player_id", "players", "player_name", enemy)
       data = (tournament_id, stage_id, match_type_id, match_id, map_id, player_team_id, player_id, enemy_team_id,
             enemy_id, player_kills, enemy_kills, difference, kill_type)
       execute_query(curr, query, data)
@@ -201,10 +209,13 @@ def add_kills_stats(curr):
    query = """
       INSERT INTO kills_stats (
          tournament_id, stage_id, match_type_id, match_id, map_id, team_id, player_id, agent_id,
-         two_kills, three_kills, four_kills, one_vs_one, one_vs_two, one_vs_three, one_vs_four, one_vs_five, econ, spike_plants, spike_defuse
+         two_kills, three_kills, four_kills, five_kills, one_vs_one, one_vs_two, one_vs_three, one_vs_four, one_vs_five,
+         econ, spike_plants, spike_defuse
       )
       VALUES (
-         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+         %s, %s, %s, %s, %s, %s, %s, %s,
+         %s, %s, %s, %s, %s, %s, %s, %s, %s,
+         %s, %s, %s
       );
    """
    for index, row in kills_stats.iterrows():
@@ -216,30 +227,42 @@ def add_kills_stats(curr):
       team = row["Team"]
       player = row["Player"]
       agent = row["Agent"]
-      two_kills = row["2K"]
-      three_kills = row["3K"]
-      four_kills = row["4K"]
-      five_kills = row["5K"]
-      one_vs_one = row["1v1"]
-      one_vs_two = row["1v2"]
-      one_vs_three = row["1v3"]
-      one_vs_four = row["1v4"]
-      one_vs_five = row["1v5"]
+      two_kills = check_na(row["2k"], "int")
+      three_kills = check_na(row["3k"], "int")
+      four_kills = check_na(row["4k"], "int")
+      five_kills = check_na(row["5k"], "int")
+      one_vs_one = check_na(row["1v1"], "int")
+      one_vs_two = check_na(row["1v2"], "int")
+      one_vs_three = check_na(row["1v3"], "int")
+      one_vs_four = check_na(row["1v4"], "int")
+      one_vs_five = check_na(row["1v5"], "int")
       econ = row["Econ"]
       spike_plants = row["Spike Plants"]
       spike_defuse = row["Spike Defuse"]
-      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
-      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
-      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
-      match_id = retrieve_foreign_key(curr, "match_id", "match", "match_name", match_name)
-      map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
-      team_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", team)
-      player_id = retrieve_foreign_key(curr, "player_id", "player", "player_name", player)
-      agent_id = retrieve_foreign_key(curr, "agent_id", "agent", "agent_name", agent)
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
+      match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
+      map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
+      team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team)
+      player_id = retrieve_foreign_key(curr, "player_id", "players", "player_name", player)
+      agent_id = retrieve_foreign_key(curr, "agent_id", "agents", "agent_name", agent)
       data = (tournament_id, stage_id, match_type_id, match_id, map_id, team_id, player_id, agent_id,
               two_kills, three_kills, four_kills, five_kills, one_vs_one, one_vs_two, one_vs_three,
               one_vs_four, one_vs_five, econ, spike_plants, spike_defuse)
-      execute_query(curr, query, data)
+      try:
+         execute_query(curr, query, data)
+      except TypeError as e:
+         print(e)
+         print(data[0], tournament, type(data[0]))
+         print(data[1], stage, type(data[1]))
+         print(data[2], match_type, type(data[2]))
+         print(data[3], match_name, type(data[3]))
+         print(data[4], map, type(data[4]))
+         print(data[5], team, type(data[5]))
+         print(data[6], player, type(data[6]))
+         print(data[7], agent, type(data[7]))
+         break
 
 def add_maps_played(curr):
    maps_played = pd.read_csv("matches/maps_played.csv")
@@ -256,11 +279,11 @@ def add_maps_played(curr):
       match_type = row["Match Type"]
       match_name = row["Match Name"]
       map = row["Map"]
-      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
-      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
-      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
-      match_id = retrieve_foreign_key(curr, "match_id", "match", "match_name", match_name)
-      map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
+      match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
+      map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
       data = (tournament_id, stage_id, match_type_id, match_id, map_id)
       execute_query(curr, query, data)
 
@@ -272,6 +295,11 @@ def add_maps_scores(curr):
          team_a_id, team_a_score, team_a_attack_score, team_a_defender_score, team_a_overtime_score,
          team_b_id, team_b_score, team_b_attack_score, team_b_defender_score, team_b_overtime_score,
          duration
+      ) VALUES (
+         %s, %s, %s, %s, %s,
+         %s, %s, %s, %s, %s,
+         %s, %s, %s, %s, %s,
+         %s
       );
    """
    for index, row in maps_scores.iterrows():
@@ -281,23 +309,23 @@ def add_maps_scores(curr):
       match_name = row["Match Name"]
       map = row["Map"]
       team_a = row["Team A"]
-      team_a_score = row["Team A's Score"]
-      team_a_attack_score = row["Team A's Attack Score"]
-      team_a_defender_score = row["Team A's Defender Score"]
-      team_a_overtime_score = row["Team A's Overtime Score"]
+      team_a_score = row["Team A Score"]
+      team_a_attack_score = row["Team A Attacker Score"]
+      team_a_defender_score = row["Team A Defender Score"]
+      team_a_overtime_score = check_na(row["Team A Overtime Score"], "int")
       team_b = row["Team B"]
-      team_b_score = row["Team B's Score"]
-      team_b_attack_score = row["Team B's Attack Score"]
-      team_b_defender_score = row["Team B's Defender Score"]
-      team_b_overtime_score = row["Team B's Overtime Score"]
-      duration = row["Duration"]
-      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
-      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
-      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
-      match_id = retrieve_foreign_key(curr, "match_id", "match", "match_name", match_name)
-      map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
-      team_a_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", team_a)
-      team_b_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", team_b)
+      team_b_score = row["Team B Score"]
+      team_b_attack_score = row["Team B Attacker Score"]
+      team_b_defender_score = row["Team B Defender Score"]
+      team_b_overtime_score = check_na(row["Team B Overtime Score"], "int")
+      duration = check_na(row["Duration"], "interval")
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
+      match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
+      map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
+      team_a_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team_a)
+      team_b_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team_b)
       data = (tournament_id, stage_id, match_type_id, match_id, map_id,
               team_a_id, team_a_score, team_a_attack_score, team_a_defender_score, team_a_overtime_score,
               team_b_id, team_b_score, team_b_attack_score, team_b_defender_score, team_b_overtime_score,
@@ -310,10 +338,11 @@ def add_overview(curr):
    query = """
       INSERT INTO overview (
          tournament_id, stage_id, match_type_id, match_id, map_id, player_id, team_id, agent_id,
-         rating, average_combat_score, kills, deaths, assists, kill_deaths, kast, adr, headshot_percentage, first_kills, first_deaths, fkd, side
+         rating, average_combat_score, kills, deaths, assists, kill_deaths, kast_percentage, adr, headshot_percentage, first_kills, first_deaths, fkd, side
       )
       VALUES (
-         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+         %s, %s, %s, %s, %s, %s, %s, %s,
+         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
       );
    """
    for index, row in overview.iterrows():
@@ -324,28 +353,28 @@ def add_overview(curr):
       map = row["Map"]
       team = row["Team"]
       player = row["Player"]
-      agent = row["Agent"]
-      rating = row["Rating"]
-      average_combat_score = row["Average Combat Score"]
-      kills = row["Kills"]
-      deaths = row["Deaths"]
-      assists = row["Assists"]
-      kill_deaths = row["Kill - Deaths (KD)"]
-      kast = float(row["Kill, Assist, Trade, Survive %"].strip("%")) / 100.0
-      adr = row["Average Damage per Round"]
-      headshot_percentage = float(row["Headshot %"].strip("%")) / 100.0
-      first_kills = row["First Kills"]
-      first_deaths = row["First Deaths"]
-      fkd = row["Kills - Deaths (FKD)"]
-      side = row["side"]
-      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
-      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
-      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
-      match_id = retrieve_foreign_key(curr, "match_id", "match", "match_name", match_name)
-      map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
-      team_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", team)
-      player_id = retrieve_foreign_key(curr, "player_id", "player", "player_name", player)
-      agent_id = retrieve_foreign_key(curr, "agent_id", "agent", "agent_name", agent)
+      agent = row["Agents"]
+      rating = check_na(row["Rating"], "int")
+      average_combat_score = check_na(row["Average Combat Score"], "int")
+      kills = check_na(row["Kills"], "int")
+      deaths = check_na(row["Deaths"], "int")
+      assists = check_na(row["Assists"], "int")
+      kill_deaths = check_na(row["Kill - Deaths (KD)"], "int")
+      kast = check_na(row["Kill, Assist, Trade, Survive %"], "percentage")
+      adr = check_na(row["Average Damage per Round"], "int")
+      headshot_percentage = check_na(row["Headshot %"], "percentage")
+      first_kills = check_na(row["First Kills"], "int")
+      first_deaths = check_na(row["First Deaths"], "int")
+      fkd = check_na(row["Kills - Deaths (FKD)"], "int")
+      side = row["Side"]
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
+      match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
+      map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
+      team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team)
+      player_id = retrieve_foreign_key(curr, "player_id", "players", "player_name", player)
+      agent_id = retrieve_foreign_key(curr, "agent_id", "agents", "agent_name", agent)
       data = (tournament_id, stage_id, match_type_id, match_id, map_id, player_id, team_id, agent_id,
               rating, average_combat_score, kills, deaths, assists, kill_deaths, kast, adr, headshot_percentage, first_kills, first_deaths, fkd, side)
       execute_query(curr, query, data)
@@ -353,12 +382,18 @@ def add_overview(curr):
 
 def add_rounds_kills(curr):
    rounds_kills = pd.read_csv("matches/rounds_kills.csv")
+   print(list(rounds_kills.columns))
    query = """
       INSERT INTO rounds_kills (
-         tournament_id, stage_id, match_type_id, match_id, map_id,round_number,
+         tournament_id, stage_id, match_type_id, match_id, map_id, round_number,
          eliminator_team_id, eliminator_id, eliminator_agent_id,
          eliminated_team_id, eliminated_id, eliminated_agent_id,
          kill_type
+      ) VALUES (
+         %s, %s, %s, %s, %s, %s,
+         %s, %s, %s,
+         %s, %s, %s,
+         %s
       );
    """
    for index, row in rounds_kills.iterrows():
@@ -368,24 +403,24 @@ def add_rounds_kills(curr):
       match_name = row["Match Name"]
       map = row["Map"]
       round_number = row["Round Number"]
-      eliminator_team = row["Eliminator's Team"]
+      eliminator_team = row["Eliminator Team"]
       eliminator = row["Eliminator"]
-      eliminator_agent = row["Eliminator's Agent"]
-      eliminated_team = row["Eliminated's Team"]
+      eliminator_agent = row["Eliminator Agent"]
+      eliminated_team = row['Eliminated Team']
       eliminated = row["Eliminated"]
-      eliminated_agent = row["Eliminated's Team"]
+      eliminated_agent = row["Eliminated Agent"]
       kill_type = row["Kill Type"]
-      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
-      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
-      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
-      match_id = retrieve_foreign_key(curr, "match_id", "match", "match_name", match_name)
-      map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
-      eliminator_team_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", eliminator_team)
-      eliminator_id = retrieve_foreign_key(curr, "player_id", "player", "player_name", eliminator)
-      eliminator_agent_id = retrieve_foreign_key(curr, "agent_id", "agent", "agent_name", eliminator_agent)
-      eliminated_team_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", eliminated_team)
-      eliminated_id = retrieve_foreign_key(curr, "player_id", "player", "player_name", eliminated)
-      eliminated_agent_id = retrieve_foreign_key(curr, "agent_id", "agent", "agent_name", eliminated_agent)
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
+      match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
+      map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
+      eliminator_team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", eliminator_team)
+      eliminator_id = retrieve_foreign_key(curr, "player_id", "players", "player_name", eliminator)
+      eliminator_agent_id = retrieve_foreign_key(curr, "agent_id", "agents", "agent_name", eliminator_agent)
+      eliminated_team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", eliminated_team)
+      eliminated_id = retrieve_foreign_key(curr, "player_id", "players", "player_name", eliminated)
+      eliminated_agent_id = retrieve_foreign_key(curr, "agent_id", "agents", "agent_name", eliminated_agent)
       data = (tournament_id, stage_id, match_type_id, match_id, map_id, round_number,
               eliminator_team_id, eliminator_id, eliminator_agent_id,
               eliminated_team_id, eliminated_id, eliminated_agent_id,
@@ -399,6 +434,10 @@ def add_scores(curr):
          tournament_id, stage_id, match_type_id, match_id,
          winner_id, loser_id,
          winner_score, loser_score
+      ) VALUES (
+         %s, %s, %s, %s,
+         %s, %s,
+         %s, %s
       );
    """
    for index, row in scores.iterrows():
@@ -408,14 +447,14 @@ def add_scores(curr):
       match_name = row["Match Name"]
       winner = row["Winner"]
       loser = row["Loser"]
-      winner_score = row["Winner's Score"]
-      loser_score = row["Loser's Score"]
-      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
-      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
-      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
-      match_id = retrieve_foreign_key(curr, "match_id", "match", "match_name", match_name)
-      winner_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", winner)
-      loser_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", loser)
+      winner_score = row["Winner Score"]
+      loser_score = row["Loser Score"]
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
+      match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
+      winner_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", winner)
+      loser_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", loser)
       data = (tournament_id, stage_id, match_type_id, match_id,
               winner_id, loser_id,
               winner_score, loser_score)
@@ -428,6 +467,9 @@ def add_agents_pick_rates(curr):
       INSERT INTO agents_pick_rates (
          tournament_id, stage_id, match_type_id, map_id,
          agent_id, pick_rate
+      ) VALUES (
+         %s, %s, %s, %s,
+         %s, %s
       );
    """
    for index, row in pick_rates.iterrows():
@@ -436,12 +478,12 @@ def add_agents_pick_rates(curr):
       match_type = row["Match Type"]
       map = row["Map"]
       agent = row["Agent"]
-      pick_rate = float(row["Pick Rate"]) / 100.0
-      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
-      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
-      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
-      map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
-      agent_id = retrieve_foreign_key(curr, "agent_id", "agent", "agent_name", agent)
+      pick_rate = check_na(row["Pick Rate"], "percentage")
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
+      map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
+      agent_id = retrieve_foreign_key(curr, "agent_id", "agents", "agent_name", agent)
       data = (tournament_id, stage_id, match_type_id, map_id, agent_id, pick_rate)
       execute_query(curr, query, data)
 
@@ -451,6 +493,9 @@ def add_maps_stats(curr):
       INSERT INTO maps_stats (
          tournament_id, stage_id, match_type_id, map_id, 
          total_maps_played, attacker_win_percentage, defender_win_percentage
+      ) VALUES (
+         %s, %s, %s, %s,
+         %s, %s, %s
       );
    """
    for index, row in maps_stats.iterrows():
@@ -459,12 +504,12 @@ def add_maps_stats(curr):
       match_type = row["Match Type"]
       map = row["Map"]
       total_maps_played = row["Total Maps Played"]
-      attacker_win_percentage = float(row["Attacker Side Win Percentage"]) / 100.0
-      defender_win_percentage = float(row["Defender Side Win Percentage"]) / 100.0
-      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
-      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
-      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
-      map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
+      attacker_win_percentage = float(row["Attacker Side Win Percentage"].strip("%")) / 100.0
+      defender_win_percentage = float(row["Defender Side Win Percentage"].strip("%")) / 100.0
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
+      map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
 
       data = (tournament_id, stage_id, match_type_id, map_id, total_maps_played, attacker_win_percentage, defender_win_percentage)
       execute_query(curr, query, data)
@@ -474,7 +519,10 @@ def add_teams_picked_agents(curr):
    query = """
       INSERT INTO teams_picked_agents (
          tournament_id, stage_id, match_type_id, map_id, team_id, 
-         agent_id, total_wins_by_maps, total_loss_by_maps, total_maps_played
+         agent_id, total_wins_by_map, total_loss_by_map, total_maps_played
+      ) VALUES (
+         %s, %s, %s, %s, %s,
+         %s, %s, %s, %s
       );
    """
    for index, row in teams_picked_agents.iterrows():
@@ -483,24 +531,23 @@ def add_teams_picked_agents(curr):
       match_type = row["Match Type"]
       map = row["Map"]
       team = row["Team"]
-      agent = row["Agent"]
+      agent = row["Agent Picked"]
       total_wins_by_map = row["Total Wins By Map"]
       total_loss_by_map = row["Total Loss By Map"]
       total_maps_played = row["Total Maps Played"]
-      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
-      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
-      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
-      map_id = retrieve_foreign_key(curr, "map_id", "map", "map_name", map)
-      team_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", team)
-      agent_id = retrieve_foreign_key(curr, "agent_id", "agent", "agent_name", agent)
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
+      map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
+      team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team)
+      agent_id = retrieve_foreign_key(curr, "agent_id", "agents", "agent_name", agent)
 
       data = (tournament_id, stage_id, match_type_id, map_id, team_id, agent_id, total_wins_by_map, total_loss_by_map, total_maps_played)
-
       execute_query(curr, query, data)
 
 
 def add_players_stats(curr):
-   players_stats = pd.read_csv("agents/players_stats.csv")
+   players_stats = pd.read_csv("players_stats/players_stats.csv")
    query = """
       INSERT INTO players_stats (
          tournament_id, stage_id, match_type_id, player_id, team_id, agents_id,
@@ -508,6 +555,12 @@ def add_players_stats(curr):
          kills_per_round, assists_per_round, first_kills_per_round, first_deaths_per_round,
          headshot_percentage, clutch_success, clutches_won, clutches_played, mksp,
          kills, deaths, assists, first_kills, first_deaths
+      ) VALUES (
+         %s, %s, %s, %s, %s, %s,
+         %s, %s, %s, %s, %s, %s,
+         %s, %s, %s, %s,
+         %s, %s, %s, %s, %s,
+         %s, %s, %s, %s, %s
       );
    """
    for index, row in players_stats.iterrows():
@@ -518,29 +571,20 @@ def add_players_stats(curr):
       team = row["Team"]
       agents = row["Agents"]
       rounds_played = row["Rounds Played"]
-      rating = row["Rating"]
-      average_combat_score = row["Average Combat Score"]
+      rating = check_na(row["Rating"], "int")
+      average_combat_score = check_na(row["Average Combat Score"], "int")
       kills_deaths = row["Kills:Deaths"]
-      kast = float(row["Kill, Assist, Trade, Survive %"].split("%")) / 100.0
-      adr = row["Average Damage per Round"]
+      kast = check_na(row["Kill, Assist, Trade, Survive %"], "percentage")
+      adr = check_na(row["Average Damage per Round"], "int")
       kills_per_round = row["Kills Per Round"]
       assists_per_round = row["Assists Per Round"]
-      first_kills_per_round = row["First Kills Per Round"]
-      first_deaths_per_round = row["First Deaths Per Round"]
-      headshot_percentage = float(row["Headshot %"].strip("%")) / 100.0
+      first_kills_per_round = check_na(row["First Kills Per Round"], "int")
+      first_deaths_per_round = check_na(row["First Deaths Per Round"], "int")
+      headshot_percentage = check_na(row["Headshot %"], "percentage")
       
-      clutch_success = row["Clutch Success %"]
-      if clutch_success:
-         clutch_success = float(clutch_success) / 100.0
-      else:
-         clutch_success = None
+      clutch_success = check_na(row["Clutch Success %"], "percentage")
 
-      clutches = row["Clutches (won/played)"]
-
-      if clutches:
-         clutches_won, clutches_played = clutches.split("/")
-      else:
-         clutches_won, clutches_played = None, None
+      clutches_won, clutches_played = check_na(row["Clutches (won/played)"], "fraction")
 
       mksp = row["Maximum Kills in a Single Map"]
       kills = row["Kills"]
@@ -548,18 +592,43 @@ def add_players_stats(curr):
       assists = row["Assists"]
       first_kills = row["First Kills"]
       first_deaths = row["First Deaths"]
-
-      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournament", "tournament_name", tournament)
-      stage_id = retrieve_foreign_key(curr, "stage_id", "stage", "stage_name", stage)
-      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_type", "match_type_name", match_type)
-      player_id = retrieve_foreign_key(curr, "player_id", "player", "player_name", player)
-      team_id = retrieve_foreign_key(curr, "team_id", "team", "team_name", team)
-      agent_id = retrieve_foreign_key(curr, "agent_id", "agent", "agent_name", agents)
-
+      tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
+      stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
+      match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
+      player_id = retrieve_foreign_key(curr, "player_id", "players", "player_name", player)
+      team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team)
+      agent_id = retrieve_foreign_key(curr, "agent_id", "agents", "agent_name", agents)
       data = (tournament_id, stage_id, match_type_id, player_id, team_id, agent_id,
               rounds_played, rating, average_combat_score, kills_deaths, kast, adr,
               kills_per_round, assists_per_round, first_kills_per_round, first_deaths_per_round,
               headshot_percentage, clutch_success, clutches_won, clutches_played,
               mksp, kills, deaths, assists, first_kills, first_deaths)
+
+      print(data)
+
       
       execute_query(curr, query, data)
+
+def add_all_data(curr, unique_ids):
+   add_tournaments(curr, unique_ids)
+   add_stages(curr, unique_ids)
+   add_match_types(curr, unique_ids)
+   add_matches(curr, unique_ids)
+   add_maps(curr, unique_ids)
+   add_teams(curr, unique_ids)
+   add_players(curr, unique_ids)
+   add_agents(curr, unique_ids)
+   # add_drafts(curr)
+   # add_eco_rounds(curr)
+   # add_eco_stats(curr)
+   # add_kills(curr)
+   # add_kills_stats(curr)
+   # add_maps_played(curr)
+   # add_maps_scores(curr)
+   # add_overview(curr)
+   # add_rounds_kills(curr)
+   # add_scores(curr)
+   # add_agents_pick_rates(curr)
+   # add_maps_stats(curr)
+   # add_teams_picked_agents(curr)
+   add_players_stats(curr)
