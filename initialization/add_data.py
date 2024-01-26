@@ -71,25 +71,25 @@ def add_agents(curr, unique_ids):
       data = (id, agent)
       execute_query(curr, query, data)
 
-async def insert_data(curr, dataframe, insertion_function, table_name, query):
+async def insert_data(curr, dataframe, insertion_function, table_name):
    print(f"Adding data to {table_name}")
-   tasks = [insertion_function(curr, row, query) for _, row in dataframe.iterrows()]
+   tasks = [insertion_function(curr, row) for _, row in dataframe.iterrows()]
    await asyncio.gather(**tasks)
    print(f"Done adding data to {table_name}")
    
 
-async def add_drafts(curr, row, query):
+async def add_drafts(curr, row):
    # print(f"Adding drafts")
    # drafts = pd.read_csv("matches/draft_phase.csv")
-   # query = """
-   #    INSERT INTO drafts (
-   #       tournament_id, stage_id, match_type_id, match_id,
-   #       team_id, action, map_id
-   #    ) VALUES (
-   #       %s, %s, %s, %s,
-   #       %s, %s, %s
-   #    );
-   # """
+   query = """
+      INSERT INTO drafts (
+         tournament_id, stage_id, match_type_id, match_id,
+         team_id, action, map_id
+      ) VALUES (
+         %s, %s, %s, %s,
+         %s, %s, %s
+      );
+   """
    # for index, row in drafts.iterrows():
    tournament = row["Tournament"]
    stage = row["Stage"]
@@ -109,18 +109,18 @@ async def add_drafts(curr, row, query):
    # print(f"Done adding drafts")
    # await asyncio.sleep(0)
 
-async def add_eco_rounds(curr, row, query):
+async def add_eco_rounds(curr, row):
    # print(f"Adding eco rounds")
    # eco_rounds = pd.read_csv("matches/eco_rounds.csv")
-   # query = """
-   #    INSERT INTO eco_rounds (
-   #       tournament_id, stage_id, match_type_id, match_id, map_id,
-   #       round_number, team_id, credits, eco_type, outcome
-   #    ) VALUES (
-   #       %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s, %s
-   #    );
-   # """
+   query = """
+      INSERT INTO eco_rounds (
+         tournament_id, stage_id, match_type_id, match_id, map_id,
+         round_number, team_id, credits, eco_type, outcome
+      ) VALUES (
+         %s, %s, %s, %s, %s,
+         %s, %s, %s, %s, %s
+      );
+   """
    # for index, row in eco_rounds.iterrows():
    tournament = row["Tournament"]
    stage = row["Stage"]
@@ -143,18 +143,18 @@ async def add_eco_rounds(curr, row, query):
    # print(f"Done adding eco rounds")
    # await asyncio.sleep(0)
       
-async def add_eco_stats(curr, row, query):
+async def add_eco_stats(curr, row):
    # print(f"Adding eco stats")
    # eco_stats = pd.read_csv("matches/eco_stats.csv")
-   # query = """
-   #    INSERT INTO eco_stats (
-   #       tournament_id, stage_id, match_type_id, match_id, map_id,
-   #       team_id, eco_type, initiated, won
-   #    ) VALUES (
-   #       %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s
-   #    );
-   # """
+   query = """
+      INSERT INTO eco_stats (
+         tournament_id, stage_id, match_type_id, match_id, map_id,
+         team_id, eco_type, initiated, won
+      ) VALUES (
+         %s, %s, %s, %s, %s,
+         %s, %s, %s, %s
+      );
+   """
    # for index, row in eco_stats.iterrows():
    tournament = row["Tournament"]
    stage = row["Stage"]
@@ -177,22 +177,22 @@ async def add_eco_stats(curr, row, query):
    # await asyncio.sleep(0)
       
 
-async def add_kills(curr, row, query):
+async def add_kills(curr, row):
    # print(f"Adding kills")
    # kills = pd.read_csv("matches/kills.csv")
-   # query = """
-   #    INSERT INTO kills (
-   #       tournament_id, stage_id, match_type_id, match_id, map_id, 
-   #       player_team_id, player_id,
-   #       enemy_team_id, enemy_id,
-   #       player_kills, enemy_kills, difference, kill_type
-   #    ) VALUES (
-   #       %s, %s, %s, %s, %s,
-   #       %s, %s,
-   #       %s, %s,
-   #       %s, %s, %s, %s
-   #    );
-   # """
+   query = """
+      INSERT INTO kills (
+         tournament_id, stage_id, match_type_id, match_id, map_id, 
+         player_team_id, player_id,
+         enemy_team_id, enemy_id,
+         player_kills, enemy_kills, difference, kill_type
+      ) VALUES (
+         %s, %s, %s, %s, %s,
+         %s, %s,
+         %s, %s,
+         %s, %s, %s, %s
+      );
+   """
    # for index, row in kills.iterrows():
    tournament = row["Tournament"]
    stage = row["Stage"]
@@ -226,21 +226,21 @@ async def add_kills(curr, row, query):
    # await asyncio.sleep(0)
 
 
-async def add_kills_stats(curr, row, query):
+async def add_kills_stats(curr, row):
    # print(f"Adding kills stats")
    # kills_stats = pd.read_csv("matches/kills_stats.csv")
-   # query = """
-   #    INSERT INTO kills_stats (
-   #       tournament_id, stage_id, match_type_id, match_id, map_id, team_id, player_id, agent_id,
-   #       two_kills, three_kills, four_kills, five_kills, one_vs_one, one_vs_two, one_vs_three, one_vs_four, one_vs_five,
-   #       econ, spike_plants, spike_defuse
-   #    )
-   #    VALUES (
-   #       %s, %s, %s, %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s, %s, %s, %s, %s, %s,
-   #       %s, %s, %s
-   #    );
-   # """
+   query = """
+      INSERT INTO kills_stats (
+         tournament_id, stage_id, match_type_id, match_id, map_id, team_id, player_id, agent_id,
+         two_kills, three_kills, four_kills, five_kills, one_vs_one, one_vs_two, one_vs_three, one_vs_four, one_vs_five,
+         econ, spike_plants, spike_defuse
+      )
+      VALUES (
+         %s, %s, %s, %s, %s, %s, %s, %s,
+         %s, %s, %s, %s, %s, %s, %s, %s, %s,
+         %s, %s, %s
+      );
+   """
    # for index, row in kills_stats.iterrows():
    tournament = row["Tournament"]
    stage = row["Stage"]
@@ -277,16 +277,16 @@ async def add_kills_stats(curr, row, query):
    # print("Done adding kills stats")
    # await asyncio.sleep(0)
 
-async def add_maps_played(curr, row, query):
+async def add_maps_played(curr, row):
    # print(f"Adding maps played")
    # maps_played = pd.read_csv("matches/maps_played.csv")
-   # query = """
-   #    INSERT INTO maps_played (
-   #       tournament_id, stage_id, match_type_id, match_id, map_id
-   #    ) VALUES (
-   #       %s, %s, %s, %s, %s
-   #    )
-   # """
+   query = """
+      INSERT INTO maps_played (
+         tournament_id, stage_id, match_type_id, match_id, map_id
+      ) VALUES (
+         %s, %s, %s, %s, %s
+      )
+   """
    # for index, row in maps_played.iterrows():
    tournament = row["Tournament"]
    stage = row["Stage"]
@@ -303,22 +303,22 @@ async def add_maps_played(curr, row, query):
    # print(f"Done adding maps played")
    # await asyncio.sleep(0)
 
-async def add_maps_scores(curr, row, query):
+async def add_maps_scores(curr, row):
    # print(f"Adding maps scores")
    # maps_scores = pd.read_csv("matches/maps_scores.csv")
-   # query = """
-   #    INSERT INTO maps_scores (
-   #       tournament_id, stage_id, match_type_id, match_id, map_id, 
-   #       team_a_id, team_a_score, team_a_attack_score, team_a_defender_score, team_a_overtime_score,
-   #       team_b_id, team_b_score, team_b_attack_score, team_b_defender_score, team_b_overtime_score,
-   #       duration
-   #    ) VALUES (
-   #       %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s, %s,
-   #       %s
-   #    );
-   # """
+   query = """
+      INSERT INTO maps_scores (
+         tournament_id, stage_id, match_type_id, match_id, map_id, 
+         team_a_id, team_a_score, team_a_attack_score, team_a_defender_score, team_a_overtime_score,
+         team_b_id, team_b_score, team_b_attack_score, team_b_defender_score, team_b_overtime_score,
+         duration
+      ) VALUES (
+         %s, %s, %s, %s, %s,
+         %s, %s, %s, %s, %s,
+         %s, %s, %s, %s, %s,
+         %s
+      );
+   """
    # for index, row in maps_scores.iterrows():
    tournament = row["Tournament"]
    stage = row["Stage"]
@@ -352,19 +352,19 @@ async def add_maps_scores(curr, row, query):
    # await asyncio.sleep(0)
 
 
-async def add_overview(curr, row, query):
+async def add_overview(curr, row):
    # print("Adding overview")
    # overview = pd.read_csv("matches/overview.csv")
-   # query = """
-   #    INSERT INTO overview (
-   #       tournament_id, stage_id, match_type_id, match_id, map_id, player_id, team_id, agent_id,
-   #       rating, average_combat_score, kills, deaths, assists, kill_deaths, kast_percentage, adr, headshot_percentage, first_kills, first_deaths, fkd, side
-   #    )
-   #    VALUES (
-   #       %s, %s, %s, %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-   #    );
-   # """
+   query = """
+      INSERT INTO overview (
+         tournament_id, stage_id, match_type_id, match_id, map_id, player_id, team_id, agent_id,
+         rating, average_combat_score, kills, deaths, assists, kill_deaths, kast_percentage, adr, headshot_percentage, first_kills, first_deaths, fkd, side
+      )
+      VALUES (
+         %s, %s, %s, %s, %s, %s, %s, %s,
+         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+      );
+   """
    # for index, row in overview.iterrows():
    tournament = row["Tournament"]
    stage = row["Stage"]
@@ -402,23 +402,23 @@ async def add_overview(curr, row, query):
    # await asyncio.sleep(0)
 
 
-async def add_rounds_kills(curr, row, query):
+async def add_rounds_kills(curr, row):
    # print(f"Adding rounds kills")
    # rounds_kills = pd.read_csv("matches/rounds_kills.csv")
    # print(list(rounds_kills.columns))
-   # query = """
-   #    INSERT INTO rounds_kills (
-   #       tournament_id, stage_id, match_type_id, match_id, map_id, round_number,
-   #       eliminator_team_id, eliminator_id, eliminator_agent_id,
-   #       eliminated_team_id, eliminated_id, eliminated_agent_id,
-   #       kill_type
-   #    ) VALUES (
-   #       %s, %s, %s, %s, %s, %s,
-   #       %s, %s, %s,
-   #       %s, %s, %s,
-   #       %s
-   #    );
-   # """
+   query = """
+      INSERT INTO rounds_kills (
+         tournament_id, stage_id, match_type_id, match_id, map_id, round_number,
+         eliminator_team_id, eliminator_id, eliminator_agent_id,
+         eliminated_team_id, eliminated_id, eliminated_agent_id,
+         kill_type
+      ) VALUES (
+         %s, %s, %s, %s, %s, %s,
+         %s, %s, %s,
+         %s, %s, %s,
+         %s
+      );
+   """
    # for index, row in rounds_kills.iterrows():
    tournament = row["Tournament"]
    stage = row["Stage"]
@@ -452,20 +452,20 @@ async def add_rounds_kills(curr, row, query):
    # print(f"Done adding rounds kills")
    # await asyncio.sleep(0)
 
-async def add_scores(curr, row, query):
+async def add_scores(curr, row):
    # print(f"Adding scores")
    # scores = pd.read_csv("matches/scores.csv")
-   # query = """
-   #    INSERT INTO scores (
-   #       tournament_id, stage_id, match_type_id, match_id,
-   #       winner_id, loser_id,
-   #       winner_score, loser_score
-   #    ) VALUES (
-   #       %s, %s, %s, %s,
-   #       %s, %s,
-   #       %s, %s
-   #    );
-   # """
+   query = """
+      INSERT INTO scores (
+         tournament_id, stage_id, match_type_id, match_id,
+         winner_id, loser_id,
+         winner_score, loser_score
+      ) VALUES (
+         %s, %s, %s, %s,
+         %s, %s,
+         %s, %s
+      );
+   """
    # for index, row in scores.iterrows():
    tournament = row["Tournament"]
    stage = row["Stage"]
@@ -489,18 +489,18 @@ async def add_scores(curr, row, query):
    # await asyncio.sleep(0)
    
 
-async def add_agents_pick_rates(curr, row, query):
+async def add_agents_pick_rates(curr, row):
    # print(f"Adding agents pick rates")
    # pick_rates = pd.read_csv("agents/agents_pick_rates.csv")
-   # query = """
-   #    INSERT INTO agents_pick_rates (
-   #       tournament_id, stage_id, match_type_id, map_id,
-   #       agent_id, pick_rate
-   #    ) VALUES (
-   #       %s, %s, %s, %s,
-   #       %s, %s
-   #    );
-   # """
+   query = """
+      INSERT INTO agents_pick_rates (
+         tournament_id, stage_id, match_type_id, map_id,
+         agent_id, pick_rate
+      ) VALUES (
+         %s, %s, %s, %s,
+         %s, %s
+      );
+   """
    # for index, row in pick_rates.iterrows():
    tournament = row["Tournament"]
    stage = row["Stage"]
@@ -518,18 +518,18 @@ async def add_agents_pick_rates(curr, row, query):
    # print(f"Done adding agents pick rates")
    # await asyncio.sleep(0)
 
-async def add_maps_stats(curr, row, query):
+async def add_maps_stats(curr, row):
    # print(f"Adding maps stats")
    # maps_stats = pd.read_csv("agents/maps_stats.csv")
-   # query = """
-   #    INSERT INTO maps_stats (
-   #       tournament_id, stage_id, match_type_id, map_id, 
-   #       total_maps_played, attacker_win_percentage, defender_win_percentage
-   #    ) VALUES (
-   #       %s, %s, %s, %s,
-   #       %s, %s, %s
-   #    );
-   # """
+   query = """
+      INSERT INTO maps_stats (
+         tournament_id, stage_id, match_type_id, map_id, 
+         total_maps_played, attacker_win_percentage, defender_win_percentage
+      ) VALUES (
+         %s, %s, %s, %s,
+         %s, %s, %s
+      );
+   """
    # for index, row in maps_stats.iterrows():
    tournament = row["Tournament"]
    stage = row["Stage"]
@@ -548,18 +548,18 @@ async def add_maps_stats(curr, row, query):
    # print(f"Done adding maps stats")
    # await asyncio.sleep(0)
 
-async def add_teams_picked_agents(curr, row, query):
+async def add_teams_picked_agents(curr, row):
    # print(f"Adding teams picked agents")
    # teams_picked_agents = pd.read_csv("agents/teams_picked_agents.csv")
-   # query = """
-   #    INSERT INTO teams_picked_agents (
-   #       tournament_id, stage_id, match_type_id, map_id, team_id, 
-   #       agent_id, total_wins_by_map, total_loss_by_map, total_maps_played
-   #    ) VALUES (
-   #       %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s
-   #    );
-   # """
+   query = """
+      INSERT INTO teams_picked_agents (
+         tournament_id, stage_id, match_type_id, map_id, team_id, 
+         agent_id, total_wins_by_map, total_loss_by_map, total_maps_played
+      ) VALUES (
+         %s, %s, %s, %s, %s,
+         %s, %s, %s, %s
+      );
+   """
    # for index, row in teams_picked_agents.iterrows():
    tournament = row["Tournament"]
    stage = row["Stage"]
@@ -583,24 +583,24 @@ async def add_teams_picked_agents(curr, row, query):
    # await asyncio.sleep(0)
 
 
-async def add_players_stats(curr, row, query):
+async def add_players_stats(curr, row):
    # print("Adding players stats")
    # players_stats = pd.read_csv("players_stats/players_stats.csv")
-   # query = """
-   #    INSERT INTO players_stats (
-   #       tournament_id, stage_id, match_type_id, player_id, team_id, agents_id,
-   #       rounds_played, rating, average_combat_score, kills_deaths, kast, adr,
-   #       kills_per_round, assists_per_round, first_kills_per_round, first_deaths_per_round,
-   #       headshot_percentage, clutch_success, clutches_won, clutches_played, mksp,
-   #       kills, deaths, assists, first_kills, first_deaths
-   #    ) VALUES (
-   #       %s, %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s,
-   #       %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s, %s
-   #    );
-   # """
+   query = """
+      INSERT INTO players_stats (
+         tournament_id, stage_id, match_type_id, player_id, team_id, agents_id,
+         rounds_played, rating, average_combat_score, kills_deaths, kast, adr,
+         kills_per_round, assists_per_round, first_kills_per_round, first_deaths_per_round,
+         headshot_percentage, clutch_success, clutches_won, clutches_played, mksp,
+         kills, deaths, assists, first_kills, first_deaths
+      ) VALUES (
+         %s, %s, %s, %s, %s, %s,
+         %s, %s, %s, %s, %s, %s,
+         %s, %s, %s, %s,
+         %s, %s, %s, %s, %s,
+         %s, %s, %s, %s, %s
+      );
+   """
    # for index, row in players_stats.iterrows():
    tournament = row["Tournament"]
    stage = row["Stage"]
