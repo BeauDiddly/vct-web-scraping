@@ -4,8 +4,8 @@ from retrieve.retrieve import retrieve_foreign_key
 from generate.generate_unique_id import generate_unique_id
 from checking.check_values import check_na
 import asyncio
-
-
+import time
+from datetime import datetime
 
 def add_tournaments(curr, unique_ids):
    tournaments = pd.read_csv("all_values/all_tournaments.csv")
@@ -72,10 +72,19 @@ def add_agents(curr, unique_ids):
       execute_query(curr, query, data)
 
 async def insert_data(curr, dataframe, insertion_function, table_name):
+   start_time = time.time()
+   now = datetime.now()
+
    print(f"Adding data to {table_name}")
    tasks = [insertion_function(curr, row) for _, row in dataframe.iterrows()]
-   await asyncio.gather(**tasks)
+   await asyncio.gather(*tasks)
    print(f"Done adding data to {table_name}")
+   end_time = time.time()
+   elasped_time = end_time - start_time
+   hours, remainder = divmod(elasped_time, 3600)
+   minutes, seconds = divmod(remainder, 60)
+
+   print(f"Inserting data to {table_name} time: {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds")
    
 
 async def add_drafts(curr, row):
@@ -222,6 +231,10 @@ async def add_kills(curr, row):
    data = (tournament_id, stage_id, match_type_id, match_id, map_id, player_team_id, player_id, enemy_team_id,
          enemy_id, player_kills, enemy_kills, difference, kill_type)
    execute_query(curr, query, data)
+   # except:
+   #    print(row)
+   #    print(tournament, stage, match_type, match_name, map, player_team, player, enemy_team, enemy)
+   #    print(data)
    # print(f"Done adding kills")
    # await asyncio.sleep(0)
 
