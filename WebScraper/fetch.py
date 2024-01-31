@@ -137,14 +137,20 @@ async def scraping_matches_data(tournament_name, cards, session):
 
             team_a_abbriev = overview_tables[0].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
 
+            if not team_a_abbriev:
+                team_a_abbriev = team_a
+
             team_b_abbriev = overview_tables[1].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
+
+            if not team_b_abbriev:
+                team_b_abbriev = team_b
 
             maps_headers = match_soup.find_all("div", class_="vm-stats-game-header")
 
-            if team_a not in team_mapping:
+            if team_a_abbriev not in team_mapping:
                 team_mapping[team_a_abbriev] = team_a
             
-            if team_b not in team_mapping:
+            if team_b_abbriev not in team_mapping:
                 team_mapping[team_b_abbriev] = team_b
 
             maps_notes = match_soup.find_all("div", class_="match-header-note")
@@ -420,7 +426,13 @@ async def scraping_matches_data(tournament_name, cards, session):
                         class_name = td.find("div").get("class")[0]
                         if class_name == "team":
                             team = td.text.strip()
-                            team = team_mapping[team]
+                            try:
+                                team = team_mapping[team]
+                            except:
+                                if team.lower() == team_a.lower():
+                                    team = team_a
+                                elif team.lower() == team_b.lower():
+                                    team = team_b
                         else:
                             stats = td.text.strip().replace("(", "").replace(")", "").split()
                             if len(stats) > 1:
@@ -435,9 +447,16 @@ async def scraping_matches_data(tournament_name, cards, session):
                     for index, td in enumerate(td_list):
                         teams = td.find_all("div", class_="team")
                         if teams:
-                            team_a, team_b = teams[0].text.strip(), teams[1].text.strip()
-                            team_a = team_mapping[team_a]
-                            team_b = team_mapping[team_b]
+                            # team_a, team_b = teams[0].text.strip(), teams[1].text.strip()
+                            try:
+                                team_1 = team_mapping[teams[0]]
+                            except:
+                                team_1 = team_a
+                            try:
+                                team_2 = team_mapping[teams[1]]
+                            except:
+                                team_2 = team_b
+
                         else:
                             stats = td.find_all("div")
                             round = stats[0].text.strip()
@@ -452,9 +471,9 @@ async def scraping_matches_data(tournament_name, cards, session):
                                 team_a_outcome = "Lost"
                                 team_b_outcome = "Win"
                             result["eco_rounds"].append([tournament_name, stage_name, match_type_name, match_name, map,
-                                                        round, team_a, team_a_bank, team_a_eco_type, team_a_outcome])
+                                                        round, team_1, team_a_bank, team_a_eco_type, team_a_outcome])
                             result["eco_rounds"].append([tournament_name, stage_name, match_type_name, match_name, map,
-                                                        round, team_b, team_b_bank, team_b_eco_type, team_b_outcome])
+                                                        round, team_2, team_b_bank, team_b_eco_type, team_b_outcome])
                         
                         
             else:
