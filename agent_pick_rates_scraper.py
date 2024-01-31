@@ -9,13 +9,16 @@ from WebScraper.fetch import generate_urls_combination, scraping_agents_data
 from WebScraper.retrieve_urls import retrieve_urls
 import aiohttp
 async def main():
+    print(f"Input the VCT year: ")
+    year = input()
+
     start_time = time.time()
 
     now = datetime.now()
 
     current_time = now.strftime("%H:%M:%S")
     print("Current Time =", current_time)
-    url = "https://www.vlr.gg/vct-2023"
+    url = "https://www.vlr.gg/vct-{year}"
     page = requests.get(url)
     soup = BeautifulSoup(page.content, "html.parser")
 
@@ -91,7 +94,7 @@ async def main():
     print(f"Datascraping time: {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds")
 
     for file_name, dataframe in dataframes.items():
-        dataframe.to_csv(f"agents/{file_name}.csv", encoding="utf-8", index=False)
+        dataframe.to_csv(f"vct_{year}/agents/{file_name}.csv", encoding="utf-8", index=False)
 
     current_time = now.strftime("%H:%M:%S")
     print("End Time =", current_time)

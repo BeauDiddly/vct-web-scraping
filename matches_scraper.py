@@ -9,11 +9,8 @@ import aiohttp
 from WebScraper.fetch import scraping_matches_data
 
 
-
-
-
-
 async def main():
+    year = input(f"Input the VCT year: ")
     start_time = time.time()
 
     now = datetime.now()
@@ -21,7 +18,7 @@ async def main():
     current_time = now.strftime("%H:%M:%S")
     print("Current Time =", current_time)
 
-    url = "https://www.vlr.gg/vct-2023"
+    url = f"https://www.vlr.gg/vct-{year}"
     page = requests.get(url)
     soup = BeautifulSoup(page.content, "html.parser")
 
@@ -121,7 +118,7 @@ async def main():
     start_time = time.time()
 
     for file_name, dataframe in dataframes.items():
-        dataframe.to_csv(f"matches/{file_name}.csv", encoding="utf-8", index=False)
+        dataframe.to_csv(f"vct_{year}/matches/{file_name}.csv", encoding="utf-8", index=False)
 
     end_time = time.time()
 

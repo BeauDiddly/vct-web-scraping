@@ -10,6 +10,8 @@ from datetime import datetime
 
 
 async def main():
+    print(f"Input the VCT year: ")
+    year = input()
     start_time = time.time()
 
     now = datetime.now()
@@ -17,7 +19,7 @@ async def main():
     current_time = now.strftime("%H:%M:%S")
     print("Current Time =", current_time)
     team_df = pd.read_csv("matches/team_mapping.csv")
-    url = "https://www.vlr.gg/vct-2023"
+    url = "https://www.vlr.gg/vct-{year}"
     page = requests.get(url)
     soup = BeautifulSoup(page.content, "html.parser")
     tournament_cards = soup.find_all("a", class_="wf-card mod-flex event-item")
@@ -56,7 +58,7 @@ async def main():
                                             "First Deaths Per Round", "Headshot %", "Clutch Success %", "Clutches (won/played)",
                                             "Maximum Kills in a Single Map", "Kills", "Deaths", "Assists", "First Kills", "First Deaths"])
 
-    players_stats_df.to_csv("players_stats/players_stats.csv", encoding="utf-8", index=False)
+    players_stats_df.to_csv("vct_{year}/players_stats/players_stats.csv", encoding="utf-8", index=False)
 
     end_time = time.time()
     elasped_time = end_time - start_time
