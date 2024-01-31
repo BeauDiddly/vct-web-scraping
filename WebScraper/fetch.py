@@ -21,6 +21,8 @@ stats_titles = ["", "", "Rounds Played", "Rating", "Average Combat Score", "Kill
                 "Headshot %", "Clutch Success %", "Clutches (won/played)", "Maximum Kills in a Single Map", "Kills", "Deaths", "Assists",
                 "First Kills", "First Deaths"]
 
+non_latin_pattern = re.compile(r'[^a-zA-Z]')
+
 async def fetch(url, session):
     max_retries = 3
     for attempt in range(max_retries):
@@ -185,7 +187,7 @@ async def scraping_matches_data(tournament_name, cards, session):
                     lt_overtime_score = pd.NA
                 try:
                     rt_overtime_score = rt_rounds_scores[2].text.strip()
-                except:
+                except IndexError:
                     rt_overtime_score = pd.NA
                 try:
                     duration = map_info[2]
@@ -217,8 +219,17 @@ async def scraping_matches_data(tournament_name, cards, session):
                             td_class = td.get("class") or ""
                             class_name = " ".join(td_class)
                             if class_name == "mod-player":
-                                player, team = td.find("a").find_all("div")
-                                player, team =  player.text.strip(), team.text.strip()
+                                elements = td.find("a").find_all("div")
+                                player = elements[0].text.strip()
+                                if len(elements) == 2:
+                                    team = elements[1].text.strip()
+                                else:
+                                    if not bool(non_latin_pattern.search(team_a)):
+                                        team = team_a
+                                    elif not bool(non_latin_pattern.search(team_b)):
+                                        team = team_b
+                                # player, team = td.find("a").find_all("div")
+                                # player, team =  player.text.strip(), team.text.strip()
                                 team = team_mapping[team]
                                 player_to_team[player] = team
                                 team_dict = map_dict.setdefault(team, {})
