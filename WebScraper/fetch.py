@@ -75,7 +75,7 @@ async def generate_urls_combination(tournament_name, url, stages_filter, session
     tournament_dict["All Stages"]["All Match Types"] = f"{url}?exclude={showmatch_id}"
 
 async def scraping_card_data(tournament_name, card, session):
-    result = {"scores": [],
+    results = {"scores": [],
             "maps_played": [],
             "maps_scores": [],
             "draft_phase": [],
@@ -90,7 +90,7 @@ async def scraping_card_data(tournament_name, card, session):
     match_type_name = match_type_name.strip("\t")
     stage_name = stage_name.strip("\t")
     if match_type_name == "Showmatch":
-        return result
+        return results
     else:
         loser, loser_flag, loser_score = card.find("div", class_="match-item-vs").select('div.match-item-vs-team:not([class*=" "])')[0].find_all("div")
         loser = loser.text.strip("\n").strip("\t")
@@ -109,7 +109,7 @@ async def scraping_card_data(tournament_name, card, session):
 
         match_name = f"{team_a} vs {team_b}"
 
-        result["scores"].append([tournament_name, stage_name, match_type_name, match_name, winner,loser, winner_score, loser_score])
+        results["scores"].append([tournament_name, stage_name, match_type_name, match_name, winner,loser, winner_score, loser_score])
         print("Starting collecting for ",tournament_name, stage_name, match_type_name, match_name)
         url = card.get("href")
         try:
@@ -122,17 +122,6 @@ async def scraping_card_data(tournament_name, card, session):
         maps_id = {}
         maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
         extract_maps_id(maps_id_divs, maps_id)
-        
-    
-        # for div in maps_id_divs:
-        #     if div.get("data-game-id") and div.get("data-disabled") == "0":
-        #         id = div.get("data-game-id")
-        #         map = re.sub(r"\d+|\t|\n", "", div.text.strip())
-        #         maps_id[id] = map
-
-        for id, map in maps_id.items():
-            if map != "All Maps":
-                result["maps_played"].append([tournament_name, stage_name, match_type_name, match_name, map])
 
 
         overview_stats = match_soup.find_all("div", class_="vm-stats-game")
@@ -156,146 +145,13 @@ async def scraping_card_data(tournament_name, card, session):
             team_mapping[team_b_abbriev] = team_b
 
         maps_notes = match_soup.find_all("div", class_="match-header-note")
-        extract_maps_notes(maps_notes, result, team_mapping, [tournament_name, stage_name, match_type_name, match_name])
-        # try:
-        #     if ";" in maps_notes[-1].text:
-        #         maps_notes = maps_notes[-1].text.strip().split("; ")
-        #         for note in maps_notes:
-        #             if "ban" in note or "pick" in note:
-        #                 team, action, map = note.split()
-        #                 team = team_mapping[team]
-        #                 result["draft_phase"].append([tournament_name, stage_name, match_type_name, match_name, team, action, map])
-                    
-        #     else:
-        #         print(f"For {tournament_name}, {stage_name}, {match_type_name}, {match_name}, its notes regarding the draft phase is empty")
-        # except IndexError:
-        #     print(f"For {tournament_name}, {stage_name}, {match_type_name}, {match_name}, its notes regarding the draft phase is empty")
-        
-        # for header in maps_headers:
-        #     left_team_header, map_header, right_team_header = header.find_all(recursive=False)
-        #     lt_score = left_team_header.find("div", class_="score").text.strip()
-        #     lt_rounds_scores = left_team_header.find_all("span")
-        #     map_info = map_header.text.strip().split()
-        #     rt_score = right_team_header.find("div", class_="score").text.strip()
-        #     rt_rounds_scores = right_team_header.find_all("span")
-        #     map = map_info[0]
-
-        #     lt_attacker_score, lt_defender_score = lt_rounds_scores[0].text.strip(), lt_rounds_scores[1].text.strip()
-        #     rt_attacker_score, rt_defender_score = rt_rounds_scores[1].text.strip(), rt_rounds_scores[0].text.strip()
-        #     try:
-        #         lt_overtime_score = lt_rounds_scores[2].text.strip()
-        #     except IndexError:
-        #         lt_overtime_score = pd.NA
-        #     try:
-        #         rt_overtime_score = rt_rounds_scores[2].text.strip()
-        #     except IndexError:
-        #         rt_overtime_score = pd.NA
-        #     try:
-        #         duration = map_info[2]
-        #     except IndexError:
-        #         duration = pd.NA                
-
-
-        #     result["maps_scores"].append([tournament_name, stage_name, match_type_name, match_name,
-        #                                     map, team_a, lt_score, lt_attacker_score,
-        #                                     lt_defender_score, lt_overtime_score,team_b,
-        #                                     rt_score, rt_attacker_score, rt_defender_score,
-        #                                     rt_overtime_score, duration])
+        extract_maps_notes(maps_notes, results, team_mapping, [tournament_name, stage_name, match_type_name, match_name])
 
         maps_headers = match_soup.find_all("div", class_="vm-stats-game-header")
-        extract_maps_headers(maps_headers, result, team_a, team_b, [tournament_name, stage_name, match_type_name, match_type_name])
-        extract_overview_stats(overview_stats, maps_id, player_to_team, team_mapping, missing_team, result, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
+        extract_maps_headers(maps_headers, results, team_a, team_b, [tournament_name, stage_name, match_type_name, match_type_name])
 
-        # overview_dict = {}
-        # player_to_team = {}
-        # missing_team = ""
-        # for index, stats in enumerate(overview_stats):
-        #     id = stats.get("data-game-id")
-        #     map = maps_id[id]
-        #     map_dict = overview_dict.setdefault(map, {})
-        #     stats_tables = stats.find_all("table")
-        #     for table in stats_tables:
-        #         trs = table.find("tbody").find_all("tr")
-        #         for tr in trs:
-        #             tds = tr.find_all("td")
-        #             for index, td in enumerate(tds):
-        #                 td_class = td.get("class") or ""
-        #                 class_name = " ".join(td_class)
-        #                 if class_name == "mod-player":
-        #                     result = td.find("a").find_all("div")
-        #                     player = result[0].text.strip()
-        #                     try:
-        #                         team = result[1].text.strip()
-        #                     except IndexError:
-        #                         if not bool(non_latin_pattern.search(team_a)):
-        #                             team = team_a
-        #                             missing_team = team
-        #                         elif not bool(non_latin_pattern.search(team_b)):
-        #                             team = team_b
-        #                             missing_team = team
-        #                     # player, team = td.find("a").find_all("div")
-        #                     # player, team =  player.text.strip(), team.text.strip()
-        #                     team = team_mapping[team]
-        #                     player_to_team[player] = team
-        #                     team_dict = map_dict.setdefault(team, {})
-        #                     player_dict = team_dict.setdefault(player, {})
-        #                 elif class_name == "mod-agents":
-        #                     imgs = td.find_all("img")
-        #                     agents_played = []
-        #                     for img in imgs:
-        #                         agent = img.get("alt")
-        #                         agents_played.append(agent)
-        #                     agents = ", ".join(agents_played)
-        #                     player_dict["agents"] = agents
-        #                 elif class_name in ["mod-stat mod-vlr-kills", "mod-stat", "mod-stat mod-vlr-assists", "mod-stat mod-kd-diff",
-        #                                     "mod-stat mod-fb", "mod-stat mod-fd", "mod-stat mod-fk-diff"]:
-        #                     stats = td.find("span").find_all("span")
-        #                     if len(stats) == 3:
-        #                         all_stat, attack_stat, defend_stat = stats
-        #                         all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
-        #                         stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-        #                         if not all_stat and not attack_stat and not defend_stat:
-        #                             all_stat, attack_stat, defend_stat = pd.NA, pd.NA, pd.NA
-        #                         player_dict[stat_name] = {"both": all_stat, "attack": attack_stat, "defend": defend_stat}
-        #                     else:
-        #                         all_stat = stats[0]
-        #                         all_stat = all_stat.text.strip()
-        #                         stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-        #                         player_dict[stat_name] = {"both": all_stat, "attack": pd.NA, "defend": pd.NA}
-        #                 elif class_name == "mod-stat mod-vlr-deaths":
-        #                     stats = td.find("span").find_all("span")[1].find_all("span")
-        #                     if len(stats) == 3:
-        #                         all_stat, attack_stat, defend_stat = td.find("span").find_all("span")[1].find_all("span")
-        #                         all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
-        #                         stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-        #                         player_dict[stat_name] = {"both": all_stat, "attack": attack_stat, "defend": defend_stat}
-        #                     else:
-        #                         all_stat = stats[0]
-        #                         all_stat = all_stat.text.strip()
-        #                         stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-        #                         player_dict[stat_name] = {"both": all_stat, "attack": pd.NA, "defend": pd.NA}
-        # sides = ["both", "attack", "defend"]
-        # for map_name, team in overview_dict.items():
-        #     for team_name, player in team.items():
-        #         for player_name, data in player.items():
-        #                 agents = data["agents"]
-        #                 rating = data["Rating"]
-        #                 acs = data["Average Combat Score"]
-        #                 kills = data["Kills"]
-        #                 deaths = data["Deaths"]
-        #                 assists = data["Assists"]
-        #                 kills_deaths_fd = data["Kills - Deaths (KD)"]
-        #                 kats = data["Kill, Assist, Trade, Survive %"]
-        #                 adr = data["Average Damage per Round"]
-        #                 headshot = data["Headshot %"]
-        #                 first_kills = data["First Kills"]
-        #                 first_deaths = data["First Deaths"]
-        #                 kills_deaths_fkd = data["Kills - Deaths (FKD)"]
-        #                 for side in sides:
-        #                     result["overview"].append([tournament_name, stage_name, match_type_name, match_name, map_name, player_name, team_name, agents, rating[side],
-        #                                             acs[side], kills[side], deaths[side], assists[side], kills_deaths_fd[side],
-        #                                             kats[side], adr[side], headshot[side], first_kills[side], first_deaths[side],
-        #                                             kills_deaths_fkd[side], side])
+        player_to_team, missing_team = extract_overview_stats(overview_stats, maps_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
+
         try:
             performance_page = await fetch(f'https://vlr.gg{url}/?game=all&tab=performance', session)
         except MaxReentriesReached as e:
@@ -304,111 +160,113 @@ async def scraping_card_data(tournament_name, card, session):
         performance_soup = BeautifulSoup(performance_page, "html.parser")
         performance_stats_div = performance_soup.find_all("div", class_="vm-stats-game")
 
-            
-        try:
-            team_b_div = performance_stats_div[0].find("div").find("tr").find_all("div", class_="team")
-            team_b_players = [""]
-            for player in team_b_div:
-                player, team = player.text.strip().replace("\t", "").split("\n")
-                team_b_players.append(player)
-            players_to_players_kills = {}
-            players_kills = {}
+        extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_team, missing_team, [tournament_name, stage_name, match_type_name, match_name])
 
-            for div in performance_stats_div:
-                kills_table = div.find("table", "wf-table-inset mod-adv-stats")
-                if kills_table != None:
-                    id = div.get("data-game-id")
-                    players_to_players_kills[id] = []
-                    players_kills[id] = []
-                    players_to_players_kills_tables = div.find("div").find_all("table")
-                    kills_trs = kills_table.find_all("tr")[1:]
-                    for table in players_to_players_kills_tables:
-                        trs = table.find_all("tr")[1:]
-                        for tr in trs:
-                            tds = tr.find_all("td")
-                            players_to_players_kills[id].append(tds)
-                    for tr in kills_trs:
-                        tds = tr.find_all("td")
-                        players_kills[id].append(tds)
-                else:
-                    continue
             
+        # try:
+        #     team_b_div = performance_stats_div[0].find("div").find("tr").find_all("div", class_="team")
+        #     team_b_players = [""]
+        #     for player in team_b_div:
+        #         player, team = player.text.strip().replace("\t", "").split("\n")
+        #         team_b_players.append(player)
+        #     players_to_players_kills = {}
+        #     players_kills = {}
 
-            for id, tds_lists in players_to_players_kills.items():
-                map = maps_id[id]
-                for index, td_list in enumerate(tds_lists):
-                    for team_b_player_index, td in enumerate(td_list):
-                        if td.find("img") != None:
-                            result = td.text.strip().replace("\t", "").split("\n")
-                            player = result[0]
-                            try:
-                                team = result[1]
-                            except IndexError:
-                                team = missing_team
-                            kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
-                            team = team_mapping[team]
-                        else:
-                            kills_div = td.find("div").find_all("div")
-                            player_a_kills, player_b_kills, difference = kills_div[0].text.strip(), kills_div[1].text.strip(), kills_div[2].text.strip()
-                            player_b = team_b_players[team_b_player_index]
-                            if not player_a_kills and not player_b_kills and not difference:
-                                player_a_kills, player_b_kills, difference = pd.NA, pd.NA, pd.NA
-                            result["kills"].append([tournament_name, stage_name, match_type_name, match_name, map, team, player,
-                                                        team_b, player_b, player_a_kills, player_b_kills, difference,
-                                                        kill_name])
+        #     for div in performance_stats_div:
+        #         kills_table = div.find("table", "wf-table-inset mod-adv-stats")
+        #         if kills_table != None:
+        #             id = div.get("data-game-id")
+        #             players_to_players_kills[id] = []
+        #             players_kills[id] = []
+        #             players_to_players_kills_tables = div.find("div").find_all("table")
+        #             kills_trs = kills_table.find_all("tr")[1:]
+        #             for table in players_to_players_kills_tables:
+        #                 trs = table.find_all("tr")[1:]
+        #                 for tr in trs:
+        #                     tds = tr.find_all("td")
+        #                     players_to_players_kills[id].append(tds)
+        #             for tr in kills_trs:
+        #                 tds = tr.find_all("td")
+        #                 players_kills[id].append(tds)
+        #         else:
+        #             continue
             
 
-            for id, tds_lists in players_kills.items():
-                map = maps_id[id]
-                for tds in tds_lists:
-                    values = [tournament_name, stage_name, match_type_name, match_name, map]
-                    for index, td in enumerate(tds):
-                        img = td.find("img")
-                        if img != None:
-                            class_name = " ".join(td.find("div").get("class"))
-                            if class_name == "team":
-                                result = td.text.strip().replace("\t", "").split("\n")
-                                player = result[0]
-                                try:
-                                    team = result[1]
-                                except IndexError:
-                                    team = missing_team
-                                team = team_mapping[team]
-                                values.append(team)
-                                values.append(player)
-                            elif class_name == "stats-sq":
-                                src = img.get("src")
-                                agent = re.search(r'/(\w+)\.png', src).group(1)
-                                values.append(agent)
-                            else:
-                                stat = td.text.split()[0]
-                                stat_name = performance_stats_title[index % len(performance_stats_title)]
-                                rounds_divs = td.find("div").find("div").find("div").find_all("div")
-                                values.append(stat)
-                                for round_div in rounds_divs:
-                                    kills_div = round_div.find_all("div")
-                                    for div in kills_div:
-                                        img = div.find("img")
-                                        if img == None:
-                                            round_stat = div.text.strip()
-                                        else:
-                                            src = img.get("src")
-                                            eliminated_agent = re.search(r'/(\w+)\.png', src).group(1)
-                                            eliminated = div.text.strip()
-                                            eliminated_team = player_to_team[eliminated]
-                                            result["rounds_kills"].append([tournament_name, stage_name, match_type_name, match_name, map, round_stat,
-                                                                            team, player, agent, eliminated_team, eliminated, eliminated_agent, stat_name])
-                        else:
-                            stat = td.text.strip()
-                            stat_name = performance_stats_title[index % len(performance_stats_title)]
-                            if not stat:
-                                stat = pd.NA
-                            values.append(stat)
-                    result["kills_stats"].append(values)
+        #     for id, tds_lists in players_to_players_kills.items():
+        #         map = maps_id[id]
+        #         for index, td_list in enumerate(tds_lists):
+        #             for team_b_player_index, td in enumerate(td_list):
+        #                 if td.find("img") != None:
+        #                     result = td.text.strip().replace("\t", "").split("\n")
+        #                     player = result[0]
+        #                     try:
+        #                         team = result[1]
+        #                     except IndexError:
+        #                         team = missing_team
+        #                     kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
+        #                     team = team_mapping[team]
+        #                 else:
+        #                     kills_div = td.find("div").find_all("div")
+        #                     player_a_kills, player_b_kills, difference = kills_div[0].text.strip(), kills_div[1].text.strip(), kills_div[2].text.strip()
+        #                     player_b = team_b_players[team_b_player_index]
+        #                     if not player_a_kills and not player_b_kills and not difference:
+        #                         player_a_kills, player_b_kills, difference = pd.NA, pd.NA, pd.NA
+        #                     results["kills"].append([tournament_name, stage_name, match_type_name, match_name, map, team, player,
+        #                                                 team_b, player_b, player_a_kills, player_b_kills, difference,
+        #                                                 kill_name])
+            
 
-        except Exception as e:
-            print(e)
-            print(tournament_name, stage_name, match_type_name, match_name, "does not contain any data under their performance page. Either their page was empty or something went wrong during the scraping")
+        #     for id, tds_lists in players_kills.items():
+        #         map = maps_id[id]
+        #         for tds in tds_lists:
+        #             values = [tournament_name, stage_name, match_type_name, match_name, map]
+        #             for index, td in enumerate(tds):
+        #                 img = td.find("img")
+        #                 if img != None:
+        #                     class_name = " ".join(td.find("div").get("class"))
+        #                     if class_name == "team":
+        #                         result = td.text.strip().replace("\t", "").split("\n")
+        #                         player = result[0]
+        #                         try:
+        #                             team = result[1]
+        #                         except IndexError:
+        #                             team = missing_team
+        #                         team = team_mapping[team]
+        #                         values.append(team)
+        #                         values.append(player)
+        #                     elif class_name == "stats-sq":
+        #                         src = img.get("src")
+        #                         agent = re.search(r'/(\w+)\.png', src).group(1)
+        #                         values.append(agent)
+        #                     else:
+        #                         stat = td.text.split()[0]
+        #                         stat_name = performance_stats_title[index % len(performance_stats_title)]
+        #                         rounds_divs = td.find("div").find("div").find("div").find_all("div")
+        #                         values.append(stat)
+        #                         for round_div in rounds_divs:
+        #                             kills_div = round_div.find_all("div")
+        #                             for div in kills_div:
+        #                                 img = div.find("img")
+        #                                 if img == None:
+        #                                     round_stat = div.text.strip()
+        #                                 else:
+        #                                     src = img.get("src")
+        #                                     eliminated_agent = re.search(r'/(\w+)\.png', src).group(1)
+        #                                     eliminated = div.text.strip()
+        #                                     eliminated_team = player_to_team[eliminated]
+        #                                     results["rounds_kills"].append([tournament_name, stage_name, match_type_name, match_name, map, round_stat,
+        #                                                                     team, player, agent, eliminated_team, eliminated, eliminated_agent, stat_name])
+        #                 else:
+        #                     stat = td.text.strip()
+        #                     stat_name = performance_stats_title[index % len(performance_stats_title)]
+        #                     if not stat:
+        #                         stat = pd.NA
+        #                     values.append(stat)
+        #             results["kills_stats"].append(values)
+
+        # except Exception as e:
+        #     print(e)
+        #     print(tournament_name, stage_name, match_type_name, match_name, "does not contain any data under their performance page. Either their page was empty or something went wrong during the scraping")
         try:
             economy_page = await fetch(f'https://vlr.gg{url}/?game=all&tab=economy', session)
         except MaxReentriesReached as e:
@@ -466,7 +324,7 @@ async def scraping_card_data(tournament_name, card, session):
                         else:
                             initiated, won = pd.NA, stats[0]
                         stat_name = economy_stats_title[index % len(economy_stats_title)]
-                        result["eco_stats"].append([tournament_name, stage_name, match_type_name, match_name,
+                        results["eco_stats"].append([tournament_name, stage_name, match_type_name, match_name,
                                                         map, team, stat_name, initiated, won])
             for id, td_list in eco_rounds_stats.items():
                 map = maps_id[id]
@@ -496,16 +354,16 @@ async def scraping_card_data(tournament_name, card, session):
                         else:
                             team_a_outcome = "Lost"
                             team_b_outcome = "Win"
-                        result["eco_rounds"].append([tournament_name, stage_name, match_type_name, match_name, map,
+                        results["eco_rounds"].append([tournament_name, stage_name, match_type_name, match_name, map,
                                                     round, team_1, team_a_bank, team_a_eco_type, team_a_outcome])
-                        result["eco_rounds"].append([tournament_name, stage_name, match_type_name, match_name, map,
+                        results["eco_rounds"].append([tournament_name, stage_name, match_type_name, match_name, map,
                                                     round, team_2, team_b_bank, team_b_eco_type, team_b_outcome])
                     
                     
         else:
             print(tournament_name, stage_name, match_type_name, match_name, "does not contain any data under their economy page")
-    result["team_mapping"] = team_mapping
-    return result
+    results["team_mapping"] = team_mapping
+    return results
 
 
 async def scraping_matches_data(tournament_name, cards, session):
