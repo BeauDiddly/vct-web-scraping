@@ -202,99 +202,100 @@ async def scraping_card_data(tournament_name, card, session):
         #                                     rt_score, rt_attacker_score, rt_defender_score,
         #                                     rt_overtime_score, duration])
 
+        maps_headers = match_soup.find_all("div", class_="vm-stats-game-header")
+        extract_maps_headers(maps_headers, result, team_a, team_b, [tournament_name, stage_name, match_type_name, match_type_name])
+        extract_overview_stats(overview_stats, maps_id, player_to_team, team_mapping, missing_team, result, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
 
-        
-
-        overview_dict = {}
-        player_to_team = {}
-        missing_team = ""
-        for index, stats in enumerate(overview_stats):
-            id = stats.get("data-game-id")
-            map = maps_id[id]
-            map_dict = overview_dict.setdefault(map, {})
-            stats_tables = stats.find_all("table")
-            for table in stats_tables:
-                trs = table.find("tbody").find_all("tr")
-                for tr in trs:
-                    tds = tr.find_all("td")
-                    for index, td in enumerate(tds):
-                        td_class = td.get("class") or ""
-                        class_name = " ".join(td_class)
-                        if class_name == "mod-player":
-                            result = td.find("a").find_all("div")
-                            player = result[0].text.strip()
-                            try:
-                                team = result[1].text.strip()
-                            except IndexError:
-                                if not bool(non_latin_pattern.search(team_a)):
-                                    team = team_a
-                                    missing_team = team
-                                elif not bool(non_latin_pattern.search(team_b)):
-                                    team = team_b
-                                    missing_team = team
-                            # player, team = td.find("a").find_all("div")
-                            # player, team =  player.text.strip(), team.text.strip()
-                            team = team_mapping[team]
-                            player_to_team[player] = team
-                            team_dict = map_dict.setdefault(team, {})
-                            player_dict = team_dict.setdefault(player, {})
-                        elif class_name == "mod-agents":
-                            imgs = td.find_all("img")
-                            agents_played = []
-                            for img in imgs:
-                                agent = img.get("alt")
-                                agents_played.append(agent)
-                            agents = ", ".join(agents_played)
-                            player_dict["agents"] = agents
-                        elif class_name in ["mod-stat mod-vlr-kills", "mod-stat", "mod-stat mod-vlr-assists", "mod-stat mod-kd-diff",
-                                            "mod-stat mod-fb", "mod-stat mod-fd", "mod-stat mod-fk-diff"]:
-                            stats = td.find("span").find_all("span")
-                            if len(stats) == 3:
-                                all_stat, attack_stat, defend_stat = stats
-                                all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
-                                stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                                if not all_stat and not attack_stat and not defend_stat:
-                                    all_stat, attack_stat, defend_stat = pd.NA, pd.NA, pd.NA
-                                player_dict[stat_name] = {"both": all_stat, "attack": attack_stat, "defend": defend_stat}
-                            else:
-                                all_stat = stats[0]
-                                all_stat = all_stat.text.strip()
-                                stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                                player_dict[stat_name] = {"both": all_stat, "attack": pd.NA, "defend": pd.NA}
-                        elif class_name == "mod-stat mod-vlr-deaths":
-                            stats = td.find("span").find_all("span")[1].find_all("span")
-                            if len(stats) == 3:
-                                all_stat, attack_stat, defend_stat = td.find("span").find_all("span")[1].find_all("span")
-                                all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
-                                stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                                player_dict[stat_name] = {"both": all_stat, "attack": attack_stat, "defend": defend_stat}
-                            else:
-                                all_stat = stats[0]
-                                all_stat = all_stat.text.strip()
-                                stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                                player_dict[stat_name] = {"both": all_stat, "attack": pd.NA, "defend": pd.NA}
-        sides = ["both", "attack", "defend"]
-        for map_name, team in overview_dict.items():
-            for team_name, player in team.items():
-                for player_name, data in player.items():
-                        agents = data["agents"]
-                        rating = data["Rating"]
-                        acs = data["Average Combat Score"]
-                        kills = data["Kills"]
-                        deaths = data["Deaths"]
-                        assists = data["Assists"]
-                        kills_deaths_fd = data["Kills - Deaths (KD)"]
-                        kats = data["Kill, Assist, Trade, Survive %"]
-                        adr = data["Average Damage per Round"]
-                        headshot = data["Headshot %"]
-                        first_kills = data["First Kills"]
-                        first_deaths = data["First Deaths"]
-                        kills_deaths_fkd = data["Kills - Deaths (FKD)"]
-                        for side in sides:
-                            result["overview"].append([tournament_name, stage_name, match_type_name, match_name, map_name, player_name, team_name, agents, rating[side],
-                                                    acs[side], kills[side], deaths[side], assists[side], kills_deaths_fd[side],
-                                                    kats[side], adr[side], headshot[side], first_kills[side], first_deaths[side],
-                                                    kills_deaths_fkd[side], side])
+        # overview_dict = {}
+        # player_to_team = {}
+        # missing_team = ""
+        # for index, stats in enumerate(overview_stats):
+        #     id = stats.get("data-game-id")
+        #     map = maps_id[id]
+        #     map_dict = overview_dict.setdefault(map, {})
+        #     stats_tables = stats.find_all("table")
+        #     for table in stats_tables:
+        #         trs = table.find("tbody").find_all("tr")
+        #         for tr in trs:
+        #             tds = tr.find_all("td")
+        #             for index, td in enumerate(tds):
+        #                 td_class = td.get("class") or ""
+        #                 class_name = " ".join(td_class)
+        #                 if class_name == "mod-player":
+        #                     result = td.find("a").find_all("div")
+        #                     player = result[0].text.strip()
+        #                     try:
+        #                         team = result[1].text.strip()
+        #                     except IndexError:
+        #                         if not bool(non_latin_pattern.search(team_a)):
+        #                             team = team_a
+        #                             missing_team = team
+        #                         elif not bool(non_latin_pattern.search(team_b)):
+        #                             team = team_b
+        #                             missing_team = team
+        #                     # player, team = td.find("a").find_all("div")
+        #                     # player, team =  player.text.strip(), team.text.strip()
+        #                     team = team_mapping[team]
+        #                     player_to_team[player] = team
+        #                     team_dict = map_dict.setdefault(team, {})
+        #                     player_dict = team_dict.setdefault(player, {})
+        #                 elif class_name == "mod-agents":
+        #                     imgs = td.find_all("img")
+        #                     agents_played = []
+        #                     for img in imgs:
+        #                         agent = img.get("alt")
+        #                         agents_played.append(agent)
+        #                     agents = ", ".join(agents_played)
+        #                     player_dict["agents"] = agents
+        #                 elif class_name in ["mod-stat mod-vlr-kills", "mod-stat", "mod-stat mod-vlr-assists", "mod-stat mod-kd-diff",
+        #                                     "mod-stat mod-fb", "mod-stat mod-fd", "mod-stat mod-fk-diff"]:
+        #                     stats = td.find("span").find_all("span")
+        #                     if len(stats) == 3:
+        #                         all_stat, attack_stat, defend_stat = stats
+        #                         all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
+        #                         stat_name = overview_stats_titles[index % len(overview_stats_titles)]
+        #                         if not all_stat and not attack_stat and not defend_stat:
+        #                             all_stat, attack_stat, defend_stat = pd.NA, pd.NA, pd.NA
+        #                         player_dict[stat_name] = {"both": all_stat, "attack": attack_stat, "defend": defend_stat}
+        #                     else:
+        #                         all_stat = stats[0]
+        #                         all_stat = all_stat.text.strip()
+        #                         stat_name = overview_stats_titles[index % len(overview_stats_titles)]
+        #                         player_dict[stat_name] = {"both": all_stat, "attack": pd.NA, "defend": pd.NA}
+        #                 elif class_name == "mod-stat mod-vlr-deaths":
+        #                     stats = td.find("span").find_all("span")[1].find_all("span")
+        #                     if len(stats) == 3:
+        #                         all_stat, attack_stat, defend_stat = td.find("span").find_all("span")[1].find_all("span")
+        #                         all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
+        #                         stat_name = overview_stats_titles[index % len(overview_stats_titles)]
+        #                         player_dict[stat_name] = {"both": all_stat, "attack": attack_stat, "defend": defend_stat}
+        #                     else:
+        #                         all_stat = stats[0]
+        #                         all_stat = all_stat.text.strip()
+        #                         stat_name = overview_stats_titles[index % len(overview_stats_titles)]
+        #                         player_dict[stat_name] = {"both": all_stat, "attack": pd.NA, "defend": pd.NA}
+        # sides = ["both", "attack", "defend"]
+        # for map_name, team in overview_dict.items():
+        #     for team_name, player in team.items():
+        #         for player_name, data in player.items():
+        #                 agents = data["agents"]
+        #                 rating = data["Rating"]
+        #                 acs = data["Average Combat Score"]
+        #                 kills = data["Kills"]
+        #                 deaths = data["Deaths"]
+        #                 assists = data["Assists"]
+        #                 kills_deaths_fd = data["Kills - Deaths (KD)"]
+        #                 kats = data["Kill, Assist, Trade, Survive %"]
+        #                 adr = data["Average Damage per Round"]
+        #                 headshot = data["Headshot %"]
+        #                 first_kills = data["First Kills"]
+        #                 first_deaths = data["First Deaths"]
+        #                 kills_deaths_fkd = data["Kills - Deaths (FKD)"]
+        #                 for side in sides:
+        #                     result["overview"].append([tournament_name, stage_name, match_type_name, match_name, map_name, player_name, team_name, agents, rating[side],
+        #                                             acs[side], kills[side], deaths[side], assists[side], kills_deaths_fd[side],
+        #                                             kats[side], adr[side], headshot[side], first_kills[side], first_deaths[side],
+        #                                             kills_deaths_fkd[side], side])
         try:
             performance_page = await fetch(f'https://vlr.gg{url}/?game=all&tab=performance', session)
         except MaxReentriesReached as e:
