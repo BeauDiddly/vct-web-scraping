@@ -2,6 +2,7 @@ import asyncio
 import sys
 from bs4 import BeautifulSoup, Tag
 from MaxReentriesReached.max_reentries_reached import MaxReentriesReached
+from WebScraper.web_data_extraction import *
 import pandas as pd
 import re
 import random
@@ -89,7 +90,7 @@ async def scraping_card_data(tournament_name, card, session):
     match_type_name = match_type_name.strip("\t")
     stage_name = stage_name.strip("\t")
     if match_type_name == "Showmatch":
-        return {}
+        return result
     else:
         loser, loser_flag, loser_score = card.find("div", class_="match-item-vs").select('div.match-item-vs-team:not([class*=" "])')[0].find_all("div")
         loser = loser.text.strip("\n").strip("\t")
@@ -119,13 +120,15 @@ async def scraping_card_data(tournament_name, card, session):
         match_soup = BeautifulSoup(match_page, "html.parser")
 
         maps_id = {}
-        
         maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
-        for div in maps_id_divs:
-            if div.get("data-game-id") and div.get("data-disabled") == "0":
-                id = div.get("data-game-id")
-                map = re.sub(r"\d+|\t|\n", "", div.text.strip())
-                maps_id[id] = map
+        extract_maps_id(maps_id_divs, maps_id)
+        
+    
+        # for div in maps_id_divs:
+        #     if div.get("data-game-id") and div.get("data-disabled") == "0":
+        #         id = div.get("data-game-id")
+        #         map = re.sub(r"\d+|\t|\n", "", div.text.strip())
+        #         maps_id[id] = map
 
         for id, map in maps_id.items():
             if map != "All Maps":
@@ -155,19 +158,19 @@ async def scraping_card_data(tournament_name, card, session):
             team_mapping[team_b_abbriev] = team_b
 
         maps_notes = match_soup.find_all("div", class_="match-header-note")
-        try:
-            if ";" in maps_notes[-1].text:
-                maps_notes = maps_notes[-1].text.strip().split("; ")
-                for note in maps_notes:
-                    if "ban" in note or "pick" in note:
-                        team, action, map = note.split()
-                        team = team_mapping[team]
-                        result["draft_phase"].append([tournament_name, stage_name, match_type_name, match_name, team, action, map])
+        # try:
+        #     if ";" in maps_notes[-1].text:
+        #         maps_notes = maps_notes[-1].text.strip().split("; ")
+        #         for note in maps_notes:
+        #             if "ban" in note or "pick" in note:
+        #                 team, action, map = note.split()
+        #                 team = team_mapping[team]
+        #                 result["draft_phase"].append([tournament_name, stage_name, match_type_name, match_name, team, action, map])
                     
-            else:
-                print(f"For {tournament_name}, {stage_name}, {match_type_name}, {match_name}, its notes regarding the draft phase is empty")
-        except IndexError:
-            print(f"For {tournament_name}, {stage_name}, {match_type_name}, {match_name}, its notes regarding the draft phase is empty")
+        #     else:
+        #         print(f"For {tournament_name}, {stage_name}, {match_type_name}, {match_name}, its notes regarding the draft phase is empty")
+        # except IndexError:
+        #     print(f"For {tournament_name}, {stage_name}, {match_type_name}, {match_name}, its notes regarding the draft phase is empty")
         
         for header in maps_headers:
             left_team_header, map_header, right_team_header = header.find_all(recursive=False)
