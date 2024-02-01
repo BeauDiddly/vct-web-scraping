@@ -298,3 +298,98 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
         except Exception as e:
             print(e)
             print(tournament_name, stage_name, match_type_name, match_name, "does not contain any data under their performance page. Either their page was empty or something went wrong during the scraping")
+
+def extract_economy_stats_div(economy_stats_div):
+    eco_stats = {}
+    eco_rounds_stats = {}
+    for div in economy_stats_div:
+        id = div.get("data-game-id")
+        stats_div = div.find_all(recursive=False)
+        if len(stats_div) == 3:
+            eco_stats[id] = []
+            eco_rounds_stats[id] = []
+            eco_stats_trs = stats_div[0].find_all("tr")[1:]
+            eco_rounds_trs = stats_div[2].find_all("tr")
+            for tr in eco_stats_trs:
+                tds = tr.find_all("td")
+                eco_stats[id].extend(tds)
+            for tr in eco_rounds_trs:
+                tds = tr.find_all("td")
+                eco_rounds_stats[id].extend(tds)
+        
+        elif len(stats_div) == 2:
+            eco_stats[id] = []
+            eco_rounds_stats[id] = []
+            eco_stats_trs = stats_div[0].find_all("tr")[1:]
+            for tr in eco_stats_trs:
+                tds = tr.find_all("td")
+                eco_stats[id].extend(tds)
+    return eco_stats, eco_rounds_stats
+
+def extract_economy_stats(eco_stats, eco_rounds_stats, maps_id, team_mapping, results, list):
+    tournament_name = list[0]
+    stage_name = list[1]
+    match_type_name = list[2]
+    match_name = list[3]
+    team_a = list[4]
+    team_b = list[5]
+    if eco_stats:     
+        
+        for id, td_list in eco_stats.items():
+            map = maps_id[id]
+            for index, td in enumerate(td_list):
+                class_name = td.find("div").get("class")[0]
+                if class_name == "team":
+                    team = td.text.strip()
+                    try:
+                        team = team_mapping[team]
+                    except:
+                        if team.lower() == team_a.lower():
+                            team = team_a
+                        elif team.lower() == team_b.lower():
+                            team = team_b
+                else:
+                    stats = td.text.strip().replace("(", "").replace(")", "").split()
+                    if len(stats) > 1:
+                        initiated, won = stats[0], stats[1]
+                    else:
+                        initiated, won = pd.NA, stats[0]
+                    stat_name = economy_stats_title[index % len(economy_stats_title)]
+                    results["eco_stats"].append([tournament_name, stage_name, match_type_name, match_name,
+                                                    map, team, stat_name, initiated, won])
+        for id, td_list in eco_rounds_stats.items():
+            map = maps_id[id]
+            for index, td in enumerate(td_list):
+                teams = td.find_all("div", class_="team")
+                if teams:
+                    # team_a, team_b = teams[0].text.strip(), teams[1].text.strip()
+                    try:
+                        team_1 = team_mapping[teams[0]]
+                    except:
+                        team_1 = team_a
+                    try:
+                        team_2 = team_mapping[teams[1]]
+                    except:
+                        team_2 = team_b
+
+                else:
+                    stats = td.find_all("div")
+                    round = stats[0].text.strip()
+                    team_a_bank = stats[1].text.strip()
+                    team_a_eco_type = eco_types[stats[2].text.strip()]
+                    team_b_eco_type = eco_types[stats[3].text.strip()]
+                    team_b_bank = stats[4].text.strip()
+                    if "mod-win" in stats[2]["class"]:
+                        team_a_outcome = "Win"
+                        team_b_outcome = "Lost"
+                    else:
+                        team_a_outcome = "Lost"
+                        team_b_outcome = "Win"
+                    results["eco_rounds"].append([tournament_name, stage_name, match_type_name, match_name, map,
+                                                round, team_1, team_a_bank, team_a_eco_type, team_a_outcome])
+                    results["eco_rounds"].append([tournament_name, stage_name, match_type_name, match_name, map,
+                                                round, team_2, team_b_bank, team_b_eco_type, team_b_outcome])
+                
+                
+    else:
+        print(tournament_name, stage_name, match_type_name, match_name, "does not contain any data under their economy page")
