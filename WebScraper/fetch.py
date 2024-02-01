@@ -206,6 +206,7 @@ async def scraping_matches_data(tournament_name, cards, session):
 
             overview_dict = {}
             player_to_team = {}
+            missing_team = ""
             for index, stats in enumerate(overview_stats):
                 id = stats.get("data-game-id")
                 map = maps_id[id]
@@ -219,15 +220,17 @@ async def scraping_matches_data(tournament_name, cards, session):
                             td_class = td.get("class") or ""
                             class_name = " ".join(td_class)
                             if class_name == "mod-player":
-                                elements = td.find("a").find_all("div")
-                                player = elements[0].text.strip()
-                                if len(elements) == 2:
-                                    team = elements[1].text.strip()
-                                else:
+                                result = td.find("a").find_all("div")
+                                player = result[0].text.strip()
+                                try:
+                                    team = result[1].text.strip()
+                                except IndexError:
                                     if not bool(non_latin_pattern.search(team_a)):
                                         team = team_a
+                                        missing_team = team
                                     elif not bool(non_latin_pattern.search(team_b)):
                                         team = team_b
+                                        missing_team = team
                                 # player, team = td.find("a").find_all("div")
                                 # player, team =  player.text.strip(), team.text.strip()
                                 team = team_mapping[team]
@@ -334,7 +337,12 @@ async def scraping_matches_data(tournament_name, cards, session):
                     for index, td_list in enumerate(tds_lists):
                         for team_b_player_index, td in enumerate(td_list):
                             if td.find("img") != None:
-                                player, team = td.text.strip().replace("\t", "").split("\n")
+                                result = td.text.strip().replace("\t", "").split("\n")
+                                player = result[0]
+                                try:
+                                    team = result[1]
+                                except IndexError:
+                                    team = missing_team
                                 kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
                                 team = team_mapping[team]
                             else:
@@ -357,7 +365,12 @@ async def scraping_matches_data(tournament_name, cards, session):
                             if img != None:
                                 class_name = " ".join(td.find("div").get("class"))
                                 if class_name == "team":
-                                    player, team = td.text.strip().replace("\t", "").split("\n")
+                                    result = td.text.strip().replace("\t", "").split("\n")
+                                    player = result[0]
+                                    try:
+                                        team = result[1]
+                                    except IndexError:
+                                        team = missing_team
                                     team = team_mapping[team]
                                     values.append(team)
                                     values.append(player)
