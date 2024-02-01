@@ -149,8 +149,6 @@ async def scraping_card_data(tournament_name, card, session):
         if not team_b_abbriev:
             team_b_abbriev = team_b
 
-        maps_headers = match_soup.find_all("div", class_="vm-stats-game-header")
-
         if team_a_abbriev not in team_mapping:
             team_mapping[team_a_abbriev] = team_a
         
@@ -158,6 +156,7 @@ async def scraping_card_data(tournament_name, card, session):
             team_mapping[team_b_abbriev] = team_b
 
         maps_notes = match_soup.find_all("div", class_="match-header-note")
+        extract_maps_notes(maps_notes, result, team_mapping, [tournament_name, stage_name, match_type_name, match_name])
         # try:
         #     if ";" in maps_notes[-1].text:
         #         maps_notes = maps_notes[-1].text.strip().split("; ")
@@ -172,36 +171,36 @@ async def scraping_card_data(tournament_name, card, session):
         # except IndexError:
         #     print(f"For {tournament_name}, {stage_name}, {match_type_name}, {match_name}, its notes regarding the draft phase is empty")
         
-        for header in maps_headers:
-            left_team_header, map_header, right_team_header = header.find_all(recursive=False)
-            lt_score = left_team_header.find("div", class_="score").text.strip()
-            lt_rounds_scores = left_team_header.find_all("span")
-            map_info = map_header.text.strip().split()
-            rt_score = right_team_header.find("div", class_="score").text.strip()
-            rt_rounds_scores = right_team_header.find_all("span")
-            map = map_info[0]
+        # for header in maps_headers:
+        #     left_team_header, map_header, right_team_header = header.find_all(recursive=False)
+        #     lt_score = left_team_header.find("div", class_="score").text.strip()
+        #     lt_rounds_scores = left_team_header.find_all("span")
+        #     map_info = map_header.text.strip().split()
+        #     rt_score = right_team_header.find("div", class_="score").text.strip()
+        #     rt_rounds_scores = right_team_header.find_all("span")
+        #     map = map_info[0]
 
-            lt_attacker_score, lt_defender_score = lt_rounds_scores[0].text.strip(), lt_rounds_scores[1].text.strip()
-            rt_attacker_score, rt_defender_score = rt_rounds_scores[1].text.strip(), rt_rounds_scores[0].text.strip()
-            try:
-                lt_overtime_score = lt_rounds_scores[2].text.strip()
-            except IndexError:
-                lt_overtime_score = pd.NA
-            try:
-                rt_overtime_score = rt_rounds_scores[2].text.strip()
-            except IndexError:
-                rt_overtime_score = pd.NA
-            try:
-                duration = map_info[2]
-            except IndexError:
-                duration = pd.NA                
+        #     lt_attacker_score, lt_defender_score = lt_rounds_scores[0].text.strip(), lt_rounds_scores[1].text.strip()
+        #     rt_attacker_score, rt_defender_score = rt_rounds_scores[1].text.strip(), rt_rounds_scores[0].text.strip()
+        #     try:
+        #         lt_overtime_score = lt_rounds_scores[2].text.strip()
+        #     except IndexError:
+        #         lt_overtime_score = pd.NA
+        #     try:
+        #         rt_overtime_score = rt_rounds_scores[2].text.strip()
+        #     except IndexError:
+        #         rt_overtime_score = pd.NA
+        #     try:
+        #         duration = map_info[2]
+        #     except IndexError:
+        #         duration = pd.NA                
 
 
-            result["maps_scores"].append([tournament_name, stage_name, match_type_name, match_name,
-                                            map, team_a, lt_score, lt_attacker_score,
-                                            lt_defender_score, lt_overtime_score,team_b,
-                                            rt_score, rt_attacker_score, rt_defender_score,
-                                            rt_overtime_score, duration])
+        #     result["maps_scores"].append([tournament_name, stage_name, match_type_name, match_name,
+        #                                     map, team_a, lt_score, lt_attacker_score,
+        #                                     lt_defender_score, lt_overtime_score,team_b,
+        #                                     rt_score, rt_attacker_score, rt_defender_score,
+        #                                     rt_overtime_score, duration])
 
 
         
