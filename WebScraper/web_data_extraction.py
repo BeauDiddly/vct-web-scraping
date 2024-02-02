@@ -113,7 +113,7 @@ def extract_overview_stats(overview_stats, maps_id, team_mapping, results, list)
                     class_name = " ".join(td_class)
                     if class_name == "mod-player":
                         result = td.find("a").find_all("div")
-                        player = results[0].text.strip()
+                        player = result[0].text.strip()
                         try:
                             team = result[1].text.strip()
                         except IndexError:
@@ -188,7 +188,7 @@ def extract_overview_stats(overview_stats, maps_id, team_mapping, results, list)
                                                 kills_deaths_fkd[side], side])
     return player_to_team, missing_team
 
-def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_team, missing_team,  results, list):
+def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_team, missing_team, results, list):
         tournament_name = list[0]
         stage_name = list[1]
         match_type_name = list[2]

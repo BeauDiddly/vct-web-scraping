@@ -9,7 +9,11 @@ import aiohttp
 from WebScraper.fetch import scraping_matches_data
 
 
+
+
 async def main():
+    semaphore_count = 10
+    matches_semaphore = asyncio.Semaphore(semaphore_count)
     year = input(f"Input the VCT year: ")
     start_time = time.time()
 
@@ -43,6 +47,8 @@ async def main():
             modules.extend(all_modules)
         matches_cards[tournament] = modules
 
+    print(matches_cards.keys())
+
     dataframes = {}
     all_results = {"scores": [],
                    "maps_played": [],
@@ -60,13 +66,19 @@ async def main():
         tasks = [scraping_matches_data(tournament_name, cards, session) for tournament_name, cards in matches_cards.items()]
         results = await asyncio.gather(*tasks)
 
-    for result in results:
-        for name, data in result.items():
-            if name == "team_mapping":
-                all_results[name].update(data)
-            else:
-                all_results[name].extend(data)
+    # print(results)
 
+    for result in results:
+        for dictionary in result:
+            for name, data in dictionary.items():
+                if name == "team_mapping":
+                    all_results[name].update(data)
+                else:
+                    all_results[name].extend(data)
+
+    print(all_results["team_mapping"])
+
+    # team_mapping = all_results["team_mapping"]
 
     dataframes["scores"] = pd.DataFrame(all_results["scores"],
                                         columns=["Tournament", "Stage", "Match Type", "Match Name", "Winner", "Loser", "Winner Score", "Loser Score"])
