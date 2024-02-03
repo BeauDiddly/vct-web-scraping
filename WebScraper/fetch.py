@@ -17,7 +17,7 @@ headers = {
     "User-Agent": ""
 }
 
-semaphore_count = 3
+semaphore_count = 2
 
 async def fetch(url, session):
     max_retries = 3
@@ -118,38 +118,40 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
                 sys.exit(1)
             match_soup = BeautifulSoup(match_page, "html.parser")
 
-            maps_id = {}
-            maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
-            extract_maps_id(maps_id_divs, maps_id, results, [tournament_name, stage_name, match_type_name, match_name])
+            try:
+                overview_stats = match_soup.find_all("div", class_="vm-stats-game")
+                overview_tables = overview_stats[0].find_all("table")
 
 
-            overview_stats = match_soup.find_all("div", class_="vm-stats-game")
+                maps_id = {}
+                maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
+                extract_maps_id(maps_id_divs, maps_id, results, [tournament_name, stage_name, match_type_name, match_name])
 
-            overview_tables = overview_stats[0].find_all("table")
+                team_a_abbriev = overview_tables[0].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
 
-            team_a_abbriev = overview_tables[0].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
+                if not team_a_abbriev:
+                    team_a_abbriev = team_a
 
-            if not team_a_abbriev:
-                team_a_abbriev = team_a
+                team_b_abbriev = overview_tables[1].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
 
-            team_b_abbriev = overview_tables[1].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
+                if not team_b_abbriev:
+                    team_b_abbriev = team_b
 
-            if not team_b_abbriev:
-                team_b_abbriev = team_b
+                if team_a_abbriev not in team_mapping:
+                    team_mapping[team_a_abbriev] = team_a
+                
+                if team_b_abbriev not in team_mapping:
+                    team_mapping[team_b_abbriev] = team_b
 
-            if team_a_abbriev not in team_mapping:
-                team_mapping[team_a_abbriev] = team_a
-            
-            if team_b_abbriev not in team_mapping:
-                team_mapping[team_b_abbriev] = team_b
+                maps_notes = match_soup.find_all("div", class_="match-header-note")
+                extract_maps_notes(maps_notes, results, team_mapping, [tournament_name, stage_name, match_type_name, match_name])
 
-            maps_notes = match_soup.find_all("div", class_="match-header-note")
-            extract_maps_notes(maps_notes, results, team_mapping, [tournament_name, stage_name, match_type_name, match_name])
+                maps_headers = match_soup.find_all("div", class_="vm-stats-game-header")
+                extract_maps_headers(maps_headers, results, team_a, team_b, [tournament_name, stage_name, match_type_name, match_type_name])
 
-            maps_headers = match_soup.find_all("div", class_="vm-stats-game-header")
-            extract_maps_headers(maps_headers, results, team_a, team_b, [tournament_name, stage_name, match_type_name, match_type_name])
-
-            player_to_team, missing_team = extract_overview_stats(overview_stats, maps_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
+                player_to_team, missing_team = extract_overview_stats(overview_stats, maps_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
+            except IndexError:
+                print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, the match was forfeited")
 
             await asyncio.sleep(random.uniform(1,2))
 

@@ -17,7 +17,8 @@ stats_titles = ["", "", "Rounds Played", "Rating", "Average Combat Score", "Kill
                 "Headshot %", "Clutch Success %", "Clutches (won/played)", "Maximum Kills in a Single Map", "Kills", "Deaths", "Assists",
                 "First Kills", "First Deaths"]
 
-non_latin_pattern = re.compile(r'[^a-zA-Z]')
+cjk_pattern = re.compile(r'[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]')
+
 
 def extract_maps_id(maps_id_divs, maps_id, results, list):
     tournament_name = list[0]
@@ -114,13 +115,12 @@ def extract_overview_stats(overview_stats, maps_id, team_mapping, results, list)
                     if class_name == "mod-player":
                         result = td.find("a").find_all("div")
                         player = result[0].text.strip()
-                        try:
-                            team = result[1].text.strip()
-                        except IndexError:
-                            if not bool(non_latin_pattern.search(team_a)):
+                        team = result[1].text.strip()
+                        if team == "":
+                            if cjk_pattern.search(team_a):
                                 team = team_a
                                 missing_team = team
-                            elif not bool(non_latin_pattern.search(team_b)):
+                            elif cjk_pattern.search(team_b):
                                 team = team_b
                                 missing_team = team
                         # player, team = td.find("a").find_all("div")
