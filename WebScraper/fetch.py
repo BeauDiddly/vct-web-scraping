@@ -122,11 +122,6 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
                 overview_stats = match_soup.find_all("div", class_="vm-stats-game")
                 overview_tables = overview_stats[0].find_all("table")
 
-
-                maps_id = {}
-                maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
-                extract_maps_id(maps_id_divs, maps_id, results, [tournament_name, stage_name, match_type_name, match_name])
-
                 team_a_abbriev = overview_tables[0].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
 
                 if not team_a_abbriev:
@@ -143,6 +138,12 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
                 if team_b_abbriev not in team_mapping:
                     team_mapping[team_b_abbriev] = team_b
 
+
+                maps_id = {}
+                maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
+                extract_maps_id(maps_id_divs, maps_id, results, [tournament_name, stage_name, match_type_name, match_name])
+
+
                 maps_notes = match_soup.find_all("div", class_="match-header-note")
                 extract_maps_notes(maps_notes, results, team_mapping, [tournament_name, stage_name, match_type_name, match_name])
 
@@ -152,6 +153,7 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
                 player_to_team, missing_team = extract_overview_stats(overview_stats, maps_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
             except IndexError:
                 print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, the match was forfeited")
+                return {}
 
             await asyncio.sleep(random.uniform(1,2))
 

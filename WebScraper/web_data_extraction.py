@@ -1,5 +1,6 @@
 import pandas as pd
 import re
+import traceback
 
 overview_stats_titles = ["", "", "Rating", "Average Combat Score", "Kills", "Deaths", "Assists", "Kills - Deaths (KD)",
                         "Kill, Assist, Trade, Survive %", "Average Damage per Round", "Headshot %", "First Kills",
@@ -46,7 +47,10 @@ def extract_maps_notes(maps_notes, results, team_mapping, list):
             for note in maps_notes:
                 if "ban" in note or "pick" in note:
                     team, action, map = note.split()
-                    team = team_mapping[team]
+                    try:
+                        team = team_mapping[team]
+                    except KeyError:
+                        print(f"The notes used the full team name {team} instead of the abbreviated team name")
                     results["draft_phase"].append([tournament_name, stage_name, match_type_name, match_name, team, action, map])
                 
         else:
@@ -113,7 +117,10 @@ def extract_overview_stats(overview_stats, maps_id, team_mapping, results, list)
                     td_class = td.get("class") or ""
                     class_name = " ".join(td_class)
                     if class_name == "mod-player":
-                        result = td.find("a").find_all("div")
+                        try:
+                            result = td.find("a").find_all("div")
+                        except:
+                            print(list)
                         player = result[0].text.strip()
                         team = result[1].text.strip()
                         if team == "":
@@ -295,9 +302,16 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
                             values.append(stat)
                     results["kills_stats"].append(values)
 
+        except AttributeError as e:
+            print(f"ERROR COMING FROM SCRAPING THE PERFORMANCE PAGE")
+            print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, does not contain any data under their performance page.")
+        except KeyError as e:
+            print(f"ERROR COMING FROM SCRAPING THE PERFORMANCE PAGE")
+            print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, the abbrievated name used in performance is not consistent.")
+            print(f"The abbrievated name used in the performance page is {e}. It needed to be either from this dictionary {team_mapping.keys()}")
         except Exception as e:
-            print(e)
-            print(tournament_name, stage_name, match_type_name, match_name, "does not contain any data under their performance page. Either their page was empty or something went wrong during the scraping")
+            print(f"ERROR COMING FROM SCRAPING THE PERFORMANCE PAGE")
+            traceback.print_exc()
 
 def extract_economy_stats_div(economy_stats_div):
     eco_stats = {}
