@@ -166,7 +166,7 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
             performance_soup = BeautifulSoup(performance_page, "html.parser")
             performance_stats_div = performance_soup.find_all("div", class_="vm-stats-game")
 
-            extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_team, missing_team, results, [tournament_name, stage_name, match_type_name, match_name, team_b])
+            extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_team, missing_team, results, [tournament_name, stage_name, match_type_name, match_name, team_b, f'https://vlr.gg{url}/?game=all&tab=performance'])
 
             await asyncio.sleep(random.uniform(1,2))
                 

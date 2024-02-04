@@ -202,6 +202,7 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
         match_type_name = list[2]
         match_name = list[3]
         team_b = list[4]
+        URL = list[5]
         try:
             team_b_div = performance_stats_div[0].find("div").find("tr").find_all("div", class_="team")
             team_b_players = [""]
@@ -238,10 +239,10 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
                         if td.find("img") != None:
                             result = td.text.strip().replace("\t", "").split("\n")
                             player = result[0]
-                            team = result[1]
                             try:
+                                team = result[1]
                                 team = team_mapping[team]
-                            except KeyError:
+                            except (IndexError, KeyError):
                                 if not team:
                                     team = missing_team
                                 else:
@@ -272,7 +273,7 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
                                 team = result[1]
                                 try:
                                     team = team_mapping[team]
-                                except KeyError:
+                                except (KeyError, IndexError):
                                     if not team:
                                         team = missing_team
                                     else:
@@ -298,7 +299,15 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
                                             src = img.get("src")
                                             eliminated_agent = re.search(r'/(\w+)\.png', src).group(1)
                                             eliminated = div.text.strip()
+                                            if not eliminated:
+                                                continue
+                                            # try:
                                             eliminated_team = player_to_team[eliminated]
+                                            # except KeyError:
+                                            #     print(tournament_name, stage_name, match_type_name, match_name)
+                                            #     print(player, team, round_stat, map)
+                                            #     print(URL)
+                                            #     print(eliminated)
                                             results["rounds_kills"].append([tournament_name, stage_name, match_type_name, match_name, map, round_stat,
                                                                             team, player, agent, eliminated_team, eliminated, eliminated_agent, stat_name])
                         else:
@@ -318,6 +327,7 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
         #     print(f"The abbrievated name used in the performance page is {e}. It needed to be either from this dictionary {team_mapping.keys()}")
         except Exception as e:
             print(f"ERROR COMING FROM SCRAPING THE PERFORMANCE PAGE")
+            print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}")
             traceback.print_exc()
 
 def extract_economy_stats_div(economy_stats_div):
