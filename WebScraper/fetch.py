@@ -152,6 +152,7 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
 
                 player_to_team, missing_team = extract_overview_stats(overview_stats, maps_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
             except IndexError:
+                print(f"ERROR FROM SCRAPING OVERVIEW PAGE")
                 print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, the match was forfeited")
                 return {}
 
