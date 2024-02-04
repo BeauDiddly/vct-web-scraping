@@ -106,6 +106,7 @@ def extract_overview_stats(overview_stats, maps_id, team_mapping, results, list)
     overview_dict = {}
     player_to_team = {}
     missing_team = ""
+    URL = list[6]
     for index, stats in enumerate(overview_stats):
         id = stats.get("data-game-id")
         map = maps_id[id]
@@ -119,7 +120,13 @@ def extract_overview_stats(overview_stats, maps_id, team_mapping, results, list)
                     td_class = td.get("class") or ""
                     class_name = " ".join(td_class)
                     if class_name == "mod-player":
-                        result = td.find("a").find_all("div")
+                        try:
+                            result = td.find("a").find_all("div")
+                        except AttributeError:
+                            break
+                            # print(tournament_name, stage_name, match_type_name, match_name, map)
+                            # print(td.find("a"))
+                            # print(URL)
                         player = result[0].text.strip()
                         team = result[1].text.strip()
                         try:
@@ -207,8 +214,11 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
             team_b_div = performance_stats_div[0].find("div").find("tr").find_all("div", class_="team")
             team_b_players = [""]
             for player in team_b_div:
-                player, team = player.text.strip().replace("\t", "").split("\n")
-                team_b_players.append(player)
+                try:
+                    player, team = player.text.strip().replace("\t", "").split("\n")
+                    team_b_players.append(player)
+                except ValueError:
+                    continue
             players_to_players_kills = {}
             players_kills = {}
 

@@ -150,7 +150,7 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
                 maps_headers = match_soup.find_all("div", class_="vm-stats-game-header")
                 extract_maps_headers(maps_headers, results, team_a, team_b, [tournament_name, stage_name, match_type_name, match_type_name])
 
-                player_to_team, missing_team = extract_overview_stats(overview_stats, maps_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
+                player_to_team, missing_team = extract_overview_stats(overview_stats, maps_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b, f'https://vlr.gg{url}'])
             except IndexError:
                 print(f"ERROR FROM SCRAPING OVERVIEW PAGE")
                 print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, the match was forfeited")
