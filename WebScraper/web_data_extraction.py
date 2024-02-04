@@ -270,7 +270,10 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
                             if class_name == "team":
                                 result = td.text.strip().replace("\t", "").split("\n")
                                 player = result[0]
-                                team = result[1]
+                                try:
+                                    team = result[1]
+                                except IndexError:
+                                    break
                                 try:
                                     team = team_mapping[team]
                                 except (KeyError, IndexError):
