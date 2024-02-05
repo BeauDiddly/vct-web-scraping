@@ -76,7 +76,7 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
         match_type_name, stage_name = card.find("div", class_="match-item-event text-of").text.strip().splitlines()
         match_type_name = match_type_name.strip("\t")
         stage_name = stage_name.strip("\t")
-        if match_type_name == "Showmatch" or tournament_name != "Road to VCT 2022":
+        if match_type_name == "Showmatch":
             return {}
         else:
             results = {"scores": [],

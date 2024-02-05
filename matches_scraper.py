@@ -47,8 +47,6 @@ async def main():
             modules.extend(all_modules)
         matches_cards[tournament] = modules
 
-    print(matches_cards.keys())
-
     dataframes = {}
     all_results = {"scores": [],
                    "maps_played": [],
@@ -76,7 +74,6 @@ async def main():
                 else:
                     all_results[name].extend(data)
 
-    print(all_results["team_mapping"])
 
     # team_mapping = all_results["team_mapping"]
 
