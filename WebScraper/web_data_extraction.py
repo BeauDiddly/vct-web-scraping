@@ -41,13 +41,15 @@ def extract_maps_notes(maps_notes, results, team_mapping, list):
     stage_name = list[1]
     match_type_name = list[2]
     match_name = list[3]
-
     try:
         if ";" in maps_notes[-1].text:
             maps_notes = maps_notes[-1].text.strip().split("; ")
             for note in maps_notes:
                 if "ban" in note or "pick" in note:
-                    team, action, map = note.split()
+                    result = note.split()
+                    map = result.pop()
+                    action = result.pop()
+                    team = " ".join(result)
                     try:
                         team = team_mapping[team]
                     except KeyError as e:
@@ -106,7 +108,6 @@ def extract_overview_stats(overview_stats, maps_id, team_mapping, results, list)
     overview_dict = {}
     player_to_team = {}
     missing_team = ""
-    URL = list[6]
     for index, stats in enumerate(overview_stats):
         id = stats.get("data-game-id")
         map = maps_id[id]
@@ -122,16 +123,13 @@ def extract_overview_stats(overview_stats, maps_id, team_mapping, results, list)
                     if class_name == "mod-player":
                         try:
                             result = td.find("a").find_all("div")
-                        except AttributeError:
+                        except AttributeError: #This row did not contain the player and team name
                             break
-                            # print(tournament_name, stage_name, match_type_name, match_name, map)
-                            # print(td.find("a"))
-                            # print(URL)
                         player = result[0].text.strip()
                         team = result[1].text.strip()
                         try:
                             team = team_mapping[team]
-                        except KeyError:
+                        except KeyError: #Either the team name does not contain latin characters or they did not used the abbrievated name
                             if not team:
                                 if cjk_pattern.search(team_a):
                                     team = team_a
@@ -216,9 +214,9 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
             for player in team_b_div:
                 try:
                     player, team = player.text.strip().replace("\t", "").split("\n")
-                    team_b_players.append(player)
-                except ValueError:
-                    continue
+                except ValueError: #The player name was not on the row but I set it to an empty string so I can have a "5x5 table" when I extract the kill data
+                    player = ""
+                team_b_players.append(player)
             players_to_players_kills = {}
             players_kills = {}
 
@@ -252,13 +250,15 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
                             try:
                                 team = result[1]
                                 team = team_mapping[team]
-                            except (IndexError, KeyError):
+                            except (IndexError, KeyError): #The team name was missing or they did not use the abbrievated name
                                 if not team:
                                     team = missing_team
                                 else:
                                     team = min(team_mapping.keys(), key=lambda x: Levenshtein.distance(team, x))
                             kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
                         else:
+                            if not team_b_players[team_b_player_index]:
+                                continue
                             kills_div = td.find("div").find_all("div")
                             player_a_kills, player_b_kills, difference = kills_div[0].text.strip(), kills_div[1].text.strip(), kills_div[2].text.strip()
                             player_b = team_b_players[team_b_player_index]
@@ -282,11 +282,11 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
                                 player = result[0]
                                 try:
                                     team = result[1]
-                                except IndexError:
+                                except IndexError: #The player was missing in this row. Although, I set the player, in this particular situation, only the team name was given
                                     break
                                 try:
                                     team = team_mapping[team]
-                                except (KeyError, IndexError):
+                                except (KeyError, IndexError): #The team name was missing or they did not use the abbrievated name
                                     if not team:
                                         team = missing_team
                                     else:
@@ -314,13 +314,7 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
                                             eliminated = div.text.strip()
                                             if not eliminated:
                                                 continue
-                                            # try:
                                             eliminated_team = player_to_team[eliminated]
-                                            # except KeyError:
-                                            #     print(tournament_name, stage_name, match_type_name, match_name)
-                                            #     print(player, team, round_stat, map)
-                                            #     print(URL)
-                                            #     print(eliminated)
                                             results["rounds_kills"].append([tournament_name, stage_name, match_type_name, match_name, map, round_stat,
                                                                             team, player, agent, eliminated_team, eliminated, eliminated_agent, stat_name])
                         else:
@@ -332,12 +326,7 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
                     results["kills_stats"].append(values)
 
         except AttributeError as e:
-            # print(f"ERROR COMING FROM SCRAPING THE PERFORMANCE PAGE")
             print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, does not contain any data under their performance page.")
-        # except KeyError as e:
-        #     print(f"ERROR COMING FROM SCRAPING THE PERFORMANCE PAGE")
-        #     print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, the abbrievated name used in performance is not consistent.")
-        #     print(f"The abbrievated name used in the performance page is {e}. It needed to be either from this dictionary {team_mapping.keys()}")
         except Exception as e:
             print(f"ERROR COMING FROM SCRAPING THE PERFORMANCE PAGE")
             print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}")
@@ -387,7 +376,7 @@ def extract_economy_stats(eco_stats, eco_rounds_stats, maps_id, team_mapping, re
                     team = td.text.strip()
                     try:
                         team = team_mapping[team]
-                    except KeyError:
+                    except KeyError: #They uppercased the team name
                         if team.lower() == team_a.lower():
                             team = team_a
                         elif team.lower() == team_b.lower():
@@ -409,11 +398,11 @@ def extract_economy_stats(eco_stats, eco_rounds_stats, maps_id, team_mapping, re
                     # team_a, team_b = teams[0].text.strip(), teams[1].text.strip()
                     try:
                         team_1 = team_mapping[teams[0]]
-                    except KeyError:
+                    except KeyError: #They did not use the abbrievated team name
                         team_1 = team_a
                     try:
                         team_2 = team_mapping[teams[1]]
-                    except KeyError:
+                    except KeyError: #They did not use the abbrievated team name
                         team_2 = team_b
 
                 else:

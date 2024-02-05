@@ -76,7 +76,7 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
         match_type_name, stage_name = card.find("div", class_="match-item-event text-of").text.strip().splitlines()
         match_type_name = match_type_name.strip("\t")
         stage_name = stage_name.strip("\t")
-        if match_type_name == "Showmatch":
+        if match_type_name == "Showmatch" or tournament_name != "Road to VCT 2022":
             return {}
         else:
             results = {"scores": [],
@@ -89,24 +89,31 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
                 "rounds_kills": [],
                 "eco_stats": [],
                 "eco_rounds": []}
-            team_mapping = {}
             
-            loser, loser_flag, loser_score = card.find("div", class_="match-item-vs").select('div.match-item-vs-team:not([class*=" "])')[0].find_all("div")
-            loser = loser.text.strip("\n").strip("\t")
-            loser_score = loser_score.text.strip("\n").strip("\t")
-
-            winner, winner_flag, winner_score = card.find("div", class_="match-item-vs").find("div", class_="match-item-vs-team mod-winner").find_all("div")
-            winner = winner.text.strip("\n").strip("\t")
-            winner_score = winner_score.text.strip("\n").strip("\t")
-
             teams = card.find("div", class_="match-item-vs").find_all(recursive=False)
+
 
             team_a = teams[0].find("div").text.strip("\n").strip("\t")
 
             team_b = teams[1].find("div").text.strip("\n").strip("\t")
 
-
             match_name = f"{team_a} vs {team_b}"
+
+            team_a_score = int(teams[0].find("div", class_="match-item-vs-team-score js-spoiler").text.strip())
+            team_b_score = int(teams[1].find("div", class_="match-item-vs-team-score js-spoiler").text.strip())
+            if team_a_score > team_b_score:
+                winner = team_a
+                winner_score = team_a_score
+                loser = team_b
+                loser_score = team_b_score
+            else:
+                winner = team_b
+                winner_score = team_b_score
+                loser = team_a
+                loser_score = team_a_score
+
+
+            team_mapping = {}
 
             results["scores"].append([tournament_name, stage_name, match_type_name, match_name, winner,loser, winner_score, loser_score])
             print("Starting collecting for ",tournament_name, stage_name, match_type_name, match_name)
@@ -145,7 +152,7 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
 
 
                 maps_notes = match_soup.find_all("div", class_="match-header-note")
-                extract_maps_notes(maps_notes, results, team_mapping, [tournament_name, stage_name, match_type_name, match_name])
+                extract_maps_notes(maps_notes, results, team_mapping, [tournament_name, stage_name, match_type_name, match_name, f'https://vlr.gg{url}'])
 
                 maps_headers = match_soup.find_all("div", class_="vm-stats-game-header")
                 extract_maps_headers(maps_headers, results, team_a, team_b, [tournament_name, stage_name, match_type_name, match_type_name])
