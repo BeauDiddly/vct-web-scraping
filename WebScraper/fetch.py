@@ -76,7 +76,7 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
         match_type_name, stage_name = card.find("div", class_="match-item-event text-of").text.strip().splitlines()
         match_type_name = match_type_name.strip("\t")
         stage_name = stage_name.strip("\t")
-        if match_type_name == "Showmatch":
+        if match_type_name == "Showmatch" or tournament_name != "Challengers 2" or stage_name != "Open Qualifier" or match_type_name != "Round of 256":
             return {}
         else:
             results = {"scores": [],
@@ -98,7 +98,8 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
             team_b = teams[1].find("div").text.strip("\n").strip("\t")
 
             match_name = f"{team_a} vs {team_b}"
-
+            if team_a != "Giants Gaming" and team_b != "ENTS":
+                return {}
             team_a_score = int(teams[0].find("div", class_="match-item-vs-team-score js-spoiler").text.strip())
             team_b_score = int(teams[1].find("div", class_="match-item-vs-team-score js-spoiler").text.strip())
             if team_a_score > team_b_score:
@@ -127,14 +128,15 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
 
             try:
                 overview_stats = match_soup.find_all("div", class_="vm-stats-game")
-                overview_tables = overview_stats[0].find_all("table")
+                overview_tables = overview_stats[1].find_all("table")
 
                 team_a_abbriev = overview_tables[0].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
 
                 if not team_a_abbriev:
                     team_a_abbriev = team_a
-
+                
                 team_b_abbriev = overview_tables[1].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
+
 
                 if not team_b_abbriev:
                     team_b_abbriev = team_b
