@@ -21,6 +21,7 @@ semaphore_count = 2
 
 
 # or tournament_name != "Challengers 2" or stage_name != "Open Qualifier" or match_type_name != "Round of 256"
+# or tournament_name != "Champions Tour North America Stage 2: Challengers" or stage_name != "Open Qualifier #2" or match_type_name != "Round of 128"
 async def fetch(url, session):
     max_retries = 3
     for attempt in range(max_retries):
@@ -100,10 +101,20 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
             team_b = teams[1].find("div").text.strip("\n").strip("\t")
 
             match_name = f"{team_a} vs {team_b}"
-            # if team_a != "Giants Gaming" and team_b != "ENTS":
+            # if team_a != "Ghost Gaming" and team_b != "Area of Effect":
             #     return {}
-            team_a_score = int(teams[0].find("div", class_="match-item-vs-team-score js-spoiler").text.strip())
-            team_b_score = int(teams[1].find("div", class_="match-item-vs-team-score js-spoiler").text.strip())
+            try:
+                team_a_score = int(teams[0].find("div", class_="match-item-vs-team-score js-spoiler").text.strip())
+            except AttributeError: #match was foreited
+                print(f"N/A SCPRE FROM {team_a}")
+                print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, match was foreited")
+                return {}
+            try:
+                team_b_score = int(teams[1].find("div", class_="match-item-vs-team-score js-spoiler").text.strip())
+            except AttributeError: #match was foreited
+                print(f"N/A SCPRE FROM {team_b}")
+                print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, match was foreited")
+                return {}
             if team_a_score > team_b_score:
                 winner = team_a
                 winner_score = team_a_score
@@ -373,3 +384,4 @@ async def scraping_players_stats(tournament_name, stages, team_napping, session)
                             agents_dict[stat_name] = stat
                     global_players_agents[player] = global_players_agents[player] | players_agents[player]
     return result
+
