@@ -12,7 +12,7 @@ from WebScraper.fetch import scraping_matches_data
 
 
 async def main():
-    semaphore_count = 10
+    semaphore_count = 25
     matches_semaphore = asyncio.Semaphore(semaphore_count)
     year = input(f"Input the VCT year: ")
     start_time = time.time()
@@ -78,7 +78,7 @@ async def main():
     # team_mapping = all_results["team_mapping"]
 
     dataframes["scores"] = pd.DataFrame(all_results["scores"],
-                                        columns=["Tournament", "Stage", "Match Type", "Match Name", "Winner", "Loser", "Winner Score", "Loser Score"])
+                                        columns=["Tournament", "Stage", "Match Type", "Match Name", "Team A", "Team B", "Team A Score", "Team B Score", "Match Result"])
     dataframes["maps_played"] = pd.DataFrame(all_results["maps_played"],
                                              columns=["Tournament", "Stage", "Match Type", "Match Name", "Map"])
     dataframes["maps_scores"] = pd.DataFrame(all_results["maps_scores"],

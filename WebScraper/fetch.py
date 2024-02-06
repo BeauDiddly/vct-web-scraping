@@ -17,7 +17,7 @@ headers = {
     "User-Agent": ""
 }
 
-semaphore_count = 2
+semaphore_count = 10
 
 
 # or tournament_name != "Challengers 2" or stage_name != "Open Qualifier" or match_type_name != "Round of 256"
@@ -115,21 +115,48 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
                 print(f"N/A SCPRE FROM {team_b}")
                 print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, match was foreited")
                 return {}
+            match_result = f""
             if team_a_score > team_b_score:
-                winner = team_a
-                winner_score = team_a_score
-                loser = team_b
-                loser_score = team_b_score
-            else:
-                winner = team_b
-                winner_score = team_b_score
-                loser = team_a
-                loser_score = team_a_score
+                # winner = team_a
+                # winner_score = team_a_score
+                # loser = team_b
+                # loser_score = team_b_score
+                match_result = f"{team_a} won"
+            elif team_b_score > team_a_score:
+                # winner = team_b
+                # winner_score = team_b_score
+                # loser = team_a
+                # loser_score = team_a_score
+                match_result = f"{team_b} won"
+            elif team_a_score == 0 and team_b_score == 0:
+                print(f"No score from {team_a} and {team_b} Score: {team_a_score} - {team_b_score}")
+                print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, match was foreited")
+                return {}
 
+            elif team_a_score == team_b_score:
+                if "mod-winner" in teams[0].get("class", []):
+                    # winner = team_a
+                    # winner_score = team_a_score
+                    # loser = team_b
+                    # loser_score = team_b_score
+                    match_result = f"{team_a} won"
+                elif "mod-winner" in teams[1].get("class", []):
+                    # winner = team_b
+                    # winner_score = team_b_score
+                    # loser = team_a
+                    # loser_score = team_a_score
+                    match_result = f"{team_b} won"
+                else:
+                    match_result = f"Draw"
+                    print(f"{team_a} {team_a_score} {team_b} {team_b_score}")
+                    print(f"{tournament_name} {stage_name} {match_type_name} {match_name}")
 
             team_mapping = {}
-
-            results["scores"].append([tournament_name, stage_name, match_type_name, match_name, winner,loser, winner_score, loser_score])
+            try:
+                results["scores"].append([tournament_name, stage_name, match_type_name, match_name, team_a, team_b, team_a_score, team_b_score, match_result])
+            except UnboundLocalError:
+                print(f"{team_a} {team_a_score} {team_b} {team_b_score}")
+                print(f"{tournament_name} {stage_name} {match_type_name} {match_name}")
             print("Starting collecting for ",tournament_name, stage_name, match_type_name, match_name)
             url = card.get("href")
             try:
@@ -142,8 +169,11 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
             try:
                 overview_stats = match_soup.find_all("div", class_="vm-stats-game")
                 overview_tables = overview_stats[1].find_all("table")
-
-                team_a_abbriev = overview_tables[0].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
+                try:
+                    team_a_abbriev = overview_tables[0].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
+                except AttributeError:
+                    print({team_a} and {team_b})
+                    print(overview_tables)
 
                 if not team_a_abbriev:
                     team_a_abbriev = team_a
