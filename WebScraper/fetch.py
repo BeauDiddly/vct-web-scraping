@@ -72,8 +72,8 @@ async def generate_urls_combination(tournament_name, url, stages_filter, session
     tournament_dict["All Stages"] = {}
     tournament_dict["All Stages"]["All Match Types"] = f"{url}?exclude={showmatch_id}"
 
-async def scraping_card_data(tournament_name, card, session, card_semaphore):
-    async with card_semaphore:
+async def scraping_card_data(tournament_name, card, session, semaphore):
+    async with semaphore:
         await asyncio.sleep(random.uniform(1,2))
         match_type_name, stage_name = card.find("div", class_="match-item-event text-of").text.strip().splitlines()
         match_type_name = match_type_name.strip("\t")
@@ -147,11 +147,16 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
                 
                 if team_b_abbriev not in team_mapping:
                     team_mapping[team_b_abbriev] = team_b
-
-
                 maps_id = {}
-                maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
-                extract_maps_id(maps_id_divs, maps_id, results, [tournament_name, stage_name, match_type_name, match_name])
+                try:
+                    maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
+                    extract_maps_id(maps_id_divs, maps_id, results, [tournament_name, stage_name, match_type_name, match_name])
+                except AttributeError: #only 1 map played
+                    map_name = overview_stats[0].find("div", class_="map").text.strip()
+                    id = overview_stats[0].get("data-game-id")
+                    maps_id[id] = map_name
+                    results["maps_played"].append([tournament_name, stage_name, match_type_name, match_name, map_name])
+                    
 
 
                 maps_notes = match_soup.find_all("div", class_="match-header-note")
@@ -198,9 +203,9 @@ async def scraping_card_data(tournament_name, card, session, card_semaphore):
 
 
 
-async def scraping_matches_data(tournament_name, cards, session):
-    card_semaphore = asyncio.Semaphore(semaphore_count)
-    tasks = [scraping_card_data(tournament_name, card, session, card_semaphore) for card in cards]
+async def scraping_matches_data(tournament_name, cards, semaphore, session):
+    # card_semaphore = asyncio.Semaphore(semaphore_count)
+    tasks = [scraping_card_data(tournament_name, card, session, semaphore) for card in cards]
     results = await asyncio.gather(*tasks)
     return results
 

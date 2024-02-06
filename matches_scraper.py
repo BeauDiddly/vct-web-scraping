@@ -61,7 +61,7 @@ async def main():
                    "team_mapping": {}}
 
     async with aiohttp.ClientSession() as session:
-        tasks = [scraping_matches_data(tournament_name, cards, session) for tournament_name, cards in matches_cards.items()]
+        tasks = [scraping_matches_data(tournament_name, cards, matches_semaphore, session) for tournament_name, cards in matches_cards.items()]
         results = await asyncio.gather(*tasks)
 
     # print(results)

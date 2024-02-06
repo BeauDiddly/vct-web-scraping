@@ -110,7 +110,10 @@ def extract_overview_stats(overview_stats, maps_id, team_mapping, results, list)
     missing_team = ""
     for index, stats in enumerate(overview_stats):
         id = stats.get("data-game-id")
-        map = maps_id[id]
+        try:
+            map = maps_id[id]
+        except KeyError: #match is BO1
+            continue
         map_dict = overview_dict.setdefault(map, {})
         stats_tables = stats.find_all("table")
         for table in stats_tables:
@@ -241,7 +244,10 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
             
 
             for id, tds_lists in players_to_players_kills.items():
-                map = maps_id[id]
+                try:
+                    map = maps_id[id]
+                except KeyError: #match is BO1
+                    continue
                 for index, td_list in enumerate(tds_lists):
                     for team_b_player_index, td in enumerate(td_list):
                         if td.find("img") != None:
@@ -270,7 +276,10 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
             
 
             for id, tds_lists in players_kills.items():
-                map = maps_id[id]
+                try:
+                    map = maps_id[id]
+                except KeyError:
+                    continue
                 for tds in tds_lists:
                     values = [tournament_name, stage_name, match_type_name, match_name, map]
                     for index, td in enumerate(tds):
@@ -369,7 +378,10 @@ def extract_economy_stats(eco_stats, eco_rounds_stats, maps_id, team_mapping, re
     if eco_stats:     
         
         for id, td_list in eco_stats.items():
-            map = maps_id[id]
+            try:
+                map = maps_id[id]
+            except KeyError: #match is BO1
+                continue
             for index, td in enumerate(td_list):
                 class_name = td.find("div").get("class")[0]
                 if class_name == "team":
@@ -391,7 +403,10 @@ def extract_economy_stats(eco_stats, eco_rounds_stats, maps_id, team_mapping, re
                     results["eco_stats"].append([tournament_name, stage_name, match_type_name, match_name,
                                                     map, team, stat_name, initiated, won])
         for id, td_list in eco_rounds_stats.items():
-            map = maps_id[id]
+            try:
+                map = maps_id[id]
+            except KeyError: #match is BO1
+                continue
             for index, td in enumerate(td_list):
                 teams = td.find_all("div", class_="team")
                 if teams:
