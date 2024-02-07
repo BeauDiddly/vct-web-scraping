@@ -2,7 +2,7 @@ import pandas as pd
 import re
 import traceback
 import Levenshtein
-
+from bs4 import Tag
 overview_stats_titles = ["", "", "Rating", "Average Combat Score", "Kills", "Deaths", "Assists", "Kills - Deaths (KD)",
                         "Kill, Assist, Trade, Survive %", "Average Damage per Round", "Headshot %", "First Kills",
                         "First Deaths", "Kills - Deaths (FKD)"]
@@ -20,7 +20,7 @@ stats_titles = ["", "", "Rounds Played", "Rating", "Average Combat Score", "Kill
                 "First Kills", "First Deaths"]
 
 cjk_pattern = re.compile(r'[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]')
-
+pattern = r'/(\w+)\.png'
 
 def extract_maps_id(maps_id_divs, maps_id, results, list):
     tournament_name = list[0]
@@ -439,3 +439,65 @@ def extract_economy_stats(eco_stats, eco_rounds_stats, maps_id, team_mapping, re
                 
     else:
         print(tournament_name, stage_name, match_type_name, match_name, "does not contain any data under their economy page")
+
+def extract_agent_pictures(agent_pictures, global_table_titles):
+    for th in agent_pictures:
+        src = th.find("img").get("src")
+        match = re.search(pattern, src)
+        agent = match.group(1)
+        global_table_titles.append(agent)
+
+def extract_pick_rates(table_stats_tr, maps_stats_dict, agents_pick_rates_dict, global_table_titles):
+    for tr in table_stats_tr:
+        all_tds = tr.find_all("td")
+        filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
+        for index, td in enumerate(filtered_tds):
+            td_class = td.get("class") or ""
+            class_name = " ".join(td_class)
+            if not class_name:
+                map = td.text.strip().replace("\t", "")
+                if not map:
+                    map = "All Maps"
+                else:
+                    logo, map = map.split("\n")
+                map_stats_dict = maps_stats_dict.setdefault(map, {})
+                agent_pick_rate_dict = agents_pick_rates_dict.setdefault(map, {})
+            elif class_name == "mod-right":
+                stat = td.text.strip()
+                title = global_table_titles[index]
+                map_stats_dict[title] = stat
+            elif class_name == "mod-center":
+                stat = td.text.strip()
+                agent = global_table_titles[index]
+                agent_pick_rate_dict[agent] = stat
+
+def extract_team_picked_agents(teams_tables, teams_pick_rates_dict, table_titles):
+    for table in teams_tables:
+        logo, map = table.find("tr").find("th").text.replace("\t", "").split()
+        map_dict = teams_pick_rates_dict.setdefault(map, {})
+        teams_pick_rate_tr = table.find_all("tr")[1:]
+        for tr in teams_pick_rate_tr:
+            tr_class = tr.get("class")
+            class_name = " ".join(tr_class)
+            if class_name == "pr-matrix-row":
+                all_tds = tr.find_all("td")
+                filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
+                contained_any_agents = any(td.has_attr('class') and ('mod-picked' in td['class']) for td in filtered_tds)
+                if contained_any_agents:
+                    a_tag = filtered_tds[0].find("a")
+                    team = a_tag.text.strip()
+            elif "mod-dropdown" in class_name:
+                all_tds = tr.find_all("td")
+                filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
+                for index, td in enumerate(filtered_tds):
+                    td_class = td.get("class") or ""
+                    class_name = "".join(td_class)
+                    if class_name == "mod-loss" or class_name == "mod-win":
+                        outcome = class_name.split("-")[-1]
+                    elif class_name == "mod-picked-lite":
+                        agent = table_titles[index]
+                        
+                        team_dict = map_dict.setdefault(team, {"Total Maps Played": 0, "Total Outcomes": {}})
+                        agent_dict = team_dict["Total Outcomes"].setdefault(agent, {"win": 0, "loss": 0})
+                        agent_dict[outcome] += 1
+                team_dict["Total Maps Played"] += 1

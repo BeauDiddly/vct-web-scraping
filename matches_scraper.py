@@ -41,7 +41,6 @@ async def main():
 
         all_cards = soup.select('div.wf-card:not([class*=" "])')
         modules = []
-        # print(tournament ,len(all_cards))
         for cards in all_cards:
             all_modules = cards.find_all("a")
             modules.extend(all_modules)

@@ -237,92 +237,48 @@ async def scraping_matches_data(tournament_name, cards, semaphore, session):
     return results
 
 
-async def scraping_agents_data(tournament_name, stages, session): 
-    global_table_titles = ["Map", "Total Played", "Attacker Side Win", "Defender Side Win"]
-    pattern = r'/(\w+)\.png'
-    result = {}
-    tournament_dict = result.setdefault(tournament_name, {})
-    for stage_name, match_types in stages.items():
+async def scraping_agents_data_match_type_helper(tournament_name, stage_name, match_type_name, url, semaphore, session):
+    async with semaphore:
+        global_table_titles = ["Map", "Total Played", "Attacker Side Win", "Defender Side Win"]
+        result = {}
+        tournament_dict = result.setdefault(tournament_name, {})
         stage_dict = tournament_dict.setdefault(stage_name, {})
-        for match_type_name, url in match_types.items():
-            match_type_dict = stage_dict.setdefault(match_type_name, {})
-            maps_stats_dict = match_type_dict.setdefault("Maps Stats", {})
-            agents_pick_rates_dict = match_type_dict.setdefault("Agents Pick Rates", {})
-            teams_pick_rates_dict = match_type_dict.setdefault("Teams Pick Rates", {})
-            print(f"Collecting data for {tournament_name}, {stage_name}, {match_type_name}")
+        match_type_dict = stage_dict.setdefault(match_type_name, {})
+        maps_stats_dict = match_type_dict.setdefault("Maps Stats", {})
+        agents_pick_rates_dict = match_type_dict.setdefault("Agents Pick Rates", {})
+        teams_pick_rates_dict = match_type_dict.setdefault("Teams Pick Rates", {})
+        print(f"Collecting data for {tournament_name}, {stage_name}, {match_type_name}")
+        try:
             page = await fetch(url, session)
-            soup = BeautifulSoup(page, "html.parser")
-            global_maps_table = soup.find("table", class_="wf-table mod-pr-global")
-            agent_pictures = global_maps_table.find_all("th", style=" vertical-align: middle; padding-top: 0; padding-bottom: 0; width: 65px;")
+        except MaxReentriesReached as e:
+            print(f"Error: {e}")
+            sys.exit(1)
+        soup = BeautifulSoup(page, "html.parser")
+        global_maps_table = soup.find("table", class_="wf-table mod-pr-global")
+        agent_pictures = global_maps_table.find_all("th", style=" vertical-align: middle; padding-top: 0; padding-bottom: 0; width: 65px;")
+
+        extract_agent_pictures(agent_pictures, global_table_titles)
+        table_stats_tr = global_maps_table.find_all("tr")[1:]
+        extract_pick_rates(table_stats_tr, maps_stats_dict, agents_pick_rates_dict, global_table_titles)
+
+        
+        teams_tables = soup.select('table.wf-table:not([class*=" "])')
+        table_titles = ["", ""] + global_table_titles[4:]
+
+        extract_team_picked_agents(teams_tables, teams_pick_rates_dict, table_titles)
+                
+        return result
 
 
+async def scraping_agents_data_stage_helper(tournament_name, stage_name, match_types, semaphore, session):
+    tasks = [scraping_agents_data_match_type_helper(tournament_name, stage_name, match_type_name, url, semaphore, session) for match_type_name, url in match_types.items()]
+    results = await asyncio.gather(*tasks)
+    return results
 
-            for th in agent_pictures:
-                src = th.find("img").get("src")
-                match = re.search(pattern, src)
-                agent = match.group(1)
-                global_table_titles.append(agent)
-            
-            table_stats_tr = global_maps_table.find_all("tr")[1:]
-
-            for tr in table_stats_tr:
-                all_tds = tr.find_all("td")
-                filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
-                for index, td in enumerate(filtered_tds):
-                    td_class = td.get("class") or ""
-                    class_name = " ".join(td_class)
-                    if not class_name:
-                        map = td.text.strip().replace("\t", "")
-                        if not map:
-                            map = "All Maps"
-                        else:
-                            logo, map = map.split("\n")
-                        map_stats_dict = maps_stats_dict.setdefault(map, {})
-                        agent_pick_rate_dict = agents_pick_rates_dict.setdefault(map, {})
-                    elif class_name == "mod-right":
-                        stat = td.text.strip()
-                        title = global_table_titles[index]
-                        map_stats_dict[title] = stat
-                    elif class_name == "mod-center":
-                        stat = td.text.strip()
-                        agent = global_table_titles[index]
-                        agent_pick_rate_dict[agent] = stat
-            
-            teams_tables = soup.select('table.wf-table:not([class*=" "])')
-            table_titles = ["", ""] + global_table_titles[4:]
-
-            for table in teams_tables:
-                all_tr = table.find_all("tr")
-                logo, map = table.find("tr").find("th").text.replace("\t", "").split()
-                map_dict = teams_pick_rates_dict.setdefault(map, {})
-                teams_pick_rate_tr = table.find_all("tr")[1:]
-                for tr in teams_pick_rate_tr:
-                    tr_class = tr.get("class")
-                    class_name = " ".join(tr_class)
-                    if class_name == "pr-matrix-row":
-                        all_tds = tr.find_all("td")
-                        filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
-                        contained_any_agents = any(td.has_attr('class') and ('mod-picked' in td['class']) for td in filtered_tds)
-                        if contained_any_agents:
-                            a_tag = filtered_tds[0].find("a")
-                            team = a_tag.text.strip()
-                    elif "mod-dropdown" in class_name:
-                        all_tds = tr.find_all("td")
-                        filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
-                        for index, td in enumerate(filtered_tds):
-                            td_class = td.get("class") or ""
-                            class_name = "".join(td_class)
-                            if class_name == "mod-loss" or class_name == "mod-win":
-                                outcome = class_name.split("-")[-1]
-                            elif class_name == "mod-picked-lite":
-                                agent = table_titles[index]
-                                
-                                team_dict = map_dict.setdefault(team, {"Total Maps Played": 0, "Total Outcomes": {}})
-                                agent_dict = team_dict["Total Outcomes"].setdefault(agent, {"win": 0, "loss": 0})
-                                agent_dict[outcome] += 1
-                        team_dict["Total Maps Played"] += 1
-                    
-    return result
+async def scraping_agents_data(tournament_name, stages, semaphore, session): 
+    tasks = [scraping_agents_data_stage_helper(tournament_name, stage_name, match_types, semaphore, session) for stage_name, match_types in stages.items()]
+    results = await asyncio.gather(*tasks)
+    return results
 
 async def scraping_players_stats(tournament_name, stages, team_napping, session):
     result = {}

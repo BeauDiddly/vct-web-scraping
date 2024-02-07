@@ -9,8 +9,9 @@ from WebScraper.fetch import generate_urls_combination, scraping_agents_data
 from WebScraper.retrieve_urls import retrieve_urls
 import aiohttp
 async def main():
-    print(f"Input the VCT year: ")
-    year = input()
+    semaphore_count = 25
+    pick_rates_semaphore = asyncio.Semaphore(semaphore_count)
+    year = input(f"Input the VCT year: ")
 
     start_time = time.time()
 
@@ -18,7 +19,7 @@ async def main():
 
     current_time = now.strftime("%H:%M:%S")
     print("Current Time =", current_time)
-    url = "https://www.vlr.gg/vct-{year}"
+    url = f"https://www.vlr.gg/vct-{year}"
     page = requests.get(url)
     soup = BeautifulSoup(page.content, "html.parser")
 
@@ -34,42 +35,46 @@ async def main():
         tasks = [generate_urls_combination(tournament_name, url, filtered_urls, session) for tournament_name, url in urls.items()]
         await asyncio.gather(*tasks)
 
+
     async with aiohttp.ClientSession() as session:
-        tasks = [scraping_agents_data(tournament_name, stages, session) for tournament_name, stages in filtered_urls.items()]
+        tasks = [scraping_agents_data(tournament_name, stages, pick_rates_semaphore, session) for tournament_name, stages in filtered_urls.items()]
         results = await asyncio.gather(*tasks)
 
     all_results = {"maps_stats": [],
                    "agents_pick_rates": [],
                    "teams_picked_agents": []}
     
+    print(results)
+
     dataframes = {}
 
-
-
     for result in results:
-        for tournament_name, stages in result.items():
-            for stage_name, match_types in stages.items():
-                    for match_type_name, stats in match_types.items():
-                        if match_type_name != "Total":
-                            maps_stats = stats["Maps Stats"]
-                            agents_pick_rates = stats["Agents Pick Rates"]
-                            teams_pick_rates = stats["Teams Pick Rates"]
+        for inner_list in result:
+            for dictionary in inner_list:
+                for tournament_name, stages in dictionary.items():
+                    for stage_name, match_types in stages.items():
+                            print(match_types.keys())
+                            for match_type_name, stats in match_types.items():
+                                if match_type_name != "Total":
+                                    maps_stats = stats["Maps Stats"]
+                                    agents_pick_rates = stats["Agents Pick Rates"]
+                                    teams_pick_rates = stats["Teams Pick Rates"]
 
-                            for map_name, stats in maps_stats.items():
-                                combined_list = [tournament_name, stage_name, match_type_name, map_name] + list(stats.values())
-                                all_results["maps_stats"].append(combined_list)
-                            
-                            for map_name, agents in agents_pick_rates.items():
-                                for agent_name, pick_rate in agents.items():
-                                    all_results["agents_pick_rates"].append([tournament_name, stage_name, match_type_name, map_name, agent_name, pick_rate])
-                            
-                            for map_name, teams in teams_pick_rates.items():
-                                    for team_name, totals in teams.items():
-                                         total_maps_played = totals["Total Maps Played"]
-                                         total_outcomes = totals["Total Outcomes"]
-                                         for agent, outcome in total_outcomes.items():
-                                              all_results["teams_picked_agents"].append([tournament_name, stage_name, match_type_name, map_name, team_name,
-                                                                                        agent, outcome["win"], outcome["loss"], total_maps_played])
+                                    for map_name, stats in maps_stats.items():
+                                        combined_list = [tournament_name, stage_name, match_type_name, map_name] + list(stats.values())
+                                        all_results["maps_stats"].append(combined_list)
+                                    
+                                    for map_name, agents in agents_pick_rates.items():
+                                        for agent_name, pick_rate in agents.items():
+                                            all_results["agents_pick_rates"].append([tournament_name, stage_name, match_type_name, map_name, agent_name, pick_rate])
+                                    
+                                    for map_name, teams in teams_pick_rates.items():
+                                            for team_name, totals in teams.items():
+                                                total_maps_played = totals["Total Maps Played"]
+                                                total_outcomes = totals["Total Outcomes"]
+                                                for agent, outcome in total_outcomes.items():
+                                                    all_results["teams_picked_agents"].append([tournament_name, stage_name, match_type_name, map_name, team_name,
+                                                                                                agent, outcome["win"], outcome["loss"], total_maps_played])
     
 
     dataframes["maps_stats"] = pd.DataFrame(all_results["maps_stats"],
