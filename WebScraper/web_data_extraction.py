@@ -210,7 +210,6 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
         match_type_name = list[2]
         match_name = list[3]
         team_b = list[4]
-        URL = list[5]
         try:
             team_b_div = performance_stats_div[0].find("div").find("tr").find_all("div", class_="team")
             team_b_players = [""]
@@ -410,7 +409,6 @@ def extract_economy_stats(eco_stats, eco_rounds_stats, maps_id, team_mapping, re
             for index, td in enumerate(td_list):
                 teams = td.find_all("div", class_="team")
                 if teams:
-                    # team_a, team_b = teams[0].text.strip(), teams[1].text.strip()
                     try:
                         team_1 = team_mapping[teams[0]]
                     except KeyError: #They did not use the abbrievated team name

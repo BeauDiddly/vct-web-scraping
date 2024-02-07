@@ -101,32 +101,22 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
             team_b = teams[1].find("div").text.strip("\n").strip("\t")
 
             match_name = f"{team_a} vs {team_b}"
-            # if team_a != "Ghost Gaming" and team_b != "Area of Effect":
-            #     return {}
             try:
                 team_a_score = int(teams[0].find("div", class_="match-item-vs-team-score js-spoiler").text.strip())
             except AttributeError: #match was foreited
-                print(f"N/A SCPRE FROM {team_a}")
+                print(f"N/A SCORE FROM {team_a}")
                 print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, match was foreited")
                 return {}
             try:
                 team_b_score = int(teams[1].find("div", class_="match-item-vs-team-score js-spoiler").text.strip())
             except AttributeError: #match was foreited
-                print(f"N/A SCPRE FROM {team_b}")
+                print(f"N/A SCORE FROM {team_b}")
                 print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, match was foreited")
                 return {}
             match_result = f""
             if team_a_score > team_b_score:
-                # winner = team_a
-                # winner_score = team_a_score
-                # loser = team_b
-                # loser_score = team_b_score
                 match_result = f"{team_a} won"
             elif team_b_score > team_a_score:
-                # winner = team_b
-                # winner_score = team_b_score
-                # loser = team_a
-                # loser_score = team_a_score
                 match_result = f"{team_b} won"
             elif team_a_score == 0 and team_b_score == 0:
                 print(f"No score from {team_a} and {team_b} Score: {team_a_score} - {team_b_score}")
@@ -135,21 +125,11 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
 
             elif team_a_score == team_b_score:
                 if "mod-winner" in teams[0].get("class", []):
-                    # winner = team_a
-                    # winner_score = team_a_score
-                    # loser = team_b
-                    # loser_score = team_b_score
                     match_result = f"{team_a} won"
                 elif "mod-winner" in teams[1].get("class", []):
-                    # winner = team_b
-                    # winner_score = team_b_score
-                    # loser = team_a
-                    # loser_score = team_a_score
                     match_result = f"{team_b} won"
                 else:
                     match_result = f"Draw"
-                    print(f"{team_a} {team_a_score} {team_b} {team_b_score}")
-                    print(f"{tournament_name} {stage_name} {match_type_name} {match_name}")
 
             team_mapping = {}
             try:
@@ -171,14 +151,20 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
                 overview_tables = overview_stats[1].find_all("table")
                 try:
                     team_a_abbriev = overview_tables[0].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
-                except AttributeError:
-                    print({team_a} and {team_b})
-                    print(overview_tables)
+                except AttributeError: #abbrievated name for team a was not found which means the players name will be missing
+                    print(f"Couldn't find the abbrievated name for {team_a}")
+                    print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}")
+                    return {}
 
                 if not team_a_abbriev:
                     team_a_abbriev = team_a
                 
-                team_b_abbriev = overview_tables[1].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
+                try:
+                    team_b_abbriev = overview_tables[1].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
+                except AttributeError: #abbrievated name for team b was not found which means the players name will be missing
+                    print(f"Couldn't find the abbrievated name for {team_b}")
+                    print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}")
+                    return {}
 
                 if not team_b_abbriev:
                     team_b_abbriev = team_b
@@ -201,12 +187,12 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
 
 
                 maps_notes = match_soup.find_all("div", class_="match-header-note")
-                extract_maps_notes(maps_notes, results, team_mapping, [tournament_name, stage_name, match_type_name, match_name, f'https://vlr.gg{url}'])
+                extract_maps_notes(maps_notes, results, team_mapping, [tournament_name, stage_name, match_type_name, match_name])
 
                 maps_headers = match_soup.find_all("div", class_="vm-stats-game-header")
                 extract_maps_headers(maps_headers, results, team_a, team_b, [tournament_name, stage_name, match_type_name, match_type_name])
 
-                player_to_team, missing_team = extract_overview_stats(overview_stats, maps_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b, f'https://vlr.gg{url}'])
+                player_to_team, missing_team = extract_overview_stats(overview_stats, maps_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
             except IndexError:
                 print(f"ERROR FROM SCRAPING OVERVIEW PAGE")
                 print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, the match was forfeited")
@@ -222,7 +208,7 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
             performance_soup = BeautifulSoup(performance_page, "html.parser")
             performance_stats_div = performance_soup.find_all("div", class_="vm-stats-game")
 
-            extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_team, missing_team, results, [tournament_name, stage_name, match_type_name, match_name, team_b, f'https://vlr.gg{url}/?game=all&tab=performance'])
+            extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_team, missing_team, results, [tournament_name, stage_name, match_type_name, match_name, team_b])
 
             await asyncio.sleep(random.uniform(1,2))
                 
