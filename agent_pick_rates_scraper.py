@@ -10,6 +10,7 @@ from WebScraper.retrieve_urls import retrieve_urls
 import aiohttp
 async def main():
     semaphore_count = 25
+    url_semaphore = asyncio.Semaphore(5)
     pick_rates_semaphore = asyncio.Semaphore(semaphore_count)
     year = input(f"Input the VCT year: ")
 
@@ -32,9 +33,8 @@ async def main():
     filtered_urls = {}
 
     async with aiohttp.ClientSession() as session:
-        tasks = [generate_urls_combination(tournament_name, url, filtered_urls, session) for tournament_name, url in urls.items()]
+        tasks = [generate_urls_combination(tournament_name, url, filtered_urls, url_semaphore, session) for tournament_name, url in urls.items()]
         await asyncio.gather(*tasks)
-
 
     async with aiohttp.ClientSession() as session:
         tasks = [scraping_agents_data(tournament_name, stages, pick_rates_semaphore, session) for tournament_name, stages in filtered_urls.items()]
@@ -43,8 +43,6 @@ async def main():
     all_results = {"maps_stats": [],
                    "agents_pick_rates": [],
                    "teams_picked_agents": []}
-    
-    print(results)
 
     dataframes = {}
 
@@ -53,7 +51,6 @@ async def main():
             for dictionary in inner_list:
                 for tournament_name, stages in dictionary.items():
                     for stage_name, match_types in stages.items():
-                            print(match_types.keys())
                             for match_type_name, stats in match_types.items():
                                 if match_type_name != "Total":
                                     maps_stats = stats["Maps Stats"]

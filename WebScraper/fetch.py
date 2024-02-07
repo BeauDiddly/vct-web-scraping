@@ -39,39 +39,40 @@ async def fetch(url, session):
     
 
     
-async def generate_urls_combination(tournament_name, url, stages_filter, session):
-    try:
-        page = await fetch(url, session)
-    except MaxReentriesReached as e:
-        print(f"Error: {e}")
-        sys.exit(1)
-    soup = BeautifulSoup(page, "html.parser")
+async def generate_urls_combination(tournament_name, url, stages_filter, semaphore, session):
+    async with semaphore:
+        try:
+            page = await fetch(url, session)
+        except MaxReentriesReached as e:
+            print(f"Error: {e}")
+            sys.exit(1)
+        soup = BeautifulSoup(page, "html.parser")
 
-    all_stages = soup.find("div", class_="wf-card mod-dark mod-scroll stats-filter").find("div").find_all("div", recursive=False)
-    tournament_dict = stages_filter.setdefault(tournament_name, {})
-    all_ids = ""
-    showmatch_id = ""
-    for stage in all_stages:
-        stage_name_div, match_types_div = stage.find_all("div", recursive=False)
-        stage_name = stage_name_div.find("div").text.strip()
-        if stage_name == "Showmatch":
-            showmatch_id = match_types_div.find("div").get("data-subseries-id")
-            continue
-        match_types = match_types_div.find_all("div")
-        stage_dict = tournament_dict.setdefault(stage_name, {})
-        for match_type in match_types:
-            match_type_name = match_type.text.strip()
-            id = match_type.get("data-subseries-id")
-            stage_dict[match_type_name] = id
-            all_ids += f"{id}."
-    all_ids = all_ids.strip(".").split(".")
-    for stage_name, match_types in tournament_dict.items():
-        for match_type, id in match_types.items():
-            excluded_ids = ".".join(exclude_id for exclude_id in all_ids if exclude_id != id)
-            filter_url = f"{url}?exclude={excluded_ids}.{showmatch_id}"
-            tournament_dict[stage_name][match_type] = filter_url
-    tournament_dict["All Stages"] = {}
-    tournament_dict["All Stages"]["All Match Types"] = f"{url}?exclude={showmatch_id}"
+        all_stages = soup.find("div", class_="wf-card mod-dark mod-scroll stats-filter").find("div").find_all("div", recursive=False)
+        tournament_dict = stages_filter.setdefault(tournament_name, {})
+        all_ids = ""
+        showmatch_id = ""
+        for stage in all_stages:
+            stage_name_div, match_types_div = stage.find_all("div", recursive=False)
+            stage_name = stage_name_div.find("div").text.strip()
+            if stage_name == "Showmatch":
+                showmatch_id = match_types_div.find("div").get("data-subseries-id")
+                continue
+            match_types = match_types_div.find_all("div")
+            stage_dict = tournament_dict.setdefault(stage_name, {})
+            for match_type in match_types:
+                match_type_name = match_type.text.strip()
+                id = match_type.get("data-subseries-id")
+                stage_dict[match_type_name] = id
+                all_ids += f"{id}."
+        all_ids = all_ids.strip(".").split(".")
+        for stage_name, match_types in tournament_dict.items():
+            for match_type, id in match_types.items():
+                excluded_ids = ".".join(exclude_id for exclude_id in all_ids if exclude_id != id)
+                filter_url = f"{url}?exclude={excluded_ids}.{showmatch_id}"
+                tournament_dict[stage_name][match_type] = filter_url
+        tournament_dict["All Stages"] = {}
+        tournament_dict["All Stages"]["All Match Types"] = f"{url}?exclude={showmatch_id}"
 
 async def scraping_card_data(tournament_name, card, session, semaphore):
     async with semaphore:
