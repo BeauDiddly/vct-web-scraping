@@ -17,11 +17,9 @@ headers = {
     "User-Agent": ""
 }
 
-semaphore_count = 10
+all_agents = ["astra", "breach", "brimstone", "chamber", "cypher", "deadlock", "fade", "gekko", "harbor", "iso", "jett", "kayo",
+              "killjoy", "neon", "omen", "phoenix", "raze", "reyna", "sage", "skye", "sova", "viper", "yoru", "all"]
 
-
-# or tournament_name != "Challengers 2" or stage_name != "Open Qualifier" or match_type_name != "Round of 256"
-# or tournament_name != "Champions Tour North America Stage 2: Challengers" or stage_name != "Open Qualifier #2" or match_type_name != "Round of 128"
 async def fetch(url, session):
     max_retries = 3
     for attempt in range(max_retries):
@@ -271,8 +269,8 @@ async def scraping_agents_data_match_type_helper(tournament_name, stage_name, ma
         return result
 
 
-async def scraping_agents_data_stage_helper(tournament_name, stage_name, match_types, semaphore, session):
-    tasks = [scraping_agents_data_match_type_helper(tournament_name, stage_name, match_type_name, url, semaphore, session) for match_type_name, url in match_types.items()]
+async def scraping_agents_data_stage_helper(tournament_name, stage_name, match_types, team_mapping, semaphore, session):
+    tasks = [scraping_agents_data_match_type_helper(tournament_name, stage_name, match_type_name, url, team_mapping, semaphore, session) for match_type_name, url in match_types.items()]
     results = await asyncio.gather(*tasks)
     return results
 
@@ -281,80 +279,39 @@ async def scraping_agents_data(tournament_name, stages, semaphore, session):
     results = await asyncio.gather(*tasks)
     return results
 
-async def scraping_players_stats(tournament_name, stages, team_napping, session):
-    result = {}
-    global_players_agents = {}
-    pattern = r'/(\w+)\.png'
-    tournament_dict = result.setdefault(tournament_name, {})
-    for stage_name, match_types in stages.items():
+
+async def scraping_player_stats_match_type_helper(tournament_name, stage_name, match_type_name, url, team_mapping, semaphore, session):
+    async with semaphore:
+        result = {}
+        global_players_agents = {}
+        tournament_dict = result.setdefault(tournament_name, {})
         stage_dict = tournament_dict.setdefault(stage_name, {})
-        for match_type_name, url in match_types.items():
-            match_type_dict = stage_dict.setdefault(match_type_name, {})
-            players_agents = {}
-            for agent in all_agents:
-                print(f"Collecting data for {agent} {tournament_name}, {stage_name}, {match_type_name}")
-                try:
-                    page = await fetch(f"{url}&min_rounds=0&agent={agent}", session)
-                except MaxReentriesReached as e:
-                    print(f"Error: {e}")
-                    sys.exit(1)
-                await asyncio.sleep(random.uniform(0, 1))
-                soup = BeautifulSoup(page, "html.parser")
-                stats_trs = soup.find_all("tr")[1:]
+        match_type_dict = stage_dict.setdefault(match_type_name, {})
+        players_agents = {}
+        for agent in all_agents:
+            print(f"Collecting data for {agent} {tournament_name}, {stage_name}, {match_type_name}")
+            try:
+                page = await fetch(f"{url}&min_rounds=0&agent={agent}", session)
+            except MaxReentriesReached as e:
+                print(f"Error: {e}")
+                sys.exit(1)
+            await asyncio.sleep(random.uniform(0, 1))
+            soup = BeautifulSoup(page, "html.parser")
+            stats_trs = soup.find_all("tr")[1:]
 
-                if len(stats_trs) == 1:
-                    continue
+            if len(stats_trs) == 1:
+                continue
 
-                for tr in stats_trs:
-                    all_tds = tr.find_all("td")
-                    filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
-                    for index, td in enumerate(filtered_tds):
-                        td_class = td.get("class") or ""
-                        class_name = " ".join(td_class)
-                        if class_name == "mod-player mod-a":
-                            player_info = td.find("div").find_all("div")
-                            player, team = player_info[0].text, player_info[1].text
-                            team = team_napping[team]
-                            team_dict = match_type_dict.setdefault(team, {})
-                            player_dict = team_dict.setdefault(player, {})
-                        elif class_name == "mod-agents":
-                            imgs = td.find("div").find_all("img")
-                            agents = ""
-                            player_agents_set = players_agents.setdefault(player, set())
-                            global_players_agents_set = global_players_agents.setdefault(player, set())
-                            if stage_name == "All" and match_type_name == "All":
-                                agents = ", ".join(global_players_agents_set).strip(", ")
-                            elif agent == "all" and len(player_agents_set) > 1:
-                                agents = ", ".join(player_agents_set).strip(", ")
-                            elif agent == "all" and len(player_agents_set) == 1:
-                                continue
-                            else:
-                                for img in imgs:
-                                    src = img.get("src")
-                                    match = re.search(pattern, src)
-                                    agent_name = match.group(1)
-                                    player_agents_set.add(agent_name)
-                                    agents += f"{agent}, "
-                                agents = agents.strip(", ")
-                            agents_dict = player_dict.setdefault(agents, {})
-                        elif class_name == "mod-rnd" or class_name == "mod-cl" or class_name == "":
-                            stat = td.text.strip()
-                            stat_name = stats_titles[index]
-                            if stat == "":
-                                stat = pd.NA
-                            agents_dict[stat_name] = stat
-                        elif class_name == "mod-color-sq mod-acs" or class_name ==  "mod-color-sq":
-                            stat = td.find("div").find("span").text.strip()
-                            stat_name = stats_titles[index]
-                            if stat == "":
-                                stat = pd.NA
-                            agents_dict[stat_name] = stat
-                        elif class_name == "mod-a mod-kmax":
-                            stat = td.find("a").text.strip()
-                            stat_name = stats_titles[index]
-                            if stat == "":
-                                stat = pd.NA
-                            agents_dict[stat_name] = stat
-                    global_players_agents[player] = global_players_agents[player] | players_agents[player]
-    return result
+            extract_players_stats(stats_trs, match_type_dict, global_players_agents, players_agents, team_mapping, stage_name, match_type_name, agent)
+        return result
+
+async def scraping_player_stats_stage_helper(tournament_name, stage_name, match_types, team_mapping, semaphore, session):
+    tasks = [scraping_player_stats_match_type_helper(tournament_name, stage_name, match_type_name, url, team_mapping, semaphore, session) for match_type_name, url in match_types.items()]
+    results = await asyncio.gather(*tasks)
+    return results
+
+async def scraping_players_stats(tournament_name, stages, team_napping, semaphore, session):
+    tasks = [scraping_player_stats_stage_helper(tournament_name, stage_name, match_types, team_napping, semaphore, session) for stage_name, match_types in stages.items()]
+    results = await asyncio.gather(*tasks)
+    return results
 

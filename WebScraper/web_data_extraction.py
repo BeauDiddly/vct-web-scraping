@@ -12,8 +12,8 @@ economy_stats_title = ["Pistol Won", "Eco (won)", "$ (won)", "$$ (won)", "$$$ (w
 overview, performance, economy = "Overview", "Performance", "Economy"
 specific_kills_name = ["All Kills", "First Kills", "Op Kills"]
 eco_types = {"": "Eco: 0-5k", "$": "Semi-eco: 5-10k", "$$": "Semi-buy: 10-20k", "$$$": "Full buy: 20k+"}
-all_agents = ["astra", "breach", "brimstone", "chamber", "cypher", "deadlock", "fade", "gekko", "harbor", "iso", "jett", "kayo",
-              "killjoy", "neon", "omen", "phoenix", "raze", "reyna", "sage", "skye", "sova", "viper", "yoru", "all"]
+# all_agents = ["astra", "breach", "brimstone", "chamber", "cypher", "deadlock", "fade", "gekko", "harbor", "iso", "jett", "kayo",
+#               "killjoy", "neon", "omen", "phoenix", "raze", "reyna", "sage", "skye", "sova", "viper", "yoru", "all"]
 stats_titles = ["", "", "Rounds Played", "Rating", "Average Combat Score", "Kills:Deaths", "Kill, Assist, Trade, Survive %",
                 "Average Damage per Round", "Kills Per Round", "Assists Per Round", "First Kills Per Round", "First Deaths Per Round", 
                 "Headshot %", "Clutch Success %", "Clutches (won/played)", "Maximum Kills in a Single Map", "Kills", "Deaths", "Assists",
@@ -217,8 +217,8 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
             for player in team_b_div:
                 try:
                     player, team = player.text.strip().replace("\t", "").split("\n")
-                except ValueError: #The player name was not on the row but I set it to an empty string so I can have a "5x5 table" when I extract the kill data
-                    player = ""
+                except ValueError: #The player name was not on the row but I set it to NULL so I can have a "5x5 table" when I extract the kill data
+                    player = pd.NA
                 team_b_players.append(player)
             players_to_players_kills = {}
             players_kills = {}
@@ -252,19 +252,20 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
                     for team_b_player_index, td in enumerate(td_list):
                         if td.find("img") != None:
                             result = td.text.strip().replace("\t", "").split("\n")
-                            player = result[0]
+                            team = result.pop()
                             try:
-                                team = result[1]
                                 team = team_mapping[team]
-                            except (IndexError, KeyError): #The team name was missing or they did not use the abbrievated name
+                            except KeyError: #The team name can't be map because it is empty or they did not use the abbrievated name
                                 if not team:
                                     team = missing_team
                                 else:
                                     team = min(team_mapping.keys(), key=lambda x: Levenshtein.distance(team, x))
+                            try:
+                                player = result.pop()
+                            except IndexError: #The player name is missing
+                                player = pd.NA
                             kill_name = specific_kills_name[index // (len(team_b_players) - 1)]
                         else:
-                            if not team_b_players[team_b_player_index]:
-                                continue
                             kills_div = td.find("div").find_all("div")
                             player_a_kills, player_b_kills, difference = kills_div[0].text.strip(), kills_div[1].text.strip(), kills_div[2].text.strip()
                             player_b = team_b_players[team_b_player_index]
@@ -278,7 +279,7 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
             for id, tds_lists in players_kills.items():
                 try:
                     map = maps_id[id]
-                except KeyError:
+                except KeyError: #The map name is "N/A" or it is BO1
                     continue
                 for tds in tds_lists:
                     values = [tournament_name, stage_name, match_type_name, match_name, map]
@@ -288,18 +289,18 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
                             class_name = " ".join(td.find("div").get("class"))
                             if class_name == "team":
                                 result = td.text.strip().replace("\t", "").split("\n")
-                                player = result[0]
-                                try:
-                                    team = result[1]
-                                except IndexError: #The player was missing in this row. Although, I set the player, in this particular situation, only the team name was given
-                                    break
+                                team = result.pop()
                                 try:
                                     team = team_mapping[team]
-                                except (KeyError, IndexError): #The team name was missing or they did not use the abbrievated name
+                                except KeyError: #The team name was missing or they did not use the abbrievated name
                                     if not team:
                                         team = missing_team
                                     else:
                                         team = min(team_mapping.keys(), key=lambda x: Levenshtein.distance(team, x))
+                                try:
+                                    player = result.pop()
+                                except IndexError: #The player was missing in this row.
+                                    player = pd.NA
                                 values.append(team)
                                 values.append(player)
                             elif class_name == "stats-sq":
@@ -322,8 +323,10 @@ def extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_
                                             eliminated_agent = re.search(r'/(\w+)\.png', src).group(1)
                                             eliminated = div.text.strip()
                                             if not eliminated:
-                                                continue
-                                            eliminated_team = player_to_team[eliminated]
+                                                eliminated = pd.NA
+                                                eliminated_team = pd.NA
+                                            else:
+                                                eliminated_team = player_to_team[eliminated]
                                             results["rounds_kills"].append([tournament_name, stage_name, match_type_name, match_name, map, round_stat,
                                                                             team, player, agent, eliminated_team, eliminated, eliminated_agent, stat_name])
                         else:
@@ -502,3 +505,59 @@ def extract_team_picked_agents(teams_tables, teams_pick_rates_dict, table_titles
                         agent_dict = team_dict["Total Outcomes"].setdefault(agent, {"win": 0, "loss": 0})
                         agent_dict[outcome] += 1
                 team_dict["Total Maps Played"] += 1
+
+def extract_players_stats(stats_trs, match_type_dict, global_players_agents, players_agents, team_mapping, stage_name, match_type_name, agent):
+    for tr in stats_trs:
+        all_tds = tr.find_all("td")
+        filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
+        for index, td in enumerate(filtered_tds):
+            td_class = td.get("class") or ""
+            class_name = " ".join(td_class)
+            if class_name == "mod-player mod-a":
+                player_info = td.find("div").find_all("div")
+                player, team = player_info[0].text, player_info[1].text
+                team = team_mapping[team]
+                team_dict = match_type_dict.setdefault(team, {})
+                player_dict = team_dict.setdefault(player, {})
+            elif class_name == "mod-agents":
+                imgs = td.find("div").find_all("img")
+                agents = ""
+                player_agents_set = players_agents.setdefault(player, set())
+                global_players_agents_set = global_players_agents.setdefault(player, set())
+                if stage_name == "All" and match_type_name == "All":
+                    agents = ", ".join(global_players_agents_set).strip(", ")
+                elif agent == "all" and len(player_agents_set) > 1:
+                    agents = ", ".join(player_agents_set).strip(", ")
+                elif agent == "all" and len(player_agents_set) == 1:
+                    break
+                else:
+                    for img in imgs:
+                        src = img.get("src")
+                        match = re.search(pattern, src)
+                        agent_name = match.group(1)
+                        player_agents_set.add(agent_name)
+                        agents += f"{agent}, "
+                    agents = agents.strip(", ")
+                agents_dict = player_dict.setdefault(agents, {})
+            elif class_name == "mod-rnd" or class_name == "mod-cl" or class_name == "":
+                stat = td.text.strip()
+                stat_name = stats_titles[index]
+                if stat == "":
+                    stat = pd.NA
+                # try:
+                agents_dict[stat_name] = stat
+                # except UnboundLocalError:
+                #     print(agent, "causing this error", agents, player, stage_name, match_type_name)
+            elif class_name == "mod-color-sq mod-acs" or class_name ==  "mod-color-sq":
+                stat = td.find("div").find("span").text.strip()
+                stat_name = stats_titles[index]
+                if stat == "":
+                    stat = pd.NA
+                agents_dict[stat_name] = stat
+            elif class_name == "mod-a mod-kmax":
+                stat = td.find("a").text.strip()
+                stat_name = stats_titles[index]
+                if stat == "":
+                    stat = pd.NA
+                agents_dict[stat_name] = stat
+        global_players_agents[player] = global_players_agents[player] | players_agents[player]
