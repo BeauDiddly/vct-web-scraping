@@ -31,7 +31,8 @@ def extract_maps_id(maps_id_divs, maps_id, results, list):
         if div.get("data-game-id") and div.get("data-disabled") == "0":
             id = div.get("data-game-id")
             map = re.sub(r"\d+|\t|\n", "", div.text.strip())
-            maps_id[id] = map
+            if map != "N/A":
+                maps_id[id] = map
     for id, map in maps_id.items():
         if map != "All Maps":
             results["maps_played"].append([tournament_name, stage_name, match_type_name, match_name, map])
