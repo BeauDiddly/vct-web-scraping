@@ -1,9 +1,10 @@
 import pandas as pd
 
 def main():
-    df = pd.read_csv("matches/overview.csv")
-    df_2 = pd.read_csv("players_stats/players_stats.csv")
-    df_3 = pd.read_csv("agents/agents_pick_rates.csv")
+    year = input("Input the VCT year: ")
+    df = pd.read_csv(f"vct_{year}/matches/overview.csv")
+    df_2 = pd.read_csv(f"vct_{year}/players_stats/players_stats.csv")
+    df_3 = pd.read_csv(f"vct_{year}/agents/agents_pick_rates.csv")
     all_tournaments = set(df['Tournament'])
     all_stages = set(df_3['Stage'])
     all_match_types = set(df_3['Match Type'])
@@ -23,14 +24,14 @@ def main():
     team_df = pd.DataFrame({'Team': list(all_teams)})
     agents_df = pd.DataFrame({'Agents': list(all_agents)})
 
-    tournament_df.to_csv("all_values/all_tournaments.csv", index=False)
-    stage_df.to_csv("all_values/all_stages.csv", index=False)
-    match_type_df.to_csv("all_values/all_match_types.csv", index=False)
-    matches_df.to_csv("all_values/all_matches.csv", index=False)
-    map_df.to_csv("all_values/all_maps.csv", index=False)
-    player_df.to_csv("all_values/all_players.csv", index=False)
-    team_df.to_csv("all_values/all_teams.csv", index=False)
-    agents_df.to_csv("all_values/all_agents.csv", index=False)
+    tournament_df.to_csv(f"vct_{year}/all_values/all_tournaments.csv", index=False)
+    stage_df.to_csv(f"vct_{year}/all_values/all_stages.csv", index=False)
+    match_type_df.to_csv(f"vct_{year}/all_values/all_match_types.csv", index=False)
+    matches_df.to_csv(f"vct_{year}/all_values/all_matches.csv", index=False)
+    map_df.to_csv(f"vct_{year}/all_values/all_maps.csv", index=False)
+    player_df.to_csv(f"vct_{year}/all_values/all_players.csv", index=False)
+    team_df.to_csv(f"vct_{year}/all_values/all_teams.csv", index=False)
+    agents_df.to_csv(f"vct_{year}/all_values/all_agents.csv", index=False)
 
 if __name__ == "__main__":
     main()
