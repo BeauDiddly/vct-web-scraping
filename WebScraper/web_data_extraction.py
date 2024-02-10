@@ -3,6 +3,7 @@ import re
 import traceback
 import Levenshtein
 from bs4 import Tag
+import sys
 overview_stats_titles = ["", "", "Rating", "Average Combat Score", "Kills", "Deaths", "Assists", "Kills - Deaths (KD)",
                         "Kill, Assist, Trade, Survive %", "Average Damage per Round", "Headshot %", "First Kills",
                         "First Deaths", "Kills - Deaths (FKD)"]
@@ -506,7 +507,7 @@ def extract_team_picked_agents(teams_tables, teams_pick_rates_dict, table_titles
                         agent_dict[outcome] += 1
                 team_dict["Total Maps Played"] += 1
 
-def extract_players_stats(stats_trs, match_type_dict, global_players_agents, players_agents, team_mapping, stage_name, match_type_name, agent):
+def extract_players_stats(stats_trs, match_type_dict, global_players_agents, players_agents, df, tournament_name, stage_name, match_type_name, agent):
     for tr in stats_trs:
         all_tds = tr.find_all("td")
         filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
@@ -516,7 +517,22 @@ def extract_players_stats(stats_trs, match_type_dict, global_players_agents, pla
             if class_name == "mod-player mod-a":
                 player_info = td.find("div").find_all("div")
                 player, team = player_info[0].text, player_info[1].text
-                team = team_mapping[team]
+                if stage_name == "All Stages" and match_type_name == "All Match Types":
+                    filtered = df[(df["Player"] == player) & (df["Tournament"] == tournament_name)]
+                    try:
+                        team = ", ".join(filtered["Team"].unique()).strip(", ")
+                    except TypeError:
+                        print("ERROR")
+                        print(player, team, tournament_name, stage_name, match_type_name, agent, " is causing this issue")
+                        print("Their team was missing during the scraping ")
+                else:
+                    filtered = df[(df["Player"] == player) & (df["Tournament"] == tournament_name) & (df["Stage"] == stage_name) & (df["Match Type"] == match_type_name)]
+                    try:
+                        team = ", ".join(filtered["Team"].unique()).strip(", ")
+                    except:
+                        print("ERROR")
+                        print(player, team, tournament_name, stage_name, match_type_name, agent, " is causing this issue")
+                        sys.exit(1)
                 team_dict = match_type_dict.setdefault(team, {})
                 player_dict = team_dict.setdefault(player, {})
             elif class_name == "mod-agents":
@@ -524,7 +540,7 @@ def extract_players_stats(stats_trs, match_type_dict, global_players_agents, pla
                 agents = ""
                 player_agents_set = players_agents.setdefault(player, set())
                 global_players_agents_set = global_players_agents.setdefault(player, set())
-                if stage_name == "All" and match_type_name == "All":
+                if stage_name == "All" and match_type_name == "All": 
                     agents = ", ".join(global_players_agents_set).strip(", ")
                 elif agent == "all" and len(player_agents_set) > 1:
                     agents = ", ".join(player_agents_set).strip(", ")
@@ -544,10 +560,7 @@ def extract_players_stats(stats_trs, match_type_dict, global_players_agents, pla
                 stat_name = stats_titles[index]
                 if stat == "":
                     stat = pd.NA
-                # try:
                 agents_dict[stat_name] = stat
-                # except UnboundLocalError:
-                #     print(agent, "causing this error", agents, player, stage_name, match_type_name)
             elif class_name == "mod-color-sq mod-acs" or class_name ==  "mod-color-sq":
                 stat = td.find("div").find("span").text.strip()
                 stat_name = stats_titles[index]

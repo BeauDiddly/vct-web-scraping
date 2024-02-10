@@ -97,9 +97,24 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
 
             team_a = teams[0].find("div").text.strip("\n").strip("\t")
 
+            if not team_a:
+                team_a = "TBD"
+
             team_b = teams[1].find("div").text.strip("\n").strip("\t")
 
+            if not team_b:
+                team_b = "TBD"
+                
             match_name = f"{team_a} vs {team_b}"
+            # if (team_a == "Able Esports"):
+            #     print(tournament_name, stage_name, match_type_name, team_a, team_b)
+            #     print(tournament_name != "Champions Tour North America Stage 3: Challengers 2")
+            #     print(stage_name != "Open Qualifier")
+            #     print(match_type_name != "Round 128")
+            #     print(team_a != "Able Esports")
+            #     print(team_b != "Karasuno")
+            # if (tournament_name != "Champions Tour North America Stage 3: Challengers 2" or stage_name != "Open Qualifier" or match_type_name != "Round of 128" or team_a != "Able Esports" or team_b != "Karasuno"):
+            #     return {}
             try:
                 team_a_score = int(teams[0].find("div", class_="match-item-vs-team-score js-spoiler").text.strip())
             except AttributeError: #match was foreited
@@ -280,7 +295,7 @@ async def scraping_agents_data(tournament_name, stages, semaphore, session):
     return results
 
 
-async def scraping_player_stats_match_type_helper(tournament_name, stage_name, match_type_name, url, team_mapping, semaphore, session):
+async def scraping_player_stats_match_type_helper(tournament_name, stage_name, match_type_name, url, df, semaphore, session):
     async with semaphore:
         result = {}
         global_players_agents = {}
@@ -302,16 +317,16 @@ async def scraping_player_stats_match_type_helper(tournament_name, stage_name, m
             if len(stats_trs) == 1:
                 continue
 
-            extract_players_stats(stats_trs, match_type_dict, global_players_agents, players_agents, team_mapping, stage_name, match_type_name, agent)
+            extract_players_stats(stats_trs, match_type_dict, global_players_agents, players_agents, df, tournament_name, stage_name, match_type_name, agent)
         return result
 
-async def scraping_player_stats_stage_helper(tournament_name, stage_name, match_types, team_mapping, semaphore, session):
-    tasks = [scraping_player_stats_match_type_helper(tournament_name, stage_name, match_type_name, url, team_mapping, semaphore, session) for match_type_name, url in match_types.items()]
+async def scraping_player_stats_stage_helper(tournament_name, stage_name, match_types, df, semaphore, session):
+    tasks = [scraping_player_stats_match_type_helper(tournament_name, stage_name, match_type_name, url, df, semaphore, session) for match_type_name, url in match_types.items()]
     results = await asyncio.gather(*tasks)
     return results
 
-async def scraping_players_stats(tournament_name, stages, team_napping, semaphore, session):
-    tasks = [scraping_player_stats_stage_helper(tournament_name, stage_name, match_types, team_napping, semaphore, session) for stage_name, match_types in stages.items()]
+async def scraping_players_stats(tournament_name, stages, df, semaphore, session):
+    tasks = [scraping_player_stats_stage_helper(tournament_name, stage_name, match_types, df, semaphore, session) for stage_name, match_types in stages.items()]
     results = await asyncio.gather(*tasks)
     return results
 
