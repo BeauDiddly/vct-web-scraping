@@ -91,7 +91,8 @@ def create_draft_phase_table(curr):
          match_id INT REFERENCES matches(match_id),
          team_id INT REFERENCES teams(team_id),
          action VARCHAR(255),
-         map_id INT REFERENCES maps(map_id)
+         map_id INT REFERENCES maps(map_id),
+         year INT NOT NULL
       );
    """
    execute_query(curr, query)
@@ -109,7 +110,9 @@ def create_eco_rounds_table(curr):
          team_id INT REFERENCES teams(team_id),
          credits VARCHAR(255),
          eco_type VARCHAR(255),
-         outcome VARCHAR(255)
+         outcome VARCHAR(255),
+         year INT NOT NULL
+
       );
    """
    execute_query(curr, query)
@@ -126,7 +129,9 @@ def create_eco_stats_table(curr):
          team_id INT REFERENCES teams(team_id),
          eco_type VARCHAR(255),
          initiated INT NULL,
-         won INT
+         won INT,
+         year INT NOT NULL
+
       );
    """
    execute_query(curr, query)
@@ -147,7 +152,9 @@ def create_kills_table(curr):
          player_kills INT,
          enemy_kills INT,
          difference INT,
-         kill_type VARCHAR(255)
+         kill_type VARCHAR(255),
+         year INT NOT NULL
+
       );
    """
    execute_query(curr, query)
@@ -175,7 +182,9 @@ def create_kills_stats_table(curr):
          one_vs_five INT NULL,
          econ INT,
          spike_plants INT,
-         spike_defuse INT
+         spike_defuse INT,
+         year INT NOT NULL
+
       );
    """
    execute_query(curr, query)
@@ -188,7 +197,9 @@ def create_maps_played_table(curr):
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
-         map_id INT REFERENCES maps(map_id)
+         map_id INT REFERENCES maps(map_id),
+         year INT NOT NULL
+
       );
    """
    execute_query(curr, query)
@@ -212,7 +223,9 @@ def create_maps_scores_table(curr):
          team_b_attack_score INT,
          team_b_defender_score INT,
          team_b_overtime_score INT NULL,
-         duration INTERVAL NULL
+         duration INTERVAL NULL,
+         year INT NOT NULL
+
       );
    """
    execute_query(curr, query)
@@ -241,7 +254,9 @@ def create_overview_table(curr):
          first_kills INT NULL,
          first_deaths INT NULL,
          fkd INT NULL,
-         side VARCHAR(255)
+         side VARCHAR(255),
+         year INT NOT NULL
+
       );
    """
    execute_query(curr, query)
@@ -262,7 +277,8 @@ def create_rounds_kills_table(curr):
          eliminated_team_id INT REFERENCES teams(team_id),
          eliminated_id INT REFERENCES players(player_id),
          eliminated_agent_id INT REFERENCES agents(agent_id),
-         kill_type VARCHAR(255)
+         kill_type VARCHAR(255),
+         year INT NOT NULL
       );
    """
    execute_query(curr, query)
@@ -278,7 +294,8 @@ def create_scores_table(curr):
          winner_id INT REFERENCES teams(team_id),
          loser_id INT REFERENCES teams(team_id),
          winner_score INT,
-         loser_score INT
+         loser_score INT,
+         year INT NOT NULL
       );
    """
    execute_query(curr, query)
@@ -293,7 +310,8 @@ def create_agents_pick_rates_table(curr):
          map_id INT REFERENCES maps(map_id),
          match_id INT REFERENCES matches(match_id),
          agent_id INT REFERENCES agents(agent_id),
-         pick_rate DECIMAL
+         pick_rate DECIMAL,
+         year INT NOT NULL
       );
    """
    execute_query(curr, query)
@@ -308,7 +326,8 @@ def create_maps_stats_table(curr):
       map_id INT REFERENCES maps(map_id),
       total_maps_played INT,
       attacker_win_percentage DECIMAL,
-      defender_win_percentage DECIMAL
+      defender_win_percentage DECIMAL,
+      year INT NOT NULL
       );
    """
    execute_query(curr, query)
@@ -325,7 +344,8 @@ def create_teams_picked_agents_table(curr):
          agent_id INT REFERENCES agents(agent_id),
          total_wins_by_map INT,
          total_loss_by_map INT,
-         total_maps_played INT
+         total_maps_played INT,
+         year INT NOT NULL
       );
    """
    execute_query(curr, query)
@@ -359,7 +379,8 @@ def create_players_stats_table(curr):
          deaths INT,
          assists INT,
          first_kills INT,
-         first_deaths INT
+         first_deaths INT,
+         year INT NOT NULL
       );
    """
    execute_query(curr, query)

@@ -6,70 +6,108 @@ from checking.check_values import check_na
 import asyncio
 import time
 from datetime import datetime
+import csv
+
 
 def add_tournaments(curr, unique_ids):
-   tournaments = pd.read_csv("all_values/all_tournaments.csv")
-   for index, tournament in tournaments["Tournament"].items():
-      id = generate_unique_id(unique_ids)
-      query = "INSERT INTO tournaments (tournament_id, tournament_name) VALUES (%s, %s);"
-      data = (id, tournament)
-      execute_query(curr, query, data)
+   query = "INSERT INTO tournaments (tournament_id, tournament_name) VALUES (%s, %s);"
+   with open(f"all_vct/all_tournaments.csv", "r", newline="") as file:
+      heading = next(file)
+      reader = csv.reader(file)
+
+      for row in reader:
+         id = generate_unique_id(unique_ids)
+         tournament = row[0]
+         data = (id, tournament)
+         execute_query(curr, query, data)
+
     
 def add_stages(curr, unique_ids):
-   stages = pd.read_csv("all_values/all_stages.csv")
-   for index, stage in stages["Stage"].items():
-      id = generate_unique_id(unique_ids)
-      query = "INSERT INTO stages (stage_id, stage_name) VALUES (%s, %s);"
-      data = (id, stage)
-      execute_query(curr, query, data)
+   query = "INSERT INTO stages (stage_id, stage_name) VALUES (%s, %s);"
+   with open(f"all_vct/all_stages.csv", "r", newline="") as file:
+      heading = next(file)
+      reader = csv.reader(file)
+
+      for row in reader:
+         id = generate_unique_id(unique_ids)
+         stage = row[0]
+         data = (id, stage)
+         execute_query(curr, query, data)
 
 def add_match_types(curr, unique_ids):
-   match_types = pd.read_csv("all_values/all_match_types.csv")
-   for index, match_type in match_types["Match Type"].items():
-      id = generate_unique_id(unique_ids)
-      query = "INSERT INTO match_types (match_type_id, match_type_name) VALUES (%s, %s);"
-      data = (id, match_type)
-      execute_query(curr, query, data)
+   query = "INSERT INTO match_types (match_type_id, match_type_name) VALUES (%s, %s);"
+   with open(f"all_vct/all_match_types.csv", "r", newline="") as file:
+      heading = next(file)
+      reader = csv.reader(file)
+
+      for row in reader:
+         id = generate_unique_id(unique_ids)
+         match_type = row[0]
+         data = (id, match_type)
+         execute_query(curr, query, data)
+
 
 def add_matches(curr, unique_ids):
-   match_names = pd.read_csv("all_values/all_matches.csv")
-   for index, match_name in match_names["Match Name"].items():
-      id = generate_unique_id(unique_ids)
-      query = "INSERT INTO matches (match_id, match_name) VALUES (%s, %s);"
-      data = (id, match_name)
-      execute_query(curr, query, data)
+   query = "INSERT INTO matches (match_id, match_name) VALUES (%s, %s);"
+   with open(f"all_vct/all_matches.csv", "r", newline="") as file:
+      heading = next(file)
+      reader = csv.reader(file)
+
+      for row in reader:
+         id = generate_unique_id(unique_ids)
+         match = row[0]
+         data = (id, match)
+         execute_query(curr, query, data)
+
 
 def add_maps(curr, unique_ids):
-   maps = pd.read_csv("all_values/all_maps.csv")
-   for index, map in maps["Map"].items():
-      id = generate_unique_id(unique_ids)
-      query = "INSERT INTO maps (map_id, map_name) VALUES (%s, %s);"
-      data = (id, map)
-      execute_query(curr, query, data)
+   query = "INSERT INTO matches (match_id, match_name) VALUES (%s, %s);"
+   with open(f"all_vct/all_maps.csv", "r", newline="") as file:
+      heading = next(file)
+      reader = csv.reader(file)
+
+      for row in reader:
+         id = generate_unique_id(unique_ids)
+         map = row[0]
+         data = (id, map)
+         execute_query(curr, query, data)
+
 
 def add_teams(curr, unique_ids):
-   teams = pd.read_csv("all_values/all_teams.csv")
-   for index, team in teams["Team"].items():
-      id = generate_unique_id(unique_ids)
-      query = "INSERT INTO teams (team_id, team_name) VALUES (%s, %s);"
-      data = (id, team)
-      execute_query(curr, query, data)
+   query = "INSERT INTO teams (team_id, team_name) VALUES (%s, %s);"
+   with open(f"all_vct/all_teams.csv", "r", newline="") as file:
+      heading = next(file)
+      reader = csv.reader(file)
+
+      for row in reader:
+         id = generate_unique_id(unique_ids)
+         team = row[0]
+         data = (id, team)
+         execute_query(curr, query, data)
 
 def add_players(curr, unique_ids):
-   players = pd.read_csv("all_values/all_players.csv")
-   for index, player in players["Player"].items():
-      id = generate_unique_id(unique_ids)
-      query = "INSERT INTO players (player_id, player_name) VALUES (%s, %s);"
-      data = (id, player)
-      execute_query(curr, query, data)
+   query = "INSERT INTO players (player_id, player_name) VALUES (%s, %s);"
+   with open(f"all_vct/all_teams.csv", "r", newline="") as file:
+      heading = next(file)
+      reader = csv.reader(file)
+
+      for row in reader:
+         id = generate_unique_id(unique_ids)
+         player = row[0]
+         data = (id, player)
+         execute_query(curr, query, data)
 
 def add_agents(curr, unique_ids):
-   agents = pd.read_csv("all_values/all_agents.csv")
-   for index, agent in agents["Agents"].items():
-      id = generate_unique_id(unique_ids)
-      query = "INSERT INTO agents (agent_id, agent_name) VALUES (%s, %s);"
-      data = (id, agent)
-      execute_query(curr, query, data)
+   query = "INSERT INTO agents (agent_id, agent_name) VALUES (%s, %s);"
+   with open(f"all_vct/all_agents.csv", "r", newline="") as file:
+      heading = next(file)
+      reader = csv.reader(file)
+
+      for row in reader:
+         id = generate_unique_id(unique_ids)
+         agent = row[0]
+         data = (id, agent)
+         execute_query(curr, query, data)
 
 async def insert_data(curr, dataframe, insertion_function, table_name):
    start_time = time.time()
