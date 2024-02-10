@@ -106,15 +106,6 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
                 team_b = "TBD"
                 
             match_name = f"{team_a} vs {team_b}"
-            # if (team_a == "Able Esports"):
-            #     print(tournament_name, stage_name, match_type_name, team_a, team_b)
-            #     print(tournament_name != "Champions Tour North America Stage 3: Challengers 2")
-            #     print(stage_name != "Open Qualifier")
-            #     print(match_type_name != "Round 128")
-            #     print(team_a != "Able Esports")
-            #     print(team_b != "Karasuno")
-            # if (tournament_name != "Champions Tour North America Stage 3: Challengers 2" or stage_name != "Open Qualifier" or match_type_name != "Round of 128" or team_a != "Able Esports" or team_b != "Karasuno"):
-            #     return {}
             try:
                 team_a_score = int(teams[0].find("div", class_="match-item-vs-team-score js-spoiler").text.strip())
             except AttributeError: #match was foreited

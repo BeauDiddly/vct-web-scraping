@@ -127,6 +127,8 @@ async def main():
 
     for file_name, dataframe in dataframes.items():
         dataframe.to_csv(f"vct_{year}/matches/{file_name}.csv", encoding="utf-8", index=False)
+        # dataframe.to_csv(f"test/{file_name}.csv", encoding="utf-8", index=False)
+
 
     end_time = time.time()
 
