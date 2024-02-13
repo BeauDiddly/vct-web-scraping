@@ -15,4 +15,6 @@ def check_na(value, type):
             value = float(value.strip("%")) / 100.0
         elif type =="fraction":
             value = value.split("/")
+        elif type == "float":
+            value = float(value)
     return value
