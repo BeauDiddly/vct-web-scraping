@@ -23,18 +23,18 @@ stats_titles = ["", "", "Rounds Played", "Rating", "Average Combat Score", "Kill
 cjk_pattern = re.compile(r'[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]')
 pattern = r'/(\w+)\.png'
 
-def extract_maps_id(maps_id_divs, maps_id, results, list):
+def extract_games_id(games_id_divs, games_id, results, list):
     tournament_name = list[0]
     stage_name = list[1]
     match_type_name = list[2]
     match_name = list[3]
-    for div in maps_id_divs:
+    for div in games_id_divs:
         if div.get("data-game-id") and div.get("data-disabled") == "0":
             id = div.get("data-game-id")
             map = re.sub(r"\d+|\t|\n", "", div.text.strip())
             if map != "N/A":
-                maps_id[id] = map
-    for id, map in maps_id.items():
+                games_id[id] = map
+    for id, map in games_id.items():
         if map != "All Maps":
             results["maps_played"].append([tournament_name, stage_name, match_type_name, match_name, map])
 

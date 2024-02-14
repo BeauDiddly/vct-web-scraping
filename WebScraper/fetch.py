@@ -179,14 +179,14 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
                 
                 if team_b_abbriev not in team_mapping:
                     team_mapping[team_b_abbriev] = team_b
-                maps_id = {}
+                games_id = {}
                 try:
-                    maps_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
-                    extract_maps_id(maps_id_divs, maps_id, results, [tournament_name, stage_name, match_type_name, match_name])
+                    games_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
+                    extract_games_id(games_id_divs, games_id, results, [tournament_name, stage_name, match_type_name, match_name])
                 except AttributeError: #only 1 map played
                     map_name = overview_stats[0].find("div", class_="map").text.strip()
                     id = overview_stats[0].get("data-game-id")
-                    maps_id[id] = map_name
+                    games_id[id] = map_name
                     results["maps_played"].append([tournament_name, stage_name, match_type_name, match_name, map_name])
                     
 
@@ -197,7 +197,7 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
                 maps_headers = match_soup.find_all("div", class_="vm-stats-game-header")
                 extract_maps_headers(maps_headers, results, team_a, team_b, [tournament_name, stage_name, match_type_name, match_type_name])
 
-                player_to_team, missing_team = extract_overview_stats(overview_stats, maps_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
+                player_to_team, missing_team = extract_overview_stats(overview_stats, games_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
             except IndexError:
                 print(f"ERROR FROM SCRAPING OVERVIEW PAGE")
                 print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, the match was forfeited")
@@ -213,7 +213,7 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
             performance_soup = BeautifulSoup(performance_page, "html.parser")
             performance_stats_div = performance_soup.find_all("div", class_="vm-stats-game")
 
-            extract_kills_stats(performance_stats_div, maps_id, team_mapping, player_to_team, missing_team, results, [tournament_name, stage_name, match_type_name, match_name, team_b])
+            extract_kills_stats(performance_stats_div, games_id, team_mapping, player_to_team, missing_team, results, [tournament_name, stage_name, match_type_name, match_name, team_b])
 
             await asyncio.sleep(random.uniform(1,2))
                 
@@ -227,7 +227,7 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
             economy_stats_div = economy_soup.find_all("div", class_="vm-stats-game")
 
             eco_stats, eco_rounds_stats = extract_economy_stats_div(economy_stats_div)
-            extract_economy_stats(eco_stats, eco_rounds_stats, maps_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
+            extract_economy_stats(eco_stats, eco_rounds_stats, games_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
 
         results["team_mapping"] = team_mapping
         await asyncio.sleep(random.uniform(1,2))
