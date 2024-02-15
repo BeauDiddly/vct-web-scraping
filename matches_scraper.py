@@ -28,23 +28,33 @@ async def main():
 
     urls = {}
 
+    tournament_ids = {}
+
     tournament_cards = soup.find_all("a", class_="wf-card mod-flex event-item")
 
-    retrieve_urls(urls, tournament_cards, "/event/", "/event/matches/")
+    retrieve_urls(urls, tournament_ids, tournament_cards, "/event/", "/event/matches/")
 
     matches_cards = {}
+
+    stage_ids = {}
 
     for tournament, url in urls.items():
         page = requests.get(url)
 
         soup = BeautifulSoup(page.content, "html.parser")
-
+        stages = soup.find("span", class_="wf-dropdown mod-all").find_all("a")
+        stage_ids[tournament] = {}
+        for stage in stages:
+            stage_name = stage.text.strip()
+            stage_id = stage.get("href").split("/")[-1].split("=")[-1]
+            stage_ids[tournament][stage_name] = stage_id
         all_cards = soup.select('div.wf-card:not([class*=" "])')
         modules = []
         for cards in all_cards:
             all_modules = cards.find_all("a")
             modules.extend(all_modules)
         matches_cards[tournament] = modules
+    
 
     dataframes = {}
     all_results = {"scores": [],
@@ -60,7 +70,7 @@ async def main():
                    "team_mapping": {}}
 
     async with aiohttp.ClientSession() as session:
-        tasks = [scraping_matches_data(tournament_name, cards, matches_semaphore, session) for tournament_name, cards in matches_cards.items()]
+        tasks = [scraping_matches_data(tournament_name, tournament_ids, stage_ids, cards, matches_semaphore, session) for tournament_name, cards in matches_cards.items()]
         results = await asyncio.gather(*tasks)
 
     # print(results)
