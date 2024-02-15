@@ -27,13 +27,15 @@ async def main():
     urls = {}
 
     tournament_cards = soup.find_all("a", class_="wf-card mod-flex event-item")
-
-    retrieve_urls(urls, tournament_cards, "/event/", "/event/agents/")
+    tournaments_ids = {}
+    stages_ids = {}
+    match_types_ids = {}
+    retrieve_urls(urls, tournaments_ids, tournament_cards, "/event/", "/event/agents/")
 
     filtered_urls = {}
 
     async with aiohttp.ClientSession() as session:
-        tasks = [generate_urls_combination(tournament_name, url, filtered_urls, url_semaphore, session) for tournament_name, url in urls.items()]
+        tasks = [generate_urls_combination(tournament_name, stages_ids, match_types_ids, url, filtered_urls, url_semaphore, session) for tournament_name, url in urls.items()]
         await asyncio.gather(*tasks)
 
     async with aiohttp.ClientSession() as session:
@@ -42,10 +44,16 @@ async def main():
 
     all_results = {"maps_stats": [],
                    "agents_pick_rates": [],
-                   "teams_picked_agents": []}
+                   "teams_picked_agents": [],
+                   "tournaments_stages_match_types_ids": []}
 
     dataframes = {}
-
+    for tournament_name, stages in match_types_ids.items():
+        for stage_name, match_types in stages.items():
+            for match_type_name, id in match_types.items():
+                tournament_id = tournaments_ids[tournament_name]
+                stage_id = stages_ids[stage_name]
+                all_results["tournaments_stages_match_types_ids"].append([tournament_name, tournament_id, stage_name, stage_id, match_type_name, id])
     for result in results:
         for inner_list in result:
             for dictionary in inner_list:
@@ -82,7 +90,8 @@ async def main():
     dataframes["teams_picked_agents"] = pd.DataFrame(all_results["teams_picked_agents"],
                                                      columns=["Tournament", "Stage", "Match Type", "Map", "Team", "Agent Picked",
                                                             "Total Wins By Map", "Total Loss By Map", "Total Maps Played"])
-    
+    dataframes["tournaments_stages_match_types_ids"] = pd.DataFrame(all_results["tournaments_stages_match_types_ids"],
+                                                                    columns=["Tournament", "Tournament ID", "Stage", "Stage ID", "Match Type", "Match Type ID"])
     
 
 
