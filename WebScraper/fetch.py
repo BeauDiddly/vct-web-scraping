@@ -58,7 +58,7 @@ async def generate_urls_combination(tournament_name, stages_ids, match_types_ids
             if stage_name == "Showmatch":
                 showmatch_id = match_types_div.find("div").get("data-subseries-id")
                 continue
-            stage_id = stage_div.find("a").get("data-subseries")
+            stage_id = stage_div.find("a").get("data-series-id")
             match_types = match_types_div.find_all("div")
             stage_dict = tournament_dict.setdefault(stage_name, {})
             stages_ids[stage_name] = stage_id

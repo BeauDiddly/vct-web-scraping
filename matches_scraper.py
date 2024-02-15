@@ -70,7 +70,7 @@ async def main():
                    "team_mapping": {},
                    "teams_ids": {},
                    "players_ids": {},
-                   "tournament_stage_match_game_ids": []}
+                   "tournaments_stages_matches_game_ids": []}
 
     async with aiohttp.ClientSession() as session:
         tasks = [scraping_matches_data(tournament_name, cards, tournaments_ids, stages_ids, matches_semaphore, session) for tournament_name, cards in matches_cards.items()]
@@ -129,7 +129,7 @@ async def main():
                                            columns=["Team", "Team ID"])
     dataframes["players_ids"] = pd.DataFrame(list(all_results["players_ids"].items()),
                                            columns=["Player", "Player ID"])
-    dataframes["tournament_stage_match_ids"] = pd.DataFrame(all_results["tournament_stage_match_game_ids"],
+    dataframes["tournaments_stages_matches_ids"] = pd.DataFrame(all_results["tournaments_stages_matches_game_ids"],
                                                             columns=["Tournament", "Tournament ID", "Stage", "Stage ID",
                                                                       "Match Type", "Match Name", "Match ID", "Map", "Game ID"])
 
