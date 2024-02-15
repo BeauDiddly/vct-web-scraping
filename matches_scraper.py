@@ -28,26 +28,26 @@ async def main():
 
     urls = {}
 
-    tournament_ids = {}
+    tournaments_ids = {}
 
     tournament_cards = soup.find_all("a", class_="wf-card mod-flex event-item")
 
-    retrieve_urls(urls, tournament_ids, tournament_cards, "/event/", "/event/matches/")
+    retrieve_urls(urls, tournaments_ids, tournament_cards, "/event/", "/event/matches/")
 
     matches_cards = {}
 
-    stage_ids = {}
+    stages_ids = {}
 
     for tournament, url in urls.items():
         page = requests.get(url)
 
         soup = BeautifulSoup(page.content, "html.parser")
         stages = soup.find("span", class_="wf-dropdown mod-all").find_all("a")
-        stage_ids[tournament] = {}
+        stages_ids[tournament] = {}
         for stage in stages:
             stage_name = stage.text.strip()
             stage_id = stage.get("href").split("/")[-1].split("=")[-1]
-            stage_ids[tournament][stage_name] = stage_id
+            stages_ids[tournament][stage_name] = stage_id
         all_cards = soup.select('div.wf-card:not([class*=" "])')
         modules = []
         for cards in all_cards:
@@ -67,10 +67,13 @@ async def main():
                    "rounds_kills": [],
                    "eco_stats": [],
                    "eco_rounds": [],
-                   "team_mapping": {}}
+                   "team_mapping": {},
+                   "teams_ids": {},
+                   "players_ids": {},
+                   "tournament_stage_match_game_ids": []}
 
     async with aiohttp.ClientSession() as session:
-        tasks = [scraping_matches_data(tournament_name, tournament_ids, stage_ids, cards, matches_semaphore, session) for tournament_name, cards in matches_cards.items()]
+        tasks = [scraping_matches_data(tournament_name, cards, tournaments_ids, stages_ids, matches_semaphore, session) for tournament_name, cards in matches_cards.items()]
         results = await asyncio.gather(*tasks)
 
     # print(results)
@@ -78,7 +81,7 @@ async def main():
     for result in results:
         for dictionary in result:
             for name, data in dictionary.items():
-                if name == "team_mapping":
+                if name == "team_mapping" or name == "teams_ids" or name == "players_ids":
                     all_results[name].update(data)
                 else:
                     all_results[name].extend(data)
@@ -122,6 +125,13 @@ async def main():
                                             columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Round Number", "Team", "Credits", "Type", "Outcome"])
     dataframes["team_mapping"] = pd.DataFrame(list(all_results["team_mapping"].items()),
                                               columns=["Abbreviated", "Full Name"])
+    dataframes["teams_ids"] = pd.DataFrame(list(all_results["teams_ids"].items()),
+                                           columns=["Team", "Team ID"])
+    dataframes["players_ids"] = pd.DataFrame(list(all_results["players_ids"].items()),
+                                           columns=["Player", "Player ID"])
+    dataframes["tournament_stage_match_ids"] = pd.DataFrame(all_results["tournament_stage_match_game_ids"],
+                                                            columns=["Tournament", "Tournament ID", "Stage", "Stage ID",
+                                                                      "Match Type", "Match Name", "Match ID", "Map", "Game ID"])
 
         
     end_time = time.time()

@@ -72,7 +72,7 @@ async def generate_urls_combination(tournament_name, url, stages_filter, semapho
         tournament_dict["All Stages"] = {}
         tournament_dict["All Stages"]["All Match Types"] = f"{url}?exclude={showmatch_id}"
 
-async def scraping_card_data(tournament_name, card, session, semaphore):
+async def scraping_card_data(tournament_name, card, tournaments_ids, stages_ids, session, semaphore):
     async with semaphore:
         await asyncio.sleep(random.uniform(1,2))
         match_type_name, stage_name = card.find("div", class_="match-item-event text-of").text.strip().splitlines()
@@ -90,8 +90,13 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
                 "kills_stats": [],
                 "rounds_kills": [],
                 "eco_stats": [],
-                "eco_rounds": []}
+                "eco_rounds": [],
+                "teams_ids": {},
+                "players_ids": {},
+                "tournament_stage_match_game_ids": []}
             
+            tournament_id, stage_id = tournaments_ids[tournament_name], stages_ids[tournament_name][stage_name]
+
             teams = card.find("div", class_="match-item-vs").find_all(recursive=False)
 
 
@@ -135,7 +140,7 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
                     match_result = f"{team_b} won"
                 else:
                     match_result = f"Draw"
-
+            
             team_mapping = {}
             try:
                 results["scores"].append([tournament_name, stage_name, match_type_name, match_name, team_a, team_b, team_a_score, team_b_score, match_result])
@@ -144,12 +149,32 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
                 print(f"{tournament_name} {stage_name} {match_type_name} {match_name}")
             print("Starting collecting for ",tournament_name, stage_name, match_type_name, match_name)
             url = card.get("href")
+            match_id = url.split("/")[1]
             try:
                 match_page = await fetch(f'https://vlr.gg{url}', session)
             except MaxReentriesReached as e:
                 print(f"Error: {e}")
                 sys.exit(1)
             match_soup = BeautifulSoup(match_page, "html.parser")
+            team_ids_div = match_soup.find("div", class_="match-header-vs").find_all("a")
+
+            team_a_id = team_ids_div[0].get("href")
+
+            if team_a_id:
+                team_a_id = team_a_id.split("/")[2]
+            else:
+                team_a_id = pd.NA
+
+            team_b_id = team_ids_div[1].get("href")
+
+            if team_b_id:
+                team_b_id = team_b_id.split("/")[2]
+            else:
+                team_b_id = pd.NA
+
+            results["teams_ids"][team_a] = team_a_id
+            results["teams_ids"][team_b] = team_b_id
+
 
             try:
                 overview_stats = match_soup.find_all("div", class_="vm-stats-game")
@@ -182,14 +207,12 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
                 games_id = {}
                 try:
                     games_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
-                    extract_games_id(games_id_divs, games_id, results, [tournament_name, stage_name, match_type_name, match_name])
+                    extract_games_id(games_id_divs, games_id, results, [tournament_name, stage_name, match_type_name, match_name, tournament_id, stage_id, match_id])
                 except AttributeError: #only 1 map played
                     map_name = overview_stats[0].find("div", class_="map").text.strip()
                     id = overview_stats[0].get("data-game-id")
                     games_id[id] = map_name
                     results["maps_played"].append([tournament_name, stage_name, match_type_name, match_name, map_name])
-                    
-
 
                 maps_notes = match_soup.find_all("div", class_="match-header-note")
                 extract_maps_notes(maps_notes, results, team_mapping, [tournament_name, stage_name, match_type_name, match_name])
@@ -235,9 +258,9 @@ async def scraping_card_data(tournament_name, card, session, semaphore):
 
 
 
-async def scraping_matches_data(tournament_name, cards, semaphore, session):
+async def scraping_matches_data(tournament_name, cards, tournaments_ids, stages_ids, semaphore, session):
     # card_semaphore = asyncio.Semaphore(semaphore_count)
-    tasks = [scraping_card_data(tournament_name, card, session, semaphore) for card in cards]
+    tasks = [scraping_card_data(tournament_name, card, tournaments_ids, stages_ids, session, semaphore) for card in cards]
     results = await asyncio.gather(*tasks)
     return results
 
