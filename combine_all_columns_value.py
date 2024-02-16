@@ -18,16 +18,16 @@ def main():
     for year in years:
         agents_df = pd.read_csv(f"vct_{year}/all_values/all_agents.csv")
 
-        players_df = pd.read_csv(f"vct_{year}/matches/players_ids.csv")
+        players_df = pd.read_csv(f"vct_{year}/ids/players_ids.csv")
 
-        teams_df = pd.read_csv(f"vct_{year}/matches/teams_ids.csv")
+        teams_df = pd.read_csv(f"vct_{year}/ids/teams_ids.csv")
 
         team_mapping_df = pd.read_csv(f"vct_{year}/matches/team_mapping.csv")
 
         teams_mapping_dfs[year] = team_mapping_df
 
-        tournaments_stages_matches_ids_df = pd.read_csv(f"vct_{year}/matches/tournaments_stages_matches_ids.csv")
-        tournaments_stages_match_types_ids_df = pd.read_csv(f"vct_{year}/agents/tournaments_stages_match_types_ids.csv")
+        tournaments_stages_matches_ids_df = pd.read_csv(f"vct_{year}/ids/tournaments_stages_matches_ids.csv")
+        tournaments_stages_match_types_ids_df = pd.read_csv(f"vct_{year}/ids/tournaments_stages_match_types_ids.csv")
 
         all_agents = set(agents_df['Agents'])
 

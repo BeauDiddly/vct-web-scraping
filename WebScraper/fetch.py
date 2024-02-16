@@ -227,7 +227,7 @@ async def scraping_card_data(tournament_name, card, tournaments_ids, stages_ids,
                 extract_maps_notes(maps_notes, results, team_mapping, [tournament_name, stage_name, match_type_name, match_name])
 
                 maps_headers = match_soup.find_all("div", class_="vm-stats-game-header")
-                extract_maps_headers(maps_headers, results, team_a, team_b, [tournament_name, stage_name, match_type_name, match_type_name])
+                extract_maps_headers(maps_headers, results, team_a, team_b, [tournament_name, stage_name, match_type_name, match_name])
 
                 player_to_team, missing_team = extract_overview_stats(overview_stats, games_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
             except IndexError:
