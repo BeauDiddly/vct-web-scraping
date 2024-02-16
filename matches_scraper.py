@@ -103,7 +103,7 @@ async def main():
     dataframes["overview"] = pd.DataFrame(all_results["overview"],
                                             columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Player", "Team",
                                                     "Agents", "Rating", "Average Combat Score", "Kills", "Deaths",
-                                                    "Assists", "Kill - Deaths (KD)", "Kill, Assist, Trade, Survive %",
+                                                    "Assists", "Kills - Deaths (KD)", "Kill, Assist, Trade, Survive %",
                                                     "Average Damage per Round", "Headshot %", "First Kills", "First Deaths",
                                                     "Kills - Deaths (FKD)", "Side"])
     dataframes["kills"] = pd.DataFrame(all_results["kills"],
@@ -114,7 +114,7 @@ async def main():
                                                 columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team",
                                                         "Player", "Agent", "2k", "3k", "4k", "5k", "1v1",
                                                         "1v2", "1v3", "1v4", "1v5", "Econ", "Spike Plants",
-                                                        "Spike Defuse"])
+                                                        "Spike Defuses"])
     dataframes["rounds_kills"] = pd.DataFrame(all_results["rounds_kills"],
                                                 columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Round Number",
                                                         "Eliminator Team", "Eliminator", "Eliminator Agent", 
