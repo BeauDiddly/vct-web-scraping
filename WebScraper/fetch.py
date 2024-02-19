@@ -48,24 +48,25 @@ async def generate_urls_combination(tournament_name, stages_ids, match_types_ids
 
         all_stages = soup.find("div", class_="wf-card mod-dark mod-scroll stats-filter").find("div").find_all("div", recursive=False)
         tournament_dict = stages_filter.setdefault(tournament_name, {})
-        tournament = match_types_ids.setdefault(tournament_name, {})
+        stages_to_ids = stages_ids.setdefault(tournament_name, {})
+        stages_to_match_types = match_types_ids.setdefault(tournament_name, {})
         all_ids = ""
         showmatch_id = ""
         for stage in all_stages:
             stage_div, match_types_div = stage.find_all("div", recursive=False)
             stage_name = stage_div.find("div").text.strip()
-            stage = tournament.setdefault(stage_name, {})
             if stage_name == "Showmatch":
                 showmatch_id = match_types_div.find("div").get("data-subseries-id")
                 continue
             stage_id = stage_div.find("a").get("data-series-id")
+            stages_to_ids[stage_name] = stage_id
             match_types = match_types_div.find_all("div")
             stage_dict = tournament_dict.setdefault(stage_name, {})
-            stages_ids[stage_name] = stage_id
+            match_types_to_ids = stages_to_match_types.setdefault(stage_name, {})
             for match_type in match_types:
                 match_type_name = match_type.text.strip()
                 id = match_type.get("data-subseries-id")
-                stage[match_type_name] = id
+                match_types_to_ids[match_type_name] = id
                 stage_dict[match_type_name] = id
                 all_ids += f"{id}."
         all_ids = all_ids.strip(".").split(".")
@@ -76,9 +77,9 @@ async def generate_urls_combination(tournament_name, stages_ids, match_types_ids
                 tournament_dict[stage_name][match_type] = filter_url
         tournament_dict["All Stages"] = {}
         tournament_dict["All Stages"]["All Match Types"] = f"{url}?exclude={showmatch_id}"
-        tournament["All Stages"] = {}
-        tournament["All Stages"]["All Match Types"] = "all"
-        stages_ids["All Stages"] = "all"
+        stages_to_match_types["All Stages"] = {}
+        stages_to_match_types["All Stages"]["All Match Types"] = "all"
+        stages_to_ids["All Stages"] = "all"
 
 
 async def scraping_card_data(tournament_name, card, tournaments_ids, stages_ids, session, semaphore):
