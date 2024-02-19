@@ -1,5 +1,5 @@
 import pandas as pd
-
+import math 
 def main():
     years = ["2021", "2022", "2023"]
 
@@ -31,6 +31,7 @@ def main():
 
         all_agents = set(agents_df['Agents'])
 
+        teams_df["Team ID"] = teams_df["Team ID"].apply(lambda id: int(id) if not math.isnan(id) else 0000)
         players_dfs[year] = players_df
         teams_dfs[year] = teams_df
 
@@ -50,8 +51,6 @@ def main():
         
         agents = agents | all_agents
 
-
-
     for year in years:
         matches_ids = pd.concat([matches_ids, matches_ids_dfs[year]], ignore_index=True)
         tournaments_stages_match_types_ids = pd.concat([tournaments_stages_match_types_ids, tournaments_stages_match_types_ids_dfs[year]], ignore_index=True)
@@ -60,7 +59,7 @@ def main():
         teams_mapping = pd.concat([teams_mapping, teams_mapping_dfs[year]], ignore_index=True)
 
     agents = pd.DataFrame({'Agents': list(agents)})
-
+    
     players.drop_duplicates(inplace=True)
     teams.drop_duplicates(inplace=True)
     matches_ids.drop_duplicates(inplace=True)
