@@ -2,10 +2,7 @@ import pandas as pd
 
 def check_na(value, type):
     if pd.isna(value):
-        if type == "fraction":
-            value = [None, None]
-        else:
-            value = None
+        value = None
     elif type =="interval" and value == "-":
         value = None
     else:
