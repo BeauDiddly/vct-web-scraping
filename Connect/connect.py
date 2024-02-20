@@ -1,16 +1,17 @@
 import psycopg2
 from Connect.config import config
+from sqlalchemy import create_engine
+
 def connect():
     """ Connect to the PostgreSQL database server """
     conn = None
     try:
         # read connection parameters
         params = config()
-
         # connect to the PostgreSQL server
         print('Connecting to the PostgreSQL database...')
         conn = psycopg2.connect(**params)
-		
+
         # create a cursor
         cur = conn.cursor()
 
@@ -32,3 +33,13 @@ def connect():
     #     if conn is not None:
     #         conn.close()
     #         print('Database connection closed.')
+        
+def engine():
+    engine = None
+    params = config()
+    host = params["host"]
+    db = params["database"]
+    user = params["user"]
+    password = params["password"]
+    engine = create_engine(f"postgresql://{user}:{password}@{host}:5432/{db}")
+    return engine
