@@ -7,107 +7,72 @@ import asyncio
 import time
 from datetime import datetime
 import csv
+from sqlalchemy import create_engine
 
 
-def add_tournaments(curr, unique_ids):
-   query = "INSERT INTO tournaments (tournament_id, tournament_name) VALUES (%s, %s);"
-   with open(f"all_vct/all_tournaments.csv", "r", newline="") as file:
-      heading = next(file)
-      reader = csv.reader(file)
-
-      for row in reader:
-         id = generate_unique_id(unique_ids)
-         tournament = row[0]
-         data = (id, tournament)
-         execute_query(curr, query, data)
-
+def add_tournaments(df, engine):
+   tournaments_df = df[["Tournament", "Tournament ID", "Year"]]
+   tournaments_df = tournaments_df.drop_duplicates()
+   tournaments_df = tournaments_df.reindex(columns=["Tournament ID", "Tournament", "Year"])
+   tournaments_df = tournaments_df.rename(columns={"Tournament ID": "tournament_id", "Tournament": "tournament", "Year": "year"})
+   tournaments_df.to_sql("tournaments", engine, index=False, if_exists = "append")
     
-def add_stages(curr, unique_ids):
-   query = "INSERT INTO stages (stage_id, stage_name) VALUES (%s, %s);"
-   with open(f"all_vct/all_stages.csv", "r", newline="") as file:
-      heading = next(file)
-      reader = csv.reader(file)
+def add_stages(df, engine):
+   stages_df = df[["Tournament ID", "Stage", "Stage ID", "Year"]]
+   stages_df = stages_df.drop_duplicates()
+   stages_df.loc[stages_df["Stage ID"] == "all", "Stage ID"] = stages_df["Tournament ID"] * 100 
+   stages_df["Stage ID"] = pd.to_numeric(stages_df["Stage ID"])
+   stages_df = stages_df.reindex(columns=["Stage ID", "Tournament ID", "Stage", "Year"])
+   stages_df = stages_df.rename(columns={"Stage ID": "stage_id", "Tournament ID": "tournament_id", "Stage": "stage", "Year": "year"})
+   stages_df.to_sql("stages", engine, index=False, if_exists="append")
 
-      for row in reader:
-         id = generate_unique_id(unique_ids)
-         stage = row[0]
-         data = (id, stage)
-         execute_query(curr, query, data)
-
-def add_match_types(curr, unique_ids):
-   query = "INSERT INTO match_types (match_type_id, match_type_name) VALUES (%s, %s);"
-   with open(f"all_vct/all_match_types.csv", "r", newline="") as file:
-      heading = next(file)
-      reader = csv.reader(file)
-
-      for row in reader:
-         id = generate_unique_id(unique_ids)
-         match_type = row[0]
-         data = (id, match_type)
-         execute_query(curr, query, data)
+def add_match_types(df, engine):
+   match_types_df = df[["Tournament ID", "Stage ID", "Match Type", "Match Type ID", "Year"]]
+   match_types_df = match_types_df.drop_duplicates()
+   match_types_df.loc[match_types_df["Stage ID"] == "all", "Stage ID"] = match_types_df["Tournament ID"] * 100 
+   match_types_df.loc[match_types_df["Match Type ID"] == "all", "Match Type ID"] = match_types_df["Stage ID"] * 10 
+   match_types_df["Stage ID"] = pd.to_numeric(match_types_df["Stage ID"])
+   match_types_df["Match Type ID"] = pd.to_numeric(match_types_df["Match Type ID"])
+   match_types_df = match_types_df.reindex(columns=["Match Type ID", "Tournament ID", "Stage ID", "Match Type", "Year"])
+   match_types_df = match_types_df.rename(columns={"Match Type ID": "match_type_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id", 
+                                                   "Match Type": "match_type", "Year": "year"})
+   match_types_df.to_sql("match_types", engine, index=False, if_exists="append")
 
 
-def add_matches(curr, unique_ids):
-   query = "INSERT INTO matches (match_id, match_name) VALUES (%s, %s);"
-   with open(f"all_vct/all_matches.csv", "r", newline="") as file:
-      heading = next(file)
-      reader = csv.reader(file)
+def add_matches(df, engine):
+   matches_df = df[["Tournament ID", "Stage ID", "Match Type ID", "Match Name", "Match ID", "Year"]]
+   matches_df = matches_df.drop_duplicates()
+   matches_df = matches_df.reindex(columns=["Match ID", "Tournament ID", "Stage ID", "Match Type ID", "Match Name", "Year"])
+   matches_df = matches_df.rename(columns={"Match ID": "match_id", "Tournament ID": "tournament_id",
+                                          "Stage ID": "stage_id", "Match Type ID": "match_type_id", 
+                                          "Match Name": "match", "Year": "year"})
+   matches_df.to_sql("matches", engine, index=False, if_exists="append")
 
-      for row in reader:
-         id = generate_unique_id(unique_ids)
-         match = row[0]
-         data = (id, match)
-         execute_query(curr, query, data)
-
-
-def add_maps(curr, unique_ids):
-   query = "INSERT INTO matches (match_id, match_name) VALUES (%s, %s);"
-   with open(f"all_vct/all_maps.csv", "r", newline="") as file:
-      heading = next(file)
-      reader = csv.reader(file)
-
-      for row in reader:
-         id = generate_unique_id(unique_ids)
-         map = row[0]
-         data = (id, map)
-         execute_query(curr, query, data)
+def add_games(df, engine):
+   games = df[["Tournament ID", "Stage ID", "Match Type ID", "Match ID", "Game ID", "Map", "Year"]]
+   games = games.drop_duplicates()
+   games = games.reindex(columns=["Game ID", "Tournament ID", "Stage ID", "Match Type ID", "Match ID", "Map", "Year"])
+   games = games.rename(columns={"Game ID": "game_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id",
+                                 "Match Type ID": "match_type_id", "Match ID": "match_id", 
+                                 "Map": "map", "Year": "year"})
+   print(games)
+   games.to_sql("games", engine, index=False, if_exists="append")
 
 
-def add_teams(curr, unique_ids):
-   query = "INSERT INTO teams (team_id, team_name) VALUES (%s, %s);"
-   with open(f"all_vct/all_teams.csv", "r", newline="") as file:
-      heading = next(file)
-      reader = csv.reader(file)
 
-      for row in reader:
-         id = generate_unique_id(unique_ids)
-         team = row[0]
-         data = (id, team)
-         execute_query(curr, query, data)
+def add_teams(df, engine):
+   teams_df = df[["Team", "Team ID"]]
+   teams_df = teams_df.drop_duplicates()
+   teams_df = teams_df.reindex(columns={"Team ID", "Team"})
+   teams_df = teams_df.rename(columns={"Team ID": "team_id", "Team": "team"})
+   teams_df.to_sql("teams", engine, index=False, if_exists="append")
 
-def add_players(curr, unique_ids):
-   query = "INSERT INTO players (player_id, player_name) VALUES (%s, %s);"
-   with open(f"all_vct/all_teams.csv", "r", newline="") as file:
-      heading = next(file)
-      reader = csv.reader(file)
-
-      for row in reader:
-         id = generate_unique_id(unique_ids)
-         player = row[0]
-         data = (id, player)
-         execute_query(curr, query, data)
-
-def add_agents(curr, unique_ids):
-   query = "INSERT INTO agents (agent_id, agent_name) VALUES (%s, %s);"
-   with open(f"all_vct/all_agents.csv", "r", newline="") as file:
-      heading = next(file)
-      reader = csv.reader(file)
-
-      for row in reader:
-         id = generate_unique_id(unique_ids)
-         agent = row[0]
-         data = (id, agent)
-         execute_query(curr, query, data)
+def add_players(df, engine):
+   players_df = df[["Player", "Player ID"]]
+   players_df = players_df.drop_duplicates()
+   players_df = players_df.reindex(columns={"Player ID", "Player"})
+   players_df = players_df.rename(columns={"Player ID": "player_id", "Player": "player"})
+   players_df.to_sql("players", engine, index=False, if_exists="append")
 
 async def insert_data(curr, dataframe, insertion_function, table_name):
    start_time = time.time()
@@ -720,7 +685,7 @@ async def add_players_stats(curr, row):
    # add_teams_picked_agents(curr)
    # add_players_stats(curr)
       
-def add_data_reference_tables(curr, unique_ids):
+def add_ids(curr, unique_ids):
    add_tournaments(curr, unique_ids)
    add_stages(curr, unique_ids)
    add_match_types(curr, unique_ids)

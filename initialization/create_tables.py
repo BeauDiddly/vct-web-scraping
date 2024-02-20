@@ -6,7 +6,8 @@ def create_tournaments_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS tournaments (
          tournament_id INT PRIMARY KEY,
-         tournament_name VARCHAR(255) UNIQUE NOT NULL
+         tournament VARCHAR(255) NOT NULL,
+         year INT
    );
    """
    execute_query(curr, query)
@@ -16,7 +17,9 @@ def create_stages_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS stages (
          stage_id INT PRIMARY KEY,
-         stage_name VARCHAR(255) UNIQUE NOT NULL
+         tournament_id INT REFERENCES tournaments(tournament_id),
+         stage VARCHAR(255) NOT NULL,
+         year INT
       );
       """
    execute_query(curr, query)
@@ -25,7 +28,10 @@ def create_match_types_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS match_types (
          match_type_id INT PRIMARY KEY,
-         match_type_name VARCHAR(255) UNIQUE NOT NULL
+         tournament_id INT REFERENCES tournaments(tournament_id),
+         stage_id INT REFERENCES stages(stage_id),
+         match_type VARCHAR(255) NOT NULL,
+         year INT
       );
       """
    execute_query(curr, query)
@@ -35,27 +41,34 @@ def create_matches_table(curr):
    query = """
    CREATE TABLE IF NOT EXISTS matches (
       match_id INT PRIMARY KEY,
-      match_name VARCHAR(255) UNIQUE NOT NULL
+      tournament_id INT REFERENCES tournaments(tournament_id),
+      stage_id INT REFERENCES stages(stage_id),
+      match_type_id INT REFERENCES match_types(match_type_id),
+      match VARCHAR(255) NOT NULL,
+      year INT
    );
    """
    execute_query(curr, query)
 
-
-def create_maps_table(curr):
+def create_games_table(curr):
    query = """
-   CREATE TABLE IF NOT EXISTS maps (
-      map_id INT PRIMARY KEY,
-      map_name VARCHAR(255) UNIQUE NOT NULL
+   CREATE TABLE IF NOT EXISTS games (
+      game_id INT PRIMARY KEY,
+      tournament_id INT REFERENCES tournaments(tournament_id),
+      stage_id INT REFERENCES stages(stage_id),
+      match_type_id INT REFERENCES match_types(match_type_id),
+      match_id INT REFERENCES matches(match_id),
+      map VARCHAR(255),
+      year INT
    );
    """
    execute_query(curr, query)
-
 
 def create_teams_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS teams (
          team_id INT PRIMARY KEY,
-         team_name VARCHAR(255) UNIQUE NOT NULL
+         team VARCHAR(255) UNIQUE NOT NULL
       );
       """
    execute_query(curr, query)
@@ -65,17 +78,7 @@ def create_players_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS players (
          player_id INT PRIMARY KEY,
-         player_name VARCHAR(255) UNIQUE NOT NULL
-      );
-      """
-   execute_query(curr, query)
-
-
-def create_agents_table(curr):
-   query = """
-      CREATE TABLE IF NOT EXISTS agents (
-         agent_id INT PRIMARY KEY,
-         agent_name VARCHAR(255) UNIQUE NOT NULL
+         player VARCHAR(255) UNIQUE NOT NULL
       );
       """
    execute_query(curr, query)
@@ -91,8 +94,8 @@ def create_draft_phase_table(curr):
          match_id INT REFERENCES matches(match_id),
          team_id INT REFERENCES teams(team_id),
          action VARCHAR(255),
-         map_id INT REFERENCES maps(map_id),
-         year INT NOT NULL
+         map VHARCHAR(255),
+         year INT
       );
    """
    execute_query(curr, query)
@@ -105,9 +108,9 @@ def create_eco_rounds_table(curr):
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
-         map_id INT REFERENCES maps(map_id),
-         round_number INT,
          team_id INT REFERENCES teams(team_id),
+         map VARCHAR(255),
+         round_number INT,
          credits VARCHAR(255),
          eco_type VARCHAR(255),
          outcome VARCHAR(255),
@@ -372,8 +375,7 @@ def create_players_stats_table(curr):
          first_deaths_per_round DECIMAL,
          headshot_percentage DECIMAL,
          clutch_success DECIMAL NULL,
-         clutches_won INT NULL,
-         clutches_played INT NULL,
+         clutches VARCHAR(255),
          mksp INT,
          kills INT,
          deaths INT,
@@ -387,24 +389,25 @@ def create_players_stats_table(curr):
 
 def create_all_tables(curr):
    create_tournaments_table(curr)
-   create_agents_table(curr)
-   create_maps_table(curr)
-   create_matches_table(curr)
-   create_match_types_table(curr)
    create_stages_table(curr)
-   create_teams_table(curr)
-   create_players_table(curr)
-   create_draft_phase_table(curr)
-   create_eco_rounds_table(curr)
-   create_eco_stats_table(curr)
-   create_kills_table(curr)
-   create_kills_stats_table(curr)
-   create_maps_played_table(curr)
-   create_maps_scores_table(curr)
-   create_overview_table(curr)
-   create_rounds_kills_table(curr)
-   create_scores_table(curr)
-   create_agents_pick_rates_table(curr)
-   create_maps_stats_table(curr)
-   create_teams_picked_agents_table(curr)
-   create_players_stats_table(curr)
+   create_match_types_table(curr)
+   create_matches_table(curr)
+   create_games_table(curr)
+   # create_agents_table(curr)
+   # create_maps_table(curr)
+   # create_teams_table(curr)
+   # create_players_table(curr)
+   # create_draft_phase_table(curr)
+   # create_eco_rounds_table(curr)
+   # create_eco_stats_table(curr)
+   # create_kills_table(curr)
+   # create_kills_stats_table(curr)
+   # create_maps_played_table(curr)
+   # create_maps_scores_table(curr)
+   # create_overview_table(curr)
+   # create_rounds_kills_table(curr)
+   # create_scores_table(curr)
+   # create_agents_pick_rates_table(curr)
+   # create_maps_stats_table(curr)
+   # create_teams_picked_agents_table(curr)
+   # create_players_stats_table(curr)
