@@ -1,20 +1,19 @@
 from Connect.execute_query import execute_query
 import pandas as pd
 from retrieve.retrieve import retrieve_foreign_key
-from generate.generate_unique_id import generate_unique_id
 from checking.check_values import check_na
 import asyncio
 import time
 from datetime import datetime
-import csv
-from sqlalchemy import create_engine
+from process_df.process_df import rename_columns, reorder_columns
+
 
 
 def add_tournaments(df, engine):
    tournaments_df = df[["Tournament", "Tournament ID", "Year"]]
    tournaments_df = tournaments_df.drop_duplicates()
-   tournaments_df = tournaments_df.reindex(columns=["Tournament ID", "Tournament", "Year"])
-   tournaments_df = tournaments_df.rename(columns={"Tournament ID": "tournament_id", "Tournament": "tournament", "Year": "year"})
+   tournaments_df = reorder_columns(tournaments_df, ["Tournament ID", "Tournament", "Year"])
+   tournaments_df = rename_columns(tournaments_df, {"Tournament ID": "tournament_id", "Tournament": "tournament", "Year": "year"})
    tournaments_df.to_sql("tournaments", engine, index=False, if_exists = "append")
     
 def add_stages(df, engine):
@@ -22,8 +21,8 @@ def add_stages(df, engine):
    stages_df = stages_df.drop_duplicates()
    stages_df.loc[stages_df["Stage ID"] == "all", "Stage ID"] = stages_df["Tournament ID"] * 100 
    stages_df["Stage ID"] = pd.to_numeric(stages_df["Stage ID"])
-   stages_df = stages_df.reindex(columns=["Stage ID", "Tournament ID", "Stage", "Year"])
-   stages_df = stages_df.rename(columns={"Stage ID": "stage_id", "Tournament ID": "tournament_id", "Stage": "stage", "Year": "year"})
+   stages_df = reorder_columns(stages_df, ["Stage ID", "Tournament ID", "Stage", "Year"])
+   stages_df = rename_columns(stages_df, {"Stage ID": "stage_id", "Tournament ID": "tournament_id", "Stage": "stage", "Year": "year"})
    stages_df.to_sql("stages", engine, index=False, if_exists="append")
 
 def add_match_types(df, engine):
@@ -33,8 +32,8 @@ def add_match_types(df, engine):
    match_types_df.loc[match_types_df["Match Type ID"] == "all", "Match Type ID"] = match_types_df["Stage ID"] * 10 
    match_types_df["Stage ID"] = pd.to_numeric(match_types_df["Stage ID"])
    match_types_df["Match Type ID"] = pd.to_numeric(match_types_df["Match Type ID"])
-   match_types_df = match_types_df.reindex(columns=["Match Type ID", "Tournament ID", "Stage ID", "Match Type", "Year"])
-   match_types_df = match_types_df.rename(columns={"Match Type ID": "match_type_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id", 
+   match_types_df = reorder_columns(match_types_df, ["Match Type ID", "Tournament ID", "Stage ID", "Match Type", "Year"])
+   match_types_df = rename_columns(match_types_df, {"Match Type ID": "match_type_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id", 
                                                    "Match Type": "match_type", "Year": "year"})
    match_types_df.to_sql("match_types", engine, index=False, if_exists="append")
 
@@ -42,36 +41,35 @@ def add_match_types(df, engine):
 def add_matches(df, engine):
    matches_df = df[["Tournament ID", "Stage ID", "Match Type ID", "Match Name", "Match ID", "Year"]]
    matches_df = matches_df.drop_duplicates()
-   matches_df = matches_df.reindex(columns=["Match ID", "Tournament ID", "Stage ID", "Match Type ID", "Match Name", "Year"])
-   matches_df = matches_df.rename(columns={"Match ID": "match_id", "Tournament ID": "tournament_id",
-                                          "Stage ID": "stage_id", "Match Type ID": "match_type_id", 
-                                          "Match Name": "match", "Year": "year"})
+   matches_df = reorder_columns(matches_df, ["Match ID", "Tournament ID", "Stage ID", "Match Type ID", "Match Name", "Year"])
+   matches_df = rename_columns(matches_df, {"Match ID": "match_id", "Tournament ID": "tournament_id",
+                                             "Stage ID": "stage_id", "Match Type ID": "match_type_id", 
+                                             "Match Name": "match", "Year": "year"})
    matches_df.to_sql("matches", engine, index=False, if_exists="append")
 
 def add_games(df, engine):
-   games = df[["Tournament ID", "Stage ID", "Match Type ID", "Match ID", "Game ID", "Map", "Year"]]
-   games = games.drop_duplicates()
-   games = games.reindex(columns=["Game ID", "Tournament ID", "Stage ID", "Match Type ID", "Match ID", "Map", "Year"])
-   games = games.rename(columns={"Game ID": "game_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id",
+   games_df = df[["Tournament ID", "Stage ID", "Match Type ID", "Match ID", "Game ID", "Map", "Year"]]
+   games_df = games_df.drop_duplicates()
+   games_df = reorder_columns(games_df, ["Game ID", "Tournament ID", "Stage ID", "Match Type ID", "Match ID", "Map", "Year"])
+   games_df = rename_columns(games_df, {"Game ID": "game_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id",
                                  "Match Type ID": "match_type_id", "Match ID": "match_id", 
                                  "Map": "map", "Year": "year"})
-   print(games)
-   games.to_sql("games", engine, index=False, if_exists="append")
+   games_df.to_sql("games", engine, index=False, if_exists="append")
 
 
 
 def add_teams(df, engine):
    teams_df = df[["Team", "Team ID"]]
    teams_df = teams_df.drop_duplicates()
-   teams_df = teams_df.reindex(columns={"Team ID", "Team"})
-   teams_df = teams_df.rename(columns={"Team ID": "team_id", "Team": "team"})
+   teams_df = reorder_columns(teams_df, {"Team ID", "Team"})
+   teams_df = rename_columns(teams_df, {"Team ID": "team_id", "Team": "team"})
    teams_df.to_sql("teams", engine, index=False, if_exists="append")
 
 def add_players(df, engine):
    players_df = df[["Player", "Player ID"]]
    players_df = players_df.drop_duplicates()
-   players_df = players_df.reindex(columns={"Player ID", "Player"})
-   players_df = players_df.rename(columns={"Player ID": "player_id", "Player": "player"})
+   players_df = reorder_columns(players_df, {"Player ID", "Player"})
+   players_df = rename_columns(players_df, {"Player ID": "player_id", "Player": "player"})
    players_df.to_sql("players", engine, index=False, if_exists="append")
 
 async def insert_data(curr, dataframe, insertion_function, table_name):
