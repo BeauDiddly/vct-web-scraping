@@ -7,6 +7,7 @@ import pandas as pd
 import re
 import random
 import logging
+import traceback
 
 logging.basicConfig(level=logging.INFO)  # Set the desired logging level
 
@@ -123,6 +124,7 @@ async def scraping_card_data(tournament_name, card, tournaments_ids, stages_ids,
                 team_b = "TBD"
                 
             match_name = f"{team_a} vs {team_b}"
+
             
             try:
                 team_a_score = int(teams[0].find("div", class_="match-item-vs-team-score js-spoiler").text.strip())
@@ -230,43 +232,45 @@ async def scraping_card_data(tournament_name, card, tournaments_ids, stages_ids,
                 maps_notes = match_soup.find_all("div", class_="match-header-note")
                 extract_maps_notes(maps_notes, results, team_mapping, [tournament_name, stage_name, match_type_name, match_name])
                 
-                extract_methods(overview_stats, games_id, results, team_mapping, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
+                extract_methods(overview_stats, games_id, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
 
 
-                # maps_headers = match_soup.find_all("div", class_="vm-stats-game-header")
-                # extract_maps_headers(maps_headers, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
+                maps_headers = match_soup.find_all("div", class_="vm-stats-game-header")
+                extract_maps_headers(maps_headers, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
 
-                # player_to_team = extract_overview_stats(overview_stats, games_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
+                player_to_team = extract_overview_stats(overview_stats, games_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
             except IndexError:
                 print(f"ERROR FROM SCRAPING OVERVIEW PAGE")
                 print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}, the match was forfeited")
+                traceback_info = traceback.format_exc()
+                print(traceback_info)
                 return {}
 
             await asyncio.sleep(random.uniform(1,2))
 
-            # try:
-            #     performance_page = await fetch(f'https://vlr.gg{url}/?game=all&tab=performance', session)
-            # except MaxReentriesReached as e:
-            #     print(f"Error: {e}")
-            #     sys.exit(1)
-            # performance_soup = BeautifulSoup(performance_page, "html.parser")
-            # performance_stats_div = performance_soup.find_all("div", class_="vm-stats-game")
+            try:
+                performance_page = await fetch(f'https://vlr.gg{url}/?game=all&tab=performance', session)
+            except MaxReentriesReached as e:
+                print(f"Error: {e}")
+                sys.exit(1)
+            performance_soup = BeautifulSoup(performance_page, "html.parser")
+            performance_stats_div = performance_soup.find_all("div", class_="vm-stats-game")
 
-            # extract_kills_stats(performance_stats_div, games_id, team_mapping, player_to_team, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
+            extract_kills_stats(performance_stats_div, games_id, team_mapping, player_to_team, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
 
-            # await asyncio.sleep(random.uniform(1,2))
+            await asyncio.sleep(random.uniform(1,2))
                 
             try:
                 economy_page = await fetch(f'https://vlr.gg{url}/?game=all&tab=economy', session)
             except MaxReentriesReached as e:
                 print(f"Error: {e}")
                 sys.exit(1)
-            # economy_soup = BeautifulSoup(economy_page, "html.parser")
+            economy_soup = BeautifulSoup(economy_page, "html.parser")
 
-            # economy_stats_div = economy_soup.find_all("div", class_="vm-stats-game")
+            economy_stats_div = economy_soup.find_all("div", class_="vm-stats-game")
 
-            # eco_stats, eco_rounds_stats = extract_economy_stats_div(economy_stats_div)
-            # extract_economy_stats(eco_stats, eco_rounds_stats, games_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
+            eco_stats, eco_rounds_stats = extract_economy_stats_div(economy_stats_div)
+            extract_economy_stats(eco_stats, eco_rounds_stats, games_id, team_mapping, results, [tournament_name, stage_name, match_type_name, match_name, team_a, team_b])
 
         results["team_mapping"] = team_mapping
         await asyncio.sleep(random.uniform(1,2))

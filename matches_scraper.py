@@ -61,6 +61,8 @@ async def main():
                    "maps_played": [],
                    "maps_scores": [],
                    "draft_phase": [],
+                   "win_methods_count": [],
+                   "win_methods_round_number": [],
                    "overview": [],
                    "kills": [],
                    "kills_stats": [],
@@ -70,7 +72,7 @@ async def main():
                    "team_mapping": {},
                    "teams_ids": {},
                    "players_ids": {},
-                   "tournaments_stages_matches_game_ids": []}
+                   "tournaments_stages_matches_games_ids": []}
 
     async with aiohttp.ClientSession() as session:
         tasks = [scraping_matches_data(tournament_name, cards, tournaments_ids, stages_ids, matches_semaphore, session) for tournament_name, cards in matches_cards.items()]
@@ -100,6 +102,12 @@ async def main():
                                                         "Team B Overtime Score", "Duration"])
     dataframes["draft_phase"] = pd.DataFrame(all_results["draft_phase"],
                                                 columns=["Tournament", "Stage", "Match Type", "Match Name", "Team", "Action", "Map"])
+    dataframes["win_methods_count"] = pd.DataFrame(all_results["win_methods_count"],
+                                                   columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team",
+                                                           "Elimination", "Detonated", "Defuse", "Timeout", "Eliminated"])
+    dataframes["win_methods_round_number"] = pd.DataFrame(all_results["win_methods_round_number"],
+                                                   columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Round Number", "Team",
+                                                           "Method", "Outcome"])
     dataframes["overview"] = pd.DataFrame(all_results["overview"],
                                             columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Player", "Team",
                                                     "Agents", "Rating", "Average Combat Score", "Kills", "Deaths",
@@ -122,7 +130,7 @@ async def main():
     dataframes["eco_stats"] = pd.DataFrame(all_results["eco_stats"],
                                             columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team", "Type", "Initiated", "Won"])
     dataframes["eco_rounds"] = pd.DataFrame(all_results["eco_rounds"],
-                                            columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Round Number", "Team", "Credits", "Type", "Outcome"])
+                                            columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Round Number", "Team", "Loadout Value", "Remaining Credits", "Type", "Outcome"])
     dataframes["team_mapping"] = pd.DataFrame(list(all_results["team_mapping"].items()),
                                               columns=["Abbreviated", "Full Name"])
     dataframes["teams_ids"] = pd.DataFrame(list(all_results["teams_ids"].items()),

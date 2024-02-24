@@ -19,7 +19,7 @@ stats_titles = ["", "", "Rounds Played", "Rating", "Average Combat Score", "Kill
                 "Average Damage per Round", "Kills Per Round", "Assists Per Round", "First Kills Per Round", "First Deaths Per Round", 
                 "Headshot %", "Clutch Success %", "Clutches (won/played)", "Maximum Kills in a Single Map", "Kills", "Deaths", "Assists",
                 "First Kills", "First Deaths"]
-methods = {"elim": "Elimination", "boom": "Detonated", "defuse": "Defuse"}
+methods = {"elim": "Elimination", "boom": "Detonated", "defuse": "Defuse", "time": "Timeout"}
 
 cjk_pattern = re.compile(r'[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]')
 pattern = r'/(\w+)\.png'
@@ -109,63 +109,51 @@ def extract_maps_headers(maps_headers, results, list):
                                         rt_overtime_score, duration])
     
 
-def extract_methods(overview_stats, games_id, results, team_mapping, list):
+def extract_methods(overview_stats, games_id, results, list):
     tournament_name = list[0]
     stage_name = list[1]
     match_type_name = list[2]
     match_name = list[3]
     team_a = list[4]
     team_b = list[5]
-
     for info in overview_stats:
-        teams = []
 
         id = info.get("data-game-id")
         try:
             map = games_id[id]
         except KeyError:
             continue
-        if map == "all":
+        if map == "All Maps":
             continue
         rounds = info.find_all("div", class_="vlr-rounds-row")
-        outcomes = {}
+        outcomes = {team_a: {"elim": 0, "boom": 0, "defuse": 0, "time": 0, "eliminated": 0},
+                    team_b: {"elim": 0, "boom": 0, "defuse": 0, "time": 0, "eliminated": 0}}
         for round in rounds:
             rows = round.find_all("div", class_="vlr-rounds-row-col")
             for row in rows:
-                if row.find_all("div", class_="team"):
-                    all_teams = row.find_all("img")
-                    for index, team in enumerate(all_teams):
-                        team_name = all_teams[index].text.strip()
-                        try:
-                            teams[index] = team_mapping[team_name]
-                        except KeyError: #Either the team name does not contain latin characters or they did not used the abbrievated name
-                            if not team_name:
-                                if cjk_pattern.search(team_a):
-                                    team = team_a
-                                elif cjk_pattern.search(team_b):
-                                    team = team_b
-                            else:
-                                team = min(team_mapping.values(), key=lambda x: Levenshtein.distance(team, x))
-                        team_dict = outcomes.setdefault(team, {"elim": 0, "boom": 0, "defuse": 0})
-                else:
+                if not row.find_all("div", class_="team") and row.find("img"):
                     round_number, team_a_outcome, team_b_outcome = row.find_all("div")
                     round_number = round_number.text.strip()
                     if team_a_outcome.find("img"):
                         outcome = team_a_outcome.find("img").get("src").split("/")[-1].split(".")[0]
-                        outcomes[teams[0]][outcome] += 1
-                        results["win_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, teams[0], methods[outcome], "Win"])
+                        outcomes[team_a][outcome] += 1
+                        results["win_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, team_a, methods[outcome], "Win"])
                     else:
-                        results["win_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, teams[0], pd.NA, "Loss"])
+                        results["win_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, team_a, "Eliminated", "Loss"])
+                        outcomes[team_a]["eliminated"] += 1
                     if team_b_outcome.find("img"):
                         outcome = team_b_outcome.find("img").get("src").split("/")[-1].split(".")[0]
-                        outcomes[teams[0]][outcome] += 1
-                        results["win_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, teams[1], methods[outcome], "Win"])
+                        outcomes[team_b][outcome] += 1
+                        results["win_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, team_b, methods[outcome], "Win"])
                     else:
-                        results["win_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, teams[1], pd.NA, "Loss"])
-            results["win_methods_count"].append([tournament_name, stage_name, match_type_name, match_name, map,
-                                                 teams[0], outcomes[teams[0]]["elim"], outcomes[teams[0]]["boom"], outcomes[teams[0]]["defuse"]])
-            results["win_methods_count"].append([tournament_name, stage_name, match_type_name, match_name, map,
-                                        teams[1], outcomes[teams[1]]["elim"], outcomes[teams[1]]["boom"], outcomes[teams[1]]["defuse"]])
+                        results["win_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, team_b, "Eliminated", "Loss"])
+                        outcomes[team_b]["eliminated"] += 1
+        results["win_methods_count"].append([tournament_name, stage_name, match_type_name, match_name, map,
+                                             team_a, outcomes[team_a]["elim"], outcomes[team_a]["boom"],
+                                             outcomes[team_a]["defuse"], outcomes[team_a]["time"], outcomes[team_a]["eliminated"]])
+        results["win_methods_count"].append([tournament_name, stage_name, match_type_name, match_name, map,
+                                             team_b, outcomes[team_b]["elim"], outcomes[team_b]["boom"],
+                                             outcomes[team_b]["defuse"], outcomes[team_b]["time"], outcomes[team_b]["eliminated"]])
                     
 
 
