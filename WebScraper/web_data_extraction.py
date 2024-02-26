@@ -268,7 +268,7 @@ def extract_overview_stats(overview_stats, games_id, team_mapping, results, list
                                                     first_kills[side], first_deaths[side], kills_deaths_fkd[side], side])
     return player_to_team
 
-def extract_kills_stats(performance_stats_div, games_id, team_mapping, player_to_team, missing_team, results, list):
+def extract_kills_stats(performance_stats_div, games_id, team_mapping, player_to_team, results, list):
         tournament_name = list[0]
         stage_name = list[1]
         match_type_name = list[2]
