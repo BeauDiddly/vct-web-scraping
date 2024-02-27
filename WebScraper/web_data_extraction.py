@@ -19,7 +19,7 @@ stats_titles = ["", "", "Rounds Played", "Rating", "Average Combat Score", "Kill
                 "Average Damage per Round", "Kills Per Round", "Assists Per Round", "First Kills Per Round", "First Deaths Per Round", 
                 "Headshot %", "Clutch Success %", "Clutches (won/played)", "Maximum Kills in a Single Map", "Kills", "Deaths", "Assists",
                 "First Kills", "First Deaths"]
-methods = {"elim": "Elimination", "boom": "Detonated", "defuse": "Defuse", "time": "Timeout"}
+methods = {"elim": "Elimination", "boom": "Detonated", "defuse": "Defused", "time": "Time Expiry (No Plant)"}
 
 cjk_pattern = re.compile(r'[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]')
 pattern = r'/(\w+)\.png'
@@ -126,8 +126,8 @@ def extract_methods(overview_stats, games_id, results, list):
         if map == "All Maps":
             continue
         rounds = info.find_all("div", class_="vlr-rounds-row")
-        outcomes = {team_a: {"elim": 0, "boom": 0, "defuse": 0, "time": 0, "eliminated": 0},
-                    team_b: {"elim": 0, "boom": 0, "defuse": 0, "time": 0, "eliminated": 0}}
+        outcomes = {team_a: {"elim": 0, "boom": 0, "defuse": 0, "time": 0, "eliminated": 0, "failed_to_defuse": 0, "failed_to_detonate": 0, "failed_to_plant": 0},
+                    team_b: {"elim": 0, "boom": 0, "defuse": 0, "time": 0, "eliminated": 0, "failed_to_defuse": 0, "failed_to_detonate": 0, "failed_to_plant": 0}}
         for round in rounds:
             rows = round.find_all("div", class_="vlr-rounds-row-col")
             for row in rows:
@@ -136,24 +136,59 @@ def extract_methods(overview_stats, games_id, results, list):
                     round_number = round_number.text.strip()
                     if team_a_outcome.find("img"):
                         outcome = team_a_outcome.find("img").get("src").split("/")[-1].split(".")[0]
+                        enemy_outcome = ""
                         outcomes[team_a][outcome] += 1
-                        results["win_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, team_a, methods[outcome], "Win"])
-                    else:
-                        results["win_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, team_a, "Eliminated", "Loss"])
-                        outcomes[team_a]["eliminated"] += 1
-                    if team_b_outcome.find("img"):
+
+                        if outcome == "elim":
+                            outcomes[team_b]["eliminated"] += 1
+                            enemy_outcome = "Eliminated"
+                        elif outcome == "boom":
+                            outcomes[team_b]["failed_to_defuse"] += 1
+                            enemy_outcome = "Failed Defused"
+                        elif outcome == "defuse":
+                            outcomes[team_b]["failed_to_detonate"] += 1
+                            enemy_outcome = "Detonated Denied"
+                        elif outcome == "time":
+                            outcomes[team_b]["failed_to_plant"] += 1
+                            enemy_outcome = "Time Expiry (Failed to Plant)"
+                        results["win_loss_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, team_a, methods[outcome], "Win"])
+                        results["win_loss_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, team_b, enemy_outcome, "Loss"])
+                    # else:
+                    #     results["win_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, team_a, "Eliminated", "Loss"])
+                        # outcomes[team_a]["eliminated"] += 1
+                    elif team_b_outcome.find("img"):
                         outcome = team_b_outcome.find("img").get("src").split("/")[-1].split(".")[0]
+                        enemy_outcome = ""
                         outcomes[team_b][outcome] += 1
-                        results["win_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, team_b, methods[outcome], "Win"])
-                    else:
-                        results["win_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, team_b, "Eliminated", "Loss"])
-                        outcomes[team_b]["eliminated"] += 1
-        results["win_methods_count"].append([tournament_name, stage_name, match_type_name, match_name, map,
+
+                        if outcome == "elim":
+                            outcomes[team_a]["eliminated"] += 1
+                            enemy_outcome = "Eliminated"
+                        elif outcome == "boom":
+                            outcomes[team_a]["failed_to_defuse"] += 1
+                            enemy_outcome = "Failed Defused"
+                        elif outcome == "defuse":
+                            outcomes[team_a]["failed_to_detonate"] += 1
+                            enemy_outcome = "Detonated Denied"
+                        elif outcome == "time":
+                            outcomes[team_a]["failed_to_plant"] += 1
+                            enemy_outcome = "Time Expiry (Failed to Plant)"
+                        results["win_loss_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, team_b, methods[outcome], "Win"])
+                        results["win_loss_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, team_a, enemy_outcome, "Loss"])
+
+                    # else:
+                    #     results["win_methods_round_number"].append([tournament_name, stage_name, match_type_name, match_name, map, round_number, team_b, "Eliminated", "Loss"])
+                    #     outcomes[team_b]["eliminated"] += 1
+        results["win_loss_methods_count"].append([tournament_name, stage_name, match_type_name, match_name, map,
                                              team_a, outcomes[team_a]["elim"], outcomes[team_a]["boom"],
-                                             outcomes[team_a]["defuse"], outcomes[team_a]["time"], outcomes[team_a]["eliminated"]])
-        results["win_methods_count"].append([tournament_name, stage_name, match_type_name, match_name, map,
+                                             outcomes[team_a]["defuse"], outcomes[team_a]["time"], outcomes[team_a]["eliminated"],
+                                             outcomes[team_a]["failed_to_defuse"], outcomes[team_a]["failed_to_detonate"],
+                                             outcomes[team_a]["failed_to_plant"]])
+        results["win_loss_methods_count"].append([tournament_name, stage_name, match_type_name, match_name, map,
                                              team_b, outcomes[team_b]["elim"], outcomes[team_b]["boom"],
-                                             outcomes[team_b]["defuse"], outcomes[team_b]["time"], outcomes[team_b]["eliminated"]])
+                                             outcomes[team_b]["defuse"], outcomes[team_b]["time"], outcomes[team_b]["eliminated"],
+                                             outcomes[team_b]["failed_to_defuse"], outcomes[team_b]["failed_to_detonate"],
+                                             outcomes[team_b]["failed_to_plant"]])
                     
 
 
