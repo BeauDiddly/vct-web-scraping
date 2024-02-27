@@ -50,19 +50,19 @@ def create_matches_table(curr):
    """
    execute_query(curr, query)
 
-def create_games_table(curr):
-   query = """
-   CREATE TABLE IF NOT EXISTS games (
-      game_id INT PRIMARY KEY,
-      tournament_id INT REFERENCES tournaments(tournament_id),
-      stage_id INT REFERENCES stages(stage_id),
-      match_type_id INT REFERENCES match_types(match_type_id),
-      match_id INT REFERENCES matches(match_id),
-      map VARCHAR(255),
-      year INT
-   );
-   """
-   execute_query(curr, query)
+# def create_games_table(curr):
+#    query = """
+#    CREATE TABLE IF NOT EXISTS games (
+#       game_id INT PRIMARY KEY,
+#       tournament_id INT REFERENCES tournaments(tournament_id),
+#       stage_id INT REFERENCES stages(stage_id),
+#       match_type_id INT REFERENCES match_types(match_type_id),
+#       match_id INT REFERENCES matches(match_id),
+#       map VARCHAR(255),
+#       year INT
+#    );
+#    """
+#    execute_query(curr, query)
 
 def create_teams_table(curr):
    query = """
@@ -87,7 +87,7 @@ def create_players_table(curr):
 def create_draft_phase_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS drafts (
-         draft_id SERIAL PRIMARY KEY,
+         draft_id INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
