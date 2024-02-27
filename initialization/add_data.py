@@ -1,16 +1,17 @@
 from Connect.execute_query import execute_query
 import pandas as pd
-from retrieve.retrieve import retrieve_foreign_key
+from retrieve.retrieve import retrieve_primary_key
 from checking.check_values import check_na
 import asyncio
 import time
 from datetime import datetime
-from process_df.process_df import rename_columns, reorder_columns
+from process_df.process_df import rename_columns, reorder_columns, change_reference_name_to_id, csv_to_df, create_ids, convert_column_to_int, strip_white_space
 
 
 
 def add_tournaments(df, engine):
    tournaments_df = df[["Tournament", "Tournament ID", "Year"]]
+   strip_white_space(tournaments_df, "Tournament")
    tournaments_df = tournaments_df.drop_duplicates()
    tournaments_df = reorder_columns(tournaments_df, ["Tournament ID", "Tournament", "Year"])
    tournaments_df = rename_columns(tournaments_df, {"Tournament ID": "tournament_id", "Tournament": "tournament", "Year": "year"})
@@ -18,6 +19,7 @@ def add_tournaments(df, engine):
     
 def add_stages(df, engine):
    stages_df = df[["Tournament ID", "Stage", "Stage ID", "Year"]]
+   strip_white_space(stages_df, "Stage")
    stages_df = stages_df.drop_duplicates()
    stages_df.loc[stages_df["Stage ID"] == "all", "Stage ID"] = stages_df["Tournament ID"] * 100 
    stages_df["Stage ID"] = pd.to_numeric(stages_df["Stage ID"])
@@ -27,9 +29,11 @@ def add_stages(df, engine):
 
 def add_match_types(df, engine):
    match_types_df = df[["Tournament ID", "Stage ID", "Match Type", "Match Type ID", "Year"]]
+   strip_white_space(match_types_df, "Match Type")
    match_types_df = match_types_df.drop_duplicates()
    match_types_df.loc[match_types_df["Stage ID"] == "all", "Stage ID"] = match_types_df["Tournament ID"] * 100 
    match_types_df.loc[match_types_df["Match Type ID"] == "all", "Match Type ID"] = match_types_df["Stage ID"] * 10 
+   match_types_df["Match Type ID"] = match_types_df["Match Type ID"].fillna(0000)
    match_types_df["Stage ID"] = pd.to_numeric(match_types_df["Stage ID"])
    match_types_df["Match Type ID"] = pd.to_numeric(match_types_df["Match Type ID"])
    match_types_df = reorder_columns(match_types_df, ["Match Type ID", "Tournament ID", "Stage ID", "Match Type", "Year"])
@@ -40,6 +44,7 @@ def add_match_types(df, engine):
 
 def add_matches(df, engine):
    matches_df = df[["Tournament ID", "Stage ID", "Match Type ID", "Match Name", "Match ID", "Year"]]
+   strip_white_space(matches_df, "Match Name")
    matches_df = matches_df.drop_duplicates()
    matches_df = reorder_columns(matches_df, ["Match ID", "Tournament ID", "Stage ID", "Match Type ID", "Match Name", "Year"])
    matches_df = rename_columns(matches_df, {"Match ID": "match_id", "Tournament ID": "tournament_id",
@@ -88,36 +93,23 @@ async def insert_data(curr, dataframe, insertion_function, table_name):
    print(f"Inserting data to {table_name} time: {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds")
    
 
-async def add_drafts(curr, row):
-   # print(f"Adding drafts")
-   # drafts = pd.read_csv("matches/draft_phase.csv")
-   query = """
-      INSERT INTO drafts (
-         tournament_id, stage_id, match_type_id, match_id,
-         team_id, action, map_id
-      ) VALUES (
-         %s, %s, %s, %s,
-         %s, %s, %s
-      );
-   """
-   # for index, row in drafts.iterrows():
-   tournament = row["Tournament"]
-   stage = row["Stage"]
-   match_type = row["Match Type"]
-   match_name = row["Match Name"]
-   team = row["Team"]
-   action = row["Action"]
-   map = row["Map"]
-   tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
-   stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
-   match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
-   match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
-   team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team)
-   map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
-   data = (tournament_id, stage_id, match_type_id, match_id, team_id, action, map_id)
-   execute_query(curr, query, data)
-   # print(f"Done adding drafts")
-   # await asyncio.sleep(0)
+def add_drafts(file, year, curr, engine):
+   drafts_df = csv_to_df(file)
+   strip_white_space(drafts_df, "Match Type")
+   strip_white_space(drafts_df, "Match Name")
+   drafts_df = change_reference_name_to_id(drafts_df, year, curr)
+   print(drafts_df.sample(n=20))
+   drafts_df["year"] = int(year)
+   # drafts_df = rename_columns(drafts_df, {"Tournament": "tournament_id", "Stage": "stage_id", "Match Type": "match_type_id", "Match Name": "match_id",
+   #                                        "Team": "team_id", "Action": "action", "Map": "map"})
+   # drafts_df = reorder_columns(drafts_df, ["tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "action", "map", "year"])
+   # print(drafts_df["match_type_id"].unique())
+   # drafts_df = convert_column_to_int(drafts_df, "match_type_id")
+   # drafts_df = convert_column_to_int(drafts_df, "match_id")
+   # drafts_df = convert_column_to_int(drafts_df, "team_id")
+   # drafts_df = create_ids(drafts_df, "drafts_id")
+   # print(drafts_df.dtypes)
+   # drafts_df.to_sql("drafts", engine, index=False, if_exists="append")
 
 async def add_eco_rounds(curr, row):
    # print(f"Adding eco rounds")
