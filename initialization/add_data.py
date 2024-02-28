@@ -21,7 +21,7 @@ def add_stages(df, engine):
    stages_df = df[["Tournament ID", "Stage", "Stage ID", "Year"]]
    strip_white_space(stages_df, "Stage")
    stages_df = stages_df.drop_duplicates()
-   stages_df.loc[stages_df["Stage ID"] == "all", "Stage ID"] = stages_df["Tournament ID"] * 100 
+   stages_df.loc[stages_df["Stage ID"].isnull(), "Stage ID"] = stages_df["Tournament ID"] * 1000
    stages_df["Stage ID"] = pd.to_numeric(stages_df["Stage ID"])
    stages_df = reorder_columns(stages_df, ["Stage ID", "Tournament ID", "Stage", "Year"])
    stages_df = rename_columns(stages_df, {"Stage ID": "stage_id", "Tournament ID": "tournament_id", "Stage": "stage", "Year": "year"})
@@ -31,8 +31,8 @@ def add_match_types(df, engine):
    match_types_df = df[["Tournament ID", "Stage ID", "Match Type", "Match Type ID", "Year"]]
    strip_white_space(match_types_df, "Match Type")
    match_types_df = match_types_df.drop_duplicates()
-   match_types_df.loc[match_types_df["Stage ID"] == "all", "Stage ID"] = match_types_df["Tournament ID"] * 100 
-   match_types_df.loc[match_types_df["Match Type ID"] == "all", "Match Type ID"] = match_types_df["Stage ID"] * 10 
+   match_types_df.loc[match_types_df["Stage ID"].isnull(), "Stage ID"] = match_types_df["Tournament ID"] * 1000 
+   match_types_df.loc[match_types_df["Match Type ID"].isnull(), "Match Type ID"] = match_types_df["Stage ID"] * 100 
    match_types_df["Match Type ID"] = match_types_df["Match Type ID"].fillna(0000)
    match_types_df["Stage ID"] = pd.to_numeric(match_types_df["Stage ID"])
    match_types_df["Match Type ID"] = pd.to_numeric(match_types_df["Match Type ID"])

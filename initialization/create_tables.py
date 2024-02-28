@@ -392,7 +392,7 @@ def create_all_tables(curr):
    create_stages_table(curr)
    create_match_types_table(curr)
    create_matches_table(curr)
-   create_games_table(curr)
+   # create_games_table(curr)
    # create_agents_table(curr)
    # create_maps_table(curr)
    # create_teams_table(curr)
