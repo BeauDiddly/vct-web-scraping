@@ -1,6 +1,21 @@
 import pandas as pd
 from checking.check_values import check_na
-from retrieve.retrieve import retrieve_foreign_key
+from retrieve.retrieve import retrieve_primary_key
+
+def strip_white_space(df, column_name):
+    df.loc[:, column_name] = df[column_name].str.strip()
+
+def create_ids(df):
+    df.reset_index(inplace=True)
+    return df
+
+def convert_column_to_int(df, column_name):
+    df[column_name] = pd.to_numeric(df[column_name]).astype(int)
+    return df
+
+def drop_columns(df, column_names):
+    df = df.drop(columns=column_names)
+    return df
 
 def reorder_columns(df, column_names):
     return df.reindex(columns=column_names)
@@ -8,40 +23,51 @@ def reorder_columns(df, column_names):
 def rename_columns(df, columns_names):
     return df.rename(columns=columns_names)
 
-# def change_reference_name_to_id(df):
-#     if "Tournament" in df:
-#         df["Tournament"] = df["Tournament"].apply(lambda tournament: retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament))
-#     if "Stage" in df:
-#         df["Stage"] = df["Stage"].apply(lambda stage: retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage))
-#     if "Match Type" in df:
-#         df["Match Type"] = df["Match_type"].apply(lambda match_type: retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type))
-#     if "Match Name" in df:
-#         df["Match Name"] = df["Match name"].apply(lambda match_name: retrieve_foreign_key(curr, "match name_id", "match names", "match name_name", match_name))
-#     if "Map" in df:
-#         df["Map"] = df["Map"].apply(lambda map: retrieve_foreign_key(curr, "map_id", "maps", "map_name", map))
-#     if "Team" in df:
-#         df["Team"] = df["Team"].apply(lambda col: check_na(col["Team"], "string"), axis = 1)
-#         df["Team"] = df["Team"].apply(lambda team: retrieve_foreign_key(curr, "team_id", "teams", "team_name", team))
-#     if "Player" in df:
-#         df["Player"] = df["Player"].apply(lambda col: check_na(col["Player"], "string"), axis = 1)
-#         #use retreive foreign key
-#     if "Enemy" in df:
-#         df["Enemy"] = df["Enemy"].apply(lambda col: check_na(col["Enemy"], "string"), axis = 1)
-#         #use retrieve foreign key
-#     if "Enemy Team" in df:
-#         df["Enemy Team"] = df["Enemy Team"].apply(lambda col: check_na(col["Enemy Team"], "string"), axis = 1)
-#     if "Eliminator Team" in df:
-#         df["Eliminator Team"] = df["Eliminator Team"].apply(lambda col: check_na(col["Eliminator Team"], "string"), axis = 1)
-#     if "Eliminator" in df:
-#         df["Eliminator"] = df["Eliminator"].apply(lambda col: check_na(col["Eliminator"], "string"), axis = 1)
-#     if "Eliminated Team" in df:
-#         df["Eliminated Team"] = df["Eliminated Team"].apply(lambda col: check_na(col["Eliminated Team"], "string"), axis = 1)
-#     if "Eliminated" in df:
-#         df["Eliminated"] = df["Eliminated"].apply(lambda col: check_na(col["Eliminated"], "string"), axis = 1)
-#     if "Agents" in df:
-#         df["Agents"].apply(lambda agents:)
-#     if "Agent" in df:
-#         df["Agent"].apply(lambda agents:)
+def csv_to_df(file):
+    return pd.read_csv(file)
+
+def change_reference_name_to_id(df, year, curr):
+    if "Tournament" in df:
+        df["Tournament ID"] = df["Tournament"].apply(lambda tournament: retrieve_primary_key(curr, "tournament_id", "tournaments", "tournament", tournament, year))
+    if "Stage" in df:
+        tuples = list(zip(df["Tournament ID"], df["Stage"]))
+        df["Stage ID"] = [retrieve_primary_key(curr, "stage_id", "stages", "stage", stage, year, tournament_id) 
+                          for tournament_id, stage in tuples]
+        # df["Stage ID"] = retrieve_primary_key(curr, "stage_id", "stages", "stage", df["Stage"], df["Tournament ID"])
+    if "Match Type" in df:
+        tuples = list(zip(df["Tournament ID"], df["Stage ID"], df["Match Type"]))
+        df["Match Type ID"] = [retrieve_primary_key(curr, "match_type_id", "match_types", "match_type", match_type, year, tournament_id, stage_id) 
+                               for tournament_id, stage_id, match_type in tuples]
+    if "Match Name" in df:
+        tuples = list(zip(df["Tournament ID"], df["Stage ID"], df["Match Type ID"], df["Match Name"]))
+        df["Match ID"] = [retrieve_primary_key(curr, "match_id", "matches", "match", match_name, year, tournament_id, stage_id, match_type_id)
+                            for tournament_id, stage_id, match_type_id, match_name in tuples]
+    if "Team" in df:
+        # df["Team"] = df["Team"].apply(lambda team: check_na(team, "string"))
+        df["Team ID"] = df["Team"].apply(lambda team: retrieve_primary_key(curr, "team_id", "teams", "team", team))
+    # if "Player" in df:
+    #     df["Player"] = df["Player"].apply(lambda player: player, "string")
+    #     df["Player"] = df["Player"].apply(lambda player: retrieve_foreign_key(curr, "player_id", "players", "player", player))
+    # if "Enemy" in df:
+    #     df["Enemy"] = df["Enemy"].apply(lambda col: check_na(col["Enemy"], "string"), axis = 1)
+    #     df["Enemy"] = df["Enemy"].apply(lambda player: retrieve_foreign_key(curr, "player_id", "players", "player", player))
+    # if "Enemy Team" in df:
+    #     df["Enemy Team"] = df["Enemy Team"].apply(lambda col: check_na(col["Enemy Team"], "string"))
+    #     df["Enemy Team"] = df["Enemy Team"].apply(lambda team: retrieve_foreign_key(curr, "team_id", "teams", "team", team))
+    # if "Eliminator Team" in df:
+    #     df["Eliminator Team"] = df["Eliminator Team"].apply(lambda col: check_na(col["Eliminator Team"], "string"))
+    #     df["Eliminator Team"] = df["Eliminator Team"].apply(lambda team: retrieve_foreign_key(curr, "team_id", "teams", "team", team))
+    # if "Eliminator" in df:
+    #     df["Eliminator"] = df["Eliminator"].apply(lambda col: check_na(col["Eliminator"], "string"), axis = 1)
+    #     df["Eliminator"] = df["Eliminator"].apply(lambda player: retrieve_foreign_key(curr, "player_id", "players", "player", player))
+    # if "Eliminated Team" in df:
+    #     df["Eliminated Team"] = df["Eliminated Team"].apply(lambda col: check_na(col["Eliminated Team"], "string"))
+    #     df["Eliminated Team"] = df["Eliminated Team"].apply(lambda team: retrieve_foreign_key(curr, "team_id", "teams", "team", team))
+    # if "Eliminated" in df:
+    #     df["Eliminated"] = df["Eliminated"].apply(lambda col: check_na(col["Eliminated"], "string"), axis = 1)
+    #     df["Eliminated"] = df["Eliminated"].apply(lambda player: retrieve_foreign_key(curr, "player_id", "players", "player", player))
+    return df
+        
 
 
 # def process_eco_stats_df(df):

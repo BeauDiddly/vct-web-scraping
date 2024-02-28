@@ -5,7 +5,7 @@ from checking.check_values import check_na
 import asyncio
 import time
 from datetime import datetime
-from process_df.process_df import rename_columns, reorder_columns, change_reference_name_to_id, csv_to_df, create_ids, convert_column_to_int, strip_white_space
+from process_df.process_df import *
 
 
 
@@ -66,6 +66,7 @@ def add_games(df, engine):
 def add_teams(df, engine):
    teams_df = df[["Team", "Team ID"]]
    teams_df = teams_df.drop_duplicates()
+   teams_df["Team ID"] = teams_df["Team ID"].fillna(0000)
    teams_df = reorder_columns(teams_df, {"Team ID", "Team"})
    teams_df = rename_columns(teams_df, {"Team ID": "team_id", "Team": "team"})
    teams_df.to_sql("teams", engine, index=False, if_exists="append")
@@ -98,18 +99,15 @@ def add_drafts(file, year, curr, engine):
    strip_white_space(drafts_df, "Match Type")
    strip_white_space(drafts_df, "Match Name")
    drafts_df = change_reference_name_to_id(drafts_df, year, curr)
-   print(drafts_df.sample(n=20))
+   drafts_df = convert_column_to_int(drafts_df, "Team ID")
    drafts_df["year"] = int(year)
-   # drafts_df = rename_columns(drafts_df, {"Tournament": "tournament_id", "Stage": "stage_id", "Match Type": "match_type_id", "Match Name": "match_id",
-   #                                        "Team": "team_id", "Action": "action", "Map": "map"})
-   # drafts_df = reorder_columns(drafts_df, ["tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "action", "map", "year"])
-   # print(drafts_df["match_type_id"].unique())
-   # drafts_df = convert_column_to_int(drafts_df, "match_type_id")
-   # drafts_df = convert_column_to_int(drafts_df, "match_id")
-   # drafts_df = convert_column_to_int(drafts_df, "team_id")
-   # drafts_df = create_ids(drafts_df, "drafts_id")
-   # print(drafts_df.dtypes)
-   # drafts_df.to_sql("drafts", engine, index=False, if_exists="append")
+   drafts_df = create_ids(drafts_df)
+   drafts_df = drop_columns(drafts_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team"])
+   drafts_df = rename_columns(drafts_df, {"index": "draft_id","Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id", "Match ID": "match_id",
+                                          "Team ID": "team_id", "Action": "action", "Map": "map"})
+   drafts_df = reorder_columns(drafts_df, ["draft_id", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "action", "map", "year"])
+   print(drafts_df.sample(n=20))
+   drafts_df.to_sql("drafts", engine, index=False, if_exists="append")
 
 async def add_eco_rounds(curr, row):
    # print(f"Adding eco rounds")
