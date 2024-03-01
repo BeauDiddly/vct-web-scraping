@@ -13,17 +13,19 @@ async def retrieve_primary_key(conn, primary_key, table, column_name, values, ye
     #     data = (tournament, year)
         # result = await conn.fetchval(query, column_value, year)
     #     return result if result else None
-    # if match_type_id and stage_id and tournament_id:
-    #     query = """
-    #             SELECT {} FROM {} WHERE {} = $1 AND tournament_id = $2 AND stage_id = $3 AND match_type_id = $4 AND year = $5;
-    #             """.format(primary_key, table, column_name)
-    #     data = (column_value, tournament_id, stage_id, match_type_id, year)
-    # if stage_id and tournament_id:
-    #     query = """
-    #             SELECT {} FROM {} WHERE {} = $1 AND tournament_id = $2 AND stage_id = $3 and year = $4;
-    #             """.format(primary_key, table, column_name)
-    #     data = (column_value, tournament_id, stage_id, year)
-    if table == "stages":
+    if table == "matches":
+        tournament_id, stage_id, match_type_id, match = values
+        query = """
+                SELECT {} FROM {} WHERE {} = $1 AND tournament_id = $2 AND stage_id = $3 AND match_type_id = $4 AND year = $5;
+                """.format(primary_key, table, column_name)
+        data = (match, tournament_id, stage_id, match_type_id, year)
+    elif table == "match_types":
+        tournament_id, stage_id, match_types = values
+        query = """
+                SELECT {} FROM {} WHERE {} = $1 AND tournament_id = $2 AND stage_id = $3 and year = $4;
+                """.format(primary_key, table, column_name)
+        data = (match_types, tournament_id, stage_id, year)
+    elif table == "stages":
         tournament_id, stage = values
         query = """
                 SELECT {} FROM {} WHERE {} = $1 AND tournament_id = $2 AND year = $3;
