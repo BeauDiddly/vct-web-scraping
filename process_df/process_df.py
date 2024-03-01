@@ -1,6 +1,10 @@
 import pandas as pd
 from checking.check_values import check_na
 from retrieve.retrieve import retrieve_primary_key
+from Connect.connect import create_pool, create_db_url
+import asyncpg
+import asyncio
+import numpy as np
 
 def strip_white_space(df, column_name):
     df.loc[:, column_name] = df[column_name].str.strip()
@@ -26,25 +30,56 @@ def rename_columns(df, columns_names):
 def csv_to_df(file):
     return pd.read_csv(file)
 
-def change_reference_name_to_id(df, year, curr):
-    if "Tournament" in df:
-        df["Tournament ID"] = df["Tournament"].apply(lambda tournament: retrieve_primary_key(curr, "tournament_id", "tournaments", "tournament", tournament, year))
-    if "Stage" in df:
-        tuples = list(zip(df["Tournament ID"], df["Stage"]))
-        df["Stage ID"] = [retrieve_primary_key(curr, "stage_id", "stages", "stage", stage, year, tournament_id) 
-                          for tournament_id, stage in tuples]
-        # df["Stage ID"] = retrieve_primary_key(curr, "stage_id", "stages", "stage", df["Stage"], df["Tournament ID"])
-    if "Match Type" in df:
-        tuples = list(zip(df["Tournament ID"], df["Stage ID"], df["Match Type"]))
-        df["Match Type ID"] = [retrieve_primary_key(curr, "match_type_id", "match_types", "match_type", match_type, year, tournament_id, stage_id) 
-                               for tournament_id, stage_id, match_type in tuples]
-    if "Match Name" in df:
-        tuples = list(zip(df["Tournament ID"], df["Stage ID"], df["Match Type ID"], df["Match Name"]))
-        df["Match ID"] = [retrieve_primary_key(curr, "match_id", "matches", "match", match_name, year, tournament_id, stage_id, match_type_id)
-                            for tournament_id, stage_id, match_type_id, match_name in tuples]
-    if "Team" in df:
-        # df["Team"] = df["Team"].apply(lambda team: check_na(team, "string"))
-        df["Team ID"] = df["Team"].apply(lambda team: retrieve_primary_key(curr, "team_id", "teams", "team", team))
+def create_tournament_conditions_values(df, ids):
+    conditions, values = [], []
+    for id in ids:
+        tournament, id = next(iter(id.items()), (None, None))
+        conditions.append(df["Tournament"] == tournament)
+        values.append(id)
+    return conditions, values
+
+
+
+
+async def change_reference_name_to_id(df, year, db_conn_info):
+    db_url = create_db_url()
+    # pool = await create_pool(**db_conn_info)
+    async with asyncpg.create_pool(db_url) as pool:
+        async with pool.acquire() as conn:
+            if "Tournament" in df:
+                tournaments = df["Tournament"].unique().tolist()
+                tournament_ids = [await retrieve_primary_key(pool, "tournament_id", "tournaments", "tournament", tournament, year) for tournament in tournaments]
+                conditions, values = create_tournament_conditions_values(df, tournament_ids)
+                df["Tournament ID"] = np.select(conditions, values, default=None)
+                # df["Tournament ID"] = df["Tournament"].map(lambda x: next((d.get(x) for d in tournament_ids if x in d), None))
+                # df["Tournament ID"] = [await retrieve_primary_key(conn, "tournament_id", "tournaments", "tournament", tournament, year) for tournament in df["Tournament"]]
+                
+        # df["Tournament ID"] = df["Tournament"].apply(lambda tournament: retrieve_primary_key(curr, "tournament_id", "tournaments", "tournament", tournament, year))
+            if "Stage" in df:
+                stages = df[["Tournament ID", "Stage"]].drop_duplicates()
+                tuples = [tuple(x) for x in stages.values]
+                # tuples = list(zip(df["Tournament ID"], df["Stage"]))
+                stage_ids = [await retrieve_primary_key(conn, "stage_id", "stages", "stage", (tournament_id, stage), year) 
+                                  for tournament_id, stage in tuples]
+                conditions = []
+                values = []
+                for dict in stage_ids:
+                    for key, value in dict.items():
+                        conditions.append((df["Tournament ID"] == key[0]) & (df["Stage"] == key[1]))
+                        values.append(value)
+                default_value = None
+                df["Stagea ID"] = np.select(conditions, values, default=default_value)
+                # df["Stage ID"] = df[["Tournament ID", "Stage"]].map(lambda x: next((d.get((x[0], x[1])) for d in stage_ids if (x[0], x[1]) in d), None))
+            # if "Match Type" in df:
+            #     tuples = list(zip(df["Tournament ID"], df["Stage ID"], df["Match Type"]))
+            #     df["Match Type ID"] = [await retrieve_primary_key(conn, "match_type_id", "match_types", "match_type", match_type, year, tournament_id, stage_id) 
+            #                         for tournament_id, stage_id, match_type in tuples]
+            # if "Match Name" in df:
+            #     tuples = list(zip(df["Tournament ID"], df["Stage ID"], df["Match Type ID"], df["Match Name"]))
+            #     df["Match ID"] = [await retrieve_primary_key(conn, "match_id", "matches", "match", match_name, year, tournament_id, stage_id, match_type_id)
+            #                      for tournament_id, stage_id, match_type_id, match_name in tuples]
+    # if "Team" in df:
+    #     df["Team ID"] = df["Team"].apply(lambda team: retrieve_primary_key(curr, "team_id", "teams", "team", team))
     # if "Player" in df:
     #     df["Player"] = df["Player"].apply(lambda player: player, "string")
     #     df["Player"] = df["Player"].apply(lambda player: retrieve_foreign_key(curr, "player_id", "players", "player", player))
@@ -67,7 +102,6 @@ def change_reference_name_to_id(df, year, curr):
     #     df["Eliminated"] = df["Eliminated"].apply(lambda col: check_na(col["Eliminated"], "string"), axis = 1)
     #     df["Eliminated"] = df["Eliminated"].apply(lambda player: retrieve_foreign_key(curr, "player_id", "players", "player", player))
     return df
-        
 
 
 # def process_eco_stats_df(df):

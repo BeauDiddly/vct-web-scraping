@@ -1,6 +1,7 @@
 import psycopg2
 from Connect.config import config
 from sqlalchemy import create_engine
+import asyncpg
 
 def connect():
     """ Connect to the PostgreSQL database server """
@@ -43,3 +44,14 @@ def engine():
     password = params["password"]
     engine = create_engine(f"postgresql://{user}:{password}@{host}:5432/{db}")
     return engine
+
+def create_db_url():
+    params = config()
+    host = params["host"]
+    db = params["database"]
+    user = params["user"]
+    password = params["password"]
+    return f"postgresql://{user}:{password}@{host}:5432/{db}"
+
+async def create_pool(db_conn_info):
+    return await asyncpg.create_pool(**db_conn_info)
