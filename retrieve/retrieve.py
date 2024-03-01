@@ -20,11 +20,11 @@ async def retrieve_primary_key(conn, primary_key, table, column_name, values, ye
                 """.format(primary_key, table, column_name)
         data = (match, tournament_id, stage_id, match_type_id, year)
     elif table == "match_types":
-        tournament_id, stage_id, match_types = values
+        tournament_id, stage_id, match_type = values
         query = """
                 SELECT {} FROM {} WHERE {} = $1 AND tournament_id = $2 AND stage_id = $3 and year = $4;
                 """.format(primary_key, table, column_name)
-        data = (match_types, tournament_id, stage_id, year)
+        data = (match_type, tournament_id, stage_id, year)
     elif table == "stages":
         tournament_id, stage = values
         query = """
@@ -38,12 +38,13 @@ async def retrieve_primary_key(conn, primary_key, table, column_name, values, ye
                     SELECT {} FROM {} WHERE {} = $1 AND year = $2;
                     """.format(primary_key, table, column_name)
             data = (tournament, year)
-        elif table == "teams":
-            team = values
+        elif table == "teams" or table == "players":
+            value = values
             query = """
                     SELECT {} FROM {} WHERE {} = $1;
                     """.format(primary_key, table, column_name)
-            data = (team)
+            data = (value, )
+        
     result = await conn.fetchval(query, *data)
     return {values: result} if result else None
     # if result:
