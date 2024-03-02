@@ -5,12 +5,17 @@ from Connect.connect import create_pool, create_db_url
 import asyncpg
 import asyncio
 import numpy as np
+import sys
 
 def strip_white_space(df, column_name):
     df.loc[:, column_name] = df[column_name].str.strip()
 
 def create_ids(df):
     df.reset_index(inplace=True)
+    return df
+
+def convert_missing_number_to_null(df, column_name):
+    df[column_name] = pd.to_numeric(df[column_name], errors="coerce").astype("Int32")
     return df
 
 def convert_column_to_int(df, column_name):
@@ -37,7 +42,13 @@ def create_tuples(df):
 def create_conditions_values_1d(df, ids, column):
     conditions, values = [], []
     for id in ids:
-        name, id = next(iter(id.items()), (None, None))
+        try:
+            name, id = next(iter(id.items()), (None, None))
+        except:
+            print(column)
+            print(ids)
+            print(id)
+            sys.exit()
         conditions.append(df[column] == name)
         values.append(id)
     return conditions, values
@@ -70,9 +81,8 @@ def create_matches_conditions_values(df, ids):
             values.append(value)
     return conditions, values
 
-async def change_reference_name_to_id(df, year, db_conn_info):
+async def change_reference_name_to_id(df, year):
     db_url = create_db_url()
-    # pool = await create_pool(**db_conn_info)
     async with asyncpg.create_pool(db_url) as pool:
         async with pool.acquire() as conn:
             if "Tournament" in df:

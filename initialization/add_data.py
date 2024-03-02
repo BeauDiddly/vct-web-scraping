@@ -52,21 +52,23 @@ def add_matches(df, engine):
                                              "Match Name": "match", "Year": "year"})
    matches_df.to_sql("matches", engine, index=False, if_exists="append")
 
-def add_games(df, engine):
-   games_df = df[["Tournament ID", "Stage ID", "Match Type ID", "Match ID", "Game ID", "Map", "Year"]]
-   games_df = games_df.drop_duplicates()
-   games_df = reorder_columns(games_df, ["Game ID", "Tournament ID", "Stage ID", "Match Type ID", "Match ID", "Map", "Year"])
-   games_df = rename_columns(games_df, {"Game ID": "game_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id",
-                                 "Match Type ID": "match_type_id", "Match ID": "match_id", 
-                                 "Map": "map", "Year": "year"})
-   games_df.to_sql("games", engine, index=False, if_exists="append")
+# def add_games(df, engine):
+#    games_df = df[["Tournament ID", "Stage ID", "Match Type ID", "Match ID", "Game ID", "Map", "Year"]]
+#    games_df = games_df.drop_duplicates()
+#    games_df = reorder_columns(games_df, ["Game ID", "Tournament ID", "Stage ID", "Match Type ID", "Match ID", "Map", "Year"])
+#    games_df = rename_columns(games_df, {"Game ID": "game_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id",
+#                                  "Match Type ID": "match_type_id", "Match ID": "match_id", 
+#                                  "Map": "map", "Year": "year"})
+#    games_df.to_sql("games", engine, index=False, if_exists="append")
 
 
 
 def add_teams(df, engine):
    teams_df = df[["Team", "Team ID"]]
    teams_df = teams_df.drop_duplicates()
+   strip_white_space(teams_df, "Team")
    teams_df["Team ID"] = teams_df["Team ID"].fillna(0000)
+   teams_df = convert_column_to_int(teams_df, "Team ID")
    teams_df = reorder_columns(teams_df, {"Team ID", "Team"})
    teams_df = rename_columns(teams_df, {"Team ID": "team_id", "Team": "team"})
    teams_df.to_sql("teams", engine, index=False, if_exists="append")
@@ -94,87 +96,54 @@ async def insert_data(curr, dataframe, insertion_function, table_name):
    print(f"Inserting data to {table_name} time: {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds")
    
 
-def add_drafts(file, year, curr, engine):
+async def add_drafts(file, year, curr, engine):
    drafts_df = csv_to_df(file)
    strip_white_space(drafts_df, "Match Type")
    strip_white_space(drafts_df, "Match Name")
-   drafts_df = change_reference_name_to_id(drafts_df, year, curr)
+   drafts_df = await change_reference_name_to_id(drafts_df, year, curr)
+   # print(drafts_df.sample(n=20))
    drafts_df = convert_column_to_int(drafts_df, "Team ID")
-   drafts_df["year"] = int(year)
+   # drafts_df["year"] = int(year)
    drafts_df = create_ids(drafts_df)
    drafts_df = drop_columns(drafts_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team"])
    drafts_df = rename_columns(drafts_df, {"index": "draft_id","Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id", "Match ID": "match_id",
                                           "Team ID": "team_id", "Action": "action", "Map": "map"})
    drafts_df = reorder_columns(drafts_df, ["draft_id", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "action", "map", "year"])
-   print(drafts_df.sample(n=20))
    drafts_df.to_sql("drafts", engine, index=False, if_exists="append")
 
-async def add_eco_rounds(curr, row):
-   # print(f"Adding eco rounds")
-   # eco_rounds = pd.read_csv("matches/eco_rounds.csv")
-   query = """
-      INSERT INTO eco_rounds (
-         tournament_id, stage_id, match_type_id, match_id, map_id,
-         round_number, team_id, credits, eco_type, outcome
-      ) VALUES (
-         %s, %s, %s, %s, %s,
-         %s, %s, %s, %s, %s
-      );
-   """
-   # for index, row in eco_rounds.iterrows():
-   tournament = row["Tournament"]
-   stage = row["Stage"]
-   match_type = row["Match Type"]
-   match_name = row["Match Name"]
-   map = row["Map"]
-   round_number = row["Round Number"]
-   team = row["Team"]
-   credits = row["Credits"]
-   eco_type = row["Type"]
-   outcome = row["Outcome"]
-   tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
-   stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
-   match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
-   match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
-   team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team)
-   map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
-   data = (tournament_id, stage_id, match_type_id, match_id, map_id, round_number, team_id, credits, eco_type, outcome)
-   execute_query(curr, query, data)
-   # print(f"Done adding eco rounds")
-   # await asyncio.sleep(0)
+async def add_eco_rounds(file, year, engine):
+   eco_rounds_df = csv_to_df(file)
+   strip_white_space(eco_rounds_df, "Match Type")
+   strip_white_space(eco_rounds_df, "Match Name")
+   eco_rounds_df = await change_reference_name_to_id(eco_rounds_df, year)
+   # eco_rounds_df["year"] = int(year)
+   eco_rounds_df = convert_column_to_int(eco_rounds_df, "Team ID")
+   eco_rounds_df = create_ids(eco_rounds_df)
+   eco_rounds_df = drop_columns(eco_rounds_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team"])
+   eco_rounds_df = rename_columns(eco_rounds_df, {"index": "eco_round_id","Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id", "Match ID": "match_id",
+                                          "Team ID": "team_id", "Map": "map", "Round Number": "round_number", "Loadout Value": "loadout_value",
+                                          "Remaining Credits": "credits", "Type": "eco_type", "Outcome": "outcome"})
+   eco_rounds_df = reorder_columns(eco_rounds_df, ["eco_round_id", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id",
+                                             "map", "round_number", "loadout_value", "credits", "eco_type", "outcome", "year"])
+   eco_rounds_df.to_sql("eco_rounds", engine, index=False, if_exists="append", chunksize = 10000)
       
-async def add_eco_stats(curr, row):
-   # print(f"Adding eco stats")
-   # eco_stats = pd.read_csv("matches/eco_stats.csv")
-   query = """
-      INSERT INTO eco_stats (
-         tournament_id, stage_id, match_type_id, match_id, map_id,
-         team_id, eco_type, initiated, won
-      ) VALUES (
-         %s, %s, %s, %s, %s,
-         %s, %s, %s, %s
-      );
-   """
-   # for index, row in eco_stats.iterrows():
-   tournament = row["Tournament"]
-   stage = row["Stage"]
-   match_type = row["Match Type"]
-   match_name = row["Match Name"]
-   map = row["Map"]
-   team = row["Team"]
-   eco_type = row["Type"]
-   initiated = check_na(row["Initiated"], "int")
-   won = row["Won"]
-   tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
-   stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
-   match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
-   match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
-   team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team)
-   map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
-   data = (tournament_id, stage_id, match_type_id, match_id, map_id, team_id, eco_type, initiated, won)
-   execute_query(curr, query, data)
-   # print(f"Done adding eco stats")
-   # await asyncio.sleep(0)
+async def add_eco_stats(file, year, engine):
+   eco_stats_df = csv_to_df(file)
+   strip_white_space(eco_stats_df, "Stage")
+   strip_white_space(eco_stats_df, "Match Type")
+   strip_white_space(eco_stats_df, "Match Name")
+   strip_white_space(eco_stats_df, "Team")
+   eco_stats_df = await change_reference_name_to_id(eco_stats_df, year)
+   eco_stats_df = convert_column_to_int(eco_stats_df, "Team ID")
+   eco_stats_df = convert_missing_number_to_null(eco_stats_df, "Initiated")
+   eco_stats_df = create_ids(eco_stats_df)
+   eco_stats_df = drop_columns(eco_stats_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team"])
+   eco_stats_df = rename_columns(eco_stats_df, {"index": "eco_stat_id","Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id", "Match ID": "match_id",
+                                          "Team ID": "team_id", "Map": "map", "Type": "type", "Initiated": "initiated", "Won": "won"})
+   eco_stats_df = reorder_columns(eco_stats_df, ["eco_stat_id", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "map", "type", "initiated", "won"])
+   print(eco_stats_df.sample(n=20))
+   # eco_stats_df.to_sql("eco_stats", engine, index=False, if_exists="append", chunksize = 10000)
+   
       
 
 async def add_kills(curr, row):

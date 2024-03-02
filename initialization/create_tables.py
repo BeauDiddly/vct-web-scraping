@@ -111,6 +111,7 @@ def create_eco_rounds_table(curr):
          team_id INT REFERENCES teams(team_id),
          map VARCHAR(255),
          round_number INT,
+         loadout_value VARCHAR(255)
          credits VARCHAR(255),
          eco_type VARCHAR(255),
          outcome VARCHAR(255),
@@ -128,8 +129,8 @@ def create_eco_stats_table(curr):
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
-         map_id INT REFERENCES maps(map_id),
          team_id INT REFERENCES teams(team_id),
+         map VARCHAR(255),
          eco_type VARCHAR(255),
          initiated INT NULL,
          won INT,

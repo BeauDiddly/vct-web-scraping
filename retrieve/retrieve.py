@@ -46,7 +46,12 @@ async def retrieve_primary_key(conn, primary_key, table, column_name, values, ye
             data = (value, )
         
     result = await conn.fetchval(query, *data)
-    return {values: result} if result else None
+    if result:
+        return {values: result} 
+    else:
+        print(table)
+        print(data)
+        return None
     # if result:
     #     return result[0]
     # else:
