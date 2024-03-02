@@ -510,45 +510,45 @@ def extract_economy_stats(eco_stats, eco_rounds_stats, games_id, team_mapping, r
                     stat_name = economy_stats_title[index % len(economy_stats_title)]
                     results["eco_stats"].append([tournament_name, stage_name, match_type_name, match_name,
                                                     map, team, stat_name, initiated, won])
-        # for id, td_list in eco_rounds_stats.items():
-        #     try:
-        #         map = games_id[id]
-        #     except KeyError: #match is BO1
-        #         continue
-        #     for index, td in enumerate(td_list):
-        #         teams = td.find_all("div", class_="team")
-        #         if teams:
-        #             try:
-        #                 team_1 = team_mapping[teams[0]]
-        #             except KeyError: #They did not use the abbrievated team name
-        #                 team_1 = team_a
-        #             try:
-        #                 team_2 = team_mapping[teams[1]]
-        #             except KeyError: #They did not use the abbrievated team name
-        #                 team_2 = team_b
+        for id, td_list in eco_rounds_stats.items():
+            try:
+                map = games_id[id]
+            except KeyError: #match is BO1
+                continue
+            for index, td in enumerate(td_list):
+                teams = td.find_all("div", class_="team")
+                if teams:
+                    try:
+                        team_1 = team_mapping[teams[0]]
+                    except KeyError: #They did not use the abbrievated team name
+                        team_1 = team_a
+                    try:
+                        team_2 = team_mapping[teams[1]]
+                    except KeyError: #They did not use the abbrievated team name
+                        team_2 = team_b
 
-        #         else:
-        #             stats = td.find_all("div")
-        #             commented_divs = td.find_all(string=lambda text: isinstance(text, Comment) and '<div>' in text and '</div>' in text)
-        #             divs_contents = [div.extract() for comment in commented_divs for div in BeautifulSoup(comment, 'html.parser').find_all('div')]
-        #             loadout_values = [value.text.strip() for value in divs_contents]
-        #             round = stats[0].text.strip()
-        #             team_a_loadout_value = loadout_values[0]
-        #             team_a_remaining_credits = stats[1].text.strip()
-        #             team_b_loadout_value = loadout_values[1]
-        #             team_b_remaining_credits = stats[4].text.strip()
-        #             team_a_eco_type = eco_types[stats[2].text.strip()]
-        #             team_b_eco_type = eco_types[stats[3].text.strip()]
-        #             if "mod-win" in stats[2]["class"]:
-        #                 team_a_outcome = "Win"
-        #                 team_b_outcome = "Loss"
-        #             else:
-        #                 team_a_outcome = "Loss"
-        #                 team_b_outcome = "Win"
-        #             results["eco_rounds"].append([tournament_name, stage_name, match_type_name, match_name, map,
-        #                                         round, team_1, team_a_loadout_value, team_a_remaining_credits, team_a_eco_type, team_a_outcome])
-        #             results["eco_rounds"].append([tournament_name, stage_name, match_type_name, match_name, map,
-        #                                         round, team_2, team_b_loadout_value, team_b_remaining_credits, team_b_eco_type, team_b_outcome])
+                else:
+                    stats = td.find_all("div")
+                    commented_divs = td.find_all(string=lambda text: isinstance(text, Comment) and '<div>' in text and '</div>' in text)
+                    divs_contents = [div.extract() for comment in commented_divs for div in BeautifulSoup(comment, 'html.parser').find_all('div')]
+                    loadout_values = [value.text.strip() for value in divs_contents]
+                    round = stats[0].text.strip()
+                    team_a_loadout_value = loadout_values[0]
+                    team_a_remaining_credits = stats[1].text.strip()
+                    team_b_loadout_value = loadout_values[1]
+                    team_b_remaining_credits = stats[4].text.strip()
+                    team_a_eco_type = eco_types[stats[2].text.strip()]
+                    team_b_eco_type = eco_types[stats[3].text.strip()]
+                    if "mod-win" in stats[2]["class"]:
+                        team_a_outcome = "Win"
+                        team_b_outcome = "Loss"
+                    else:
+                        team_a_outcome = "Loss"
+                        team_b_outcome = "Win"
+                    results["eco_rounds"].append([tournament_name, stage_name, match_type_name, match_name, map,
+                                                round, team_1, team_a_loadout_value, team_a_remaining_credits, team_a_eco_type, team_a_outcome])
+                    results["eco_rounds"].append([tournament_name, stage_name, match_type_name, match_name, map,
+                                                round, team_2, team_b_loadout_value, team_b_remaining_credits, team_b_eco_type, team_b_outcome])
                 
                 
     else:
