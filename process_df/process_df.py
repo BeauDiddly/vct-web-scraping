@@ -14,9 +14,12 @@ def create_ids(df):
     df.reset_index(inplace=True)
     return df
 
-def convert_missing_number_to_null(df, column_name):
+def convert_missing_number(df, column_name):
     df[column_name] = pd.to_numeric(df[column_name], errors="coerce").astype("Int32")
     return df
+
+def convert_missing_names(df, column_name):
+    return 
 
 def convert_column_to_int(df, column_name):
     df[column_name] = pd.to_numeric(df[column_name]).astype(int)
@@ -81,53 +84,110 @@ def create_matches_conditions_values(df, ids):
             values.append(value)
     return conditions, values
 
-async def change_reference_name_to_id(df, year):
-    db_url = create_db_url()
-    async with asyncpg.create_pool(db_url) as pool:
-        async with pool.acquire() as conn:
-            if "Tournament" in df:
-                tournaments = df["Tournament"].unique().tolist()
-                tournament_ids = [await retrieve_primary_key(pool, "tournament_id", "tournaments", "tournament", tournament, year) for tournament in tournaments]
-                conditions, values = create_conditions_values_1d(df, tournament_ids, "Tournament")
-                df["Tournament ID"] = np.select(conditions, values, default=None)
- 
+async def process_column(conn, df, column, id_name, table_name, value_name):
+    values = df[column].unique().tolist()
+    ids = [await retrieve_primary_key(conn, id_name, table_name, value_name, value) for value in values]
+    conditions, result_values = create_conditions_values_1d(df, ids, column)
+    df[f"{column} ID"] = np.select(conditions, result_values, default=None)
+
+async def process_tournaments_stages_match_types_matches(pool, df, year):
+    async with pool.acquire() as conn:
+        if "Tournament" in df:
+            tournaments = df["Tournament"].unique().tolist()
+            tournament_ids = [await retrieve_primary_key(pool, "tournament_id", "tournaments", "tournament", tournament, year) for tournament in tournaments]
+            conditions, values = create_conditions_values_1d(df, tournament_ids, "Tournament")
+            df["Tournament ID"] = np.select(conditions, values, default=None)
+
             if "Stage" in df:
                 stages = df[["Tournament ID", "Stage"]].drop_duplicates()
                 tuples = create_tuples(stages)
                 stage_ids = [await retrieve_primary_key(conn, "stage_id", "stages", "stage", (tournament_id, stage), year) 
-                                  for tournament_id, stage in tuples]
+                            for tournament_id, stage in tuples]
                 conditions, values = create_stages_conditions_values(df, stage_ids)
                 df["Stage ID"] = np.select(conditions, values, default=None)
-            if "Match Type" in df:
-                match_types = df[["Tournament ID", "Stage ID", "Match Type"]].drop_duplicates()
-                tuples = create_tuples(match_types)
-                match_types_ids = [await retrieve_primary_key(conn, "match_type_id", "match_types", "match_type", (tournament_id, stage_id, match_type), year) 
-                                    for tournament_id, stage_id, match_type in tuples]
-                conditions, values = create_match_types_conditions_values(df, match_types_ids)
-                df["Match Type ID"] = np.select(conditions, values, default=None)
-            if "Match Name" in df:
-                matches = df[["Tournament ID", "Stage ID", "Match Type ID", "Match Name"]].drop_duplicates()
-                tuples = create_tuples(matches)
-                matches_id = [await retrieve_primary_key(conn, "match_id", "matches", "match", (tournament_id, stage_id, match_type_id, match_name), year)
-                                 for tournament_id, stage_id, match_type_id, match_name in tuples]
-                conditions, values = create_matches_conditions_values(df, matches_id)
-                df["Match ID"] = np.select(conditions, values, default=None) 
-            if "Team" in df or "Enemy Team" in df or "Eliminator Team" in df or "Eliminated Team" in df:
-                for column in ["Team", "Enemy Team", "Eliminator Team", "Eliminated Team"]:
-                    if column in df:
-                        teams = df[column].unique().tolist()
-                        team_ids = [await retrieve_primary_key(pool, "team_id", "teams", "team", team)
-                                    for team in teams]
-                        conditions, values = create_conditions_values_1d(df, team_ids, column)
-                        df[f"{column} ID"] = np.select(conditions, values, default=None)
-            if "Player" in df or "Enemy" in df or "Eliminator" in df or "Eliminated" in df:
-                for column in ["Player", "Enemy", "Eliminator", "Eliminated"]:
-                    if column in df:
-                        players = df[column].unique().tolist()
-                        player_ids = [await retrieve_primary_key(pool, "player_id", "players", "player", player)
-                                      for player in players]
-                        conditions, values = create_conditions_values_1d(df, player_ids, column)
-                        df[f"{column} ID"] = np.select(conditions, values, default=None)
+                if "Match Type" in df:
+                    match_types = df[["Tournament ID", "Stage ID", "Match Type"]].drop_duplicates()
+                    tuples = create_tuples(match_types)
+                    match_types_ids = [await retrieve_primary_key(conn, "match_type_id", "match_types", "match_type", (tournament_id, stage_id, match_type), year) 
+                                        for tournament_id, stage_id, match_type in tuples]
+                    conditions, values = create_match_types_conditions_values(df, match_types_ids)
+                    df["Match Type ID"] = np.select(conditions, values, default=None)
+
+                if "Match Name" in df:
+                    matches = df[["Tournament ID", "Stage ID", "Match Type ID", "Match Name"]].drop_duplicates()
+                    tuples = create_tuples(matches)
+                    matches_id = [await retrieve_primary_key(conn, "match_id", "matches", "match", (tournament_id, stage_id, match_type_id, match_name), year)
+                                    for tournament_id, stage_id, match_type_id, match_name in tuples]
+                    conditions, values = create_matches_conditions_values(df, matches_id)
+                    df["Match ID"] = np.select(conditions, values, default=None) 
+
+
+async def process_teams(pool, df):
+    async with pool.acquire() as conn:
+        team_columns = ["Team", "Player Team", "Enemy Team", "Eliminator Team", "Eliminated Team"]
+        tasks = [process_column(conn, df, column, "team_id", "teams", "team") for column in team_columns if column in df]
+        await asyncio.gather(*tasks)
+
+async def process_players(pool, df):
+    async with pool.acquire() as conn:
+        team_columns = ["Team", "Player Team", "Enemy Team", "Eliminator Team", "Eliminated Team"]
+        tasks = [process_column(conn, df, column, "team_id", "teams", "team") for column in team_columns if column in df]
+        await asyncio.gather(*tasks)
+
+
+async def change_reference_name_to_id(df, year):
+    db_url = create_db_url()
+    async with asyncpg.create_pool(db_url) as pool:
+        await asyncio.gather(
+            process_tournaments_stages_match_types_matches(pool, df, year),
+            process_players(pool, df),
+            process_teams(pool, df)
+        )
+    
+        # async with pool.acquire() as conn:
+        #     if "Tournament" in df:
+        #         tournaments = df["Tournament"].unique().tolist()
+        #         tournament_ids = [await retrieve_primary_key(pool, "tournament_id", "tournaments", "tournament", tournament, year) for tournament in tournaments]
+        #         conditions, values = create_conditions_values_1d(df, tournament_ids, "Tournament")
+        #         df["Tournament ID"] = np.select(conditions, values, default=None)
+ 
+        #     if "Stage" in df:
+        #         stages = df[["Tournament ID", "Stage"]].drop_duplicates()
+        #         tuples = create_tuples(stages)
+        #         stage_ids = [await retrieve_primary_key(conn, "stage_id", "stages", "stage", (tournament_id, stage), year) 
+        #                           for tournament_id, stage in tuples]
+        #         conditions, values = create_stages_conditions_values(df, stage_ids)
+        #         df["Stage ID"] = np.select(conditions, values, default=None)
+        #     if "Match Type" in df:
+        #         match_types = df[["Tournament ID", "Stage ID", "Match Type"]].drop_duplicates()
+        #         tuples = create_tuples(match_types)
+        #         match_types_ids = [await retrieve_primary_key(conn, "match_type_id", "match_types", "match_type", (tournament_id, stage_id, match_type), year) 
+        #                             for tournament_id, stage_id, match_type in tuples]
+        #         conditions, values = create_match_types_conditions_values(df, match_types_ids)
+        #         df["Match Type ID"] = np.select(conditions, values, default=None)
+        #     if "Match Name" in df:
+        #         matches = df[["Tournament ID", "Stage ID", "Match Type ID", "Match Name"]].drop_duplicates()
+        #         tuples = create_tuples(matches)
+        #         matches_id = [await retrieve_primary_key(conn, "match_id", "matches", "match", (tournament_id, stage_id, match_type_id, match_name), year)
+        #                          for tournament_id, stage_id, match_type_id, match_name in tuples]
+        #         conditions, values = create_matches_conditions_values(df, matches_id)
+        #         df["Match ID"] = np.select(conditions, values, default=None) 
+            # if "Team" in df or "Player Team" in df or "Enemy Team" in df or "Eliminator Team" in df or "Eliminated Team" in df:
+            #     for column in ["Team", "Player Team", "Enemy Team", "Eliminator Team", "Eliminated Team"]:
+            #         if column in df:
+            #             teams = df[column].unique().tolist()
+            #             team_ids = [await retrieve_primary_key(pool, "team_id", "teams", "team", team)
+            #                         for team in teams]
+            #             conditions, values = create_conditions_values_1d(df, team_ids, column)
+            #             df[f"{column} ID"] = np.select(conditions, values, default=None)
+            # if "Player" in df or "Enemy" in df or "Eliminator" in df or "Eliminated" in df:
+            #     for column in ["Player", "Enemy", "Eliminator", "Eliminated"]:
+            #         if column in df:
+            #             players = df[column].unique().tolist()
+            #             player_ids = [await retrieve_primary_key(pool, "player_id", "players", "player", player)
+            #                           for player in players]
+            #             conditions, values = create_conditions_values_1d(df, player_ids, column)
+            #             df[f"{column} ID"] = np.select(conditions, values, default=None)
     return df
 
 
@@ -224,3 +284,43 @@ async def change_reference_name_to_id(df, year):
 #         elif file_name == "players_stats.csv":
 #             process_players_stats_df(df)
 #     return files_df
+
+# ('ZMM.B',)
+# teams
+# ('ASTRO',)
+# teams
+# ('FTZ.R',)
+# teams
+# ('KRAKEN',) x
+# teams
+# ('STY',)
+# teams
+# ('SR.GC',)
+# teams
+# ('ZMM.S',)
+# teams
+# ('Azules',)
+# teams
+# ('Arrow',)
+# teams
+# ('SPX',)
+# teams
+# ('TAIYO',)
+# teams
+# ('ex-WC',)
+# teams
+# ('MXBSS',)
+# teams
+# ('VCTRY',)
+# teams
+# ('kom4ka',)
+# teams
+# ('ODIUM',)
+# teams
+# ('Vexed',)
+# teams
+# ('Fre',)
+# teams
+# ('GLD.GC',)
+# teams
+# ('MANGAL',)
