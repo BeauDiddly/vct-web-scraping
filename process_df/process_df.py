@@ -18,8 +18,8 @@ def convert_missing_number(df, column_name):
     df[column_name] = pd.to_numeric(df[column_name], errors="coerce").astype("Int32")
     return df
 
-def convert_missing_names(df, column_name):
-    return 
+# def convert_missing_duration(df, column_name):
+#     mask = df[column_name].notna
 
 def convert_column_to_int(df, column_name):
     df[column_name] = pd.to_numeric(df[column_name]).astype(int)
