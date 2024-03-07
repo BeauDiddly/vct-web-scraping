@@ -85,6 +85,10 @@ def extract_maps_headers(maps_headers, results, list):
         rt_score = right_team_header.find("div", class_="score").text.strip()
         rt_rounds_scores = right_team_header.find_all("span")
         map = map_info[0]
+        if map == "TBD":
+            map = pd.NA
+        # print(map_info)
+        # print(tournament_name, stage_name, match_type_name, match_name)
 
         lt_attacker_score, lt_defender_score = lt_rounds_scores[0].text.strip(), lt_rounds_scores[1].text.strip()
         rt_attacker_score, rt_defender_score = rt_rounds_scores[1].text.strip(), rt_rounds_scores[0].text.strip()
@@ -97,7 +101,9 @@ def extract_maps_headers(maps_headers, results, list):
         except IndexError:
             rt_overtime_score = pd.NA
         try:
-            duration = map_info[2]
+            duration = map_info[-1]
+            if duration == "-" or duration == map:
+                duration = pd.NA
         except IndexError:
             duration = pd.NA                
 
@@ -240,6 +246,9 @@ def extract_overview_stats(overview_stats, games_id, team_mapping, results, list
                                 else:
                                     team = min(team_mapping.values(), key=lambda x: Levenshtein.distance(team, x))
                         results["players_ids"][player] = player_id
+                        # print(tournament_name, stage_name, match_type_name, match_type_name, match_name)
+                        # print(player, id)
+                        # print(results["players_ids"])
                         player_to_team[player] = team
                         team_dict = map_dict.setdefault(team, {})
                         player_dict = team_dict.setdefault(player, {})
@@ -341,7 +350,6 @@ def extract_kills_stats(performance_stats_div, games_id, team_mapping, player_to
                 else:
                     continue
             
-
             for id, tds_lists in players_to_players_kills.items():
                 try:
                     map = games_id[id]
@@ -355,13 +363,7 @@ def extract_kills_stats(performance_stats_div, games_id, team_mapping, player_to
                             try:
                                 team = team_mapping[team]
                             except KeyError: #The team name can't be map because it is empty or they did not use the abbrievated name
-                                if not team:
-                                    if cjk_pattern.search(team_a):
-                                        team = team_a
-                                    elif cjk_pattern.search(team_b):
-                                        team = team_b
-                                else:
-                                    team = min(team_mapping.values(), key=lambda x: Levenshtein.distance(team, x))
+                                team = team_a
                             try:
                                 player = result.pop()
                             except IndexError: #The player name is missing

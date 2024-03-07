@@ -16,7 +16,7 @@ def main():
     teams_mapping_dfs = {}
 
     for year in years:
-        agents_df = pd.read_csv(f"vct_{year}/all_values/all_agents.csv")
+        # agents_df = pd.read_csv(f"vct_{year}/all_values/all_agents.csv")
 
         players_df = pd.read_csv(f"vct_{year}/ids/players_ids.csv")
 
@@ -29,7 +29,7 @@ def main():
         tournaments_stages_matches_games_ids_df = pd.read_csv(f"vct_{year}/ids/tournaments_stages_matches_games_ids.csv")
         tournaments_stages_match_types_ids_df = pd.read_csv(f"vct_{year}/ids/tournaments_stages_match_types_ids.csv")
 
-        all_agents = set(agents_df['Agents'])
+        # all_agents = set(agents_df['Agents'])
 
         teams_df["Team ID"] = teams_df["Team ID"].apply(lambda id: int(id) if not math.isnan(id) else pd.NA)
         players_dfs[year] = players_df
@@ -56,7 +56,7 @@ def main():
         tournaments_stages_match_types_ids_dfs[year] = tournaments_stages_match_types_ids_df
 
         
-        agents = agents | all_agents
+        # agents = agents | all_agents
 
     for year in years:
         matches_ids = pd.concat([matches_ids, matches_ids_dfs[year]], ignore_index=True)
@@ -67,7 +67,7 @@ def main():
         teams = pd.concat([teams, teams_dfs[year]], ignore_index=True)
         teams_mapping = pd.concat([teams_mapping, teams_mapping_dfs[year]], ignore_index=True)
 
-    agents = pd.DataFrame({'Agents': list(agents)})
+    # agents = pd.DataFrame({'Agents': list(agents)})
     
     players.drop_duplicates(inplace=True)
     teams.drop_duplicates(inplace=True)
@@ -85,12 +85,12 @@ def main():
 
     tournaments_stages_match_types_ids.loc[mask, ["Stage ID", "Match Type ID"]] = pd.NA
 
-    tournaments_stages_match_types_ids["Stage ID"] = pd.to_numeric(tournaments_stages_match_types_ids["Stage ID"])
-    tournaments_stages_match_types_ids["Match Type ID"] = pd.to_numeric(tournaments_stages_match_types_ids["Match Type ID"])
+    tournaments_stages_match_types_ids["Stage ID"] = pd.to_numeric(tournaments_stages_match_types_ids["Stage ID"], errors="coerce")
+    tournaments_stages_match_types_ids["Match Type ID"] = pd.to_numeric(tournaments_stages_match_types_ids["Match Type ID"], errors="coerce")
 
     players.to_csv(f"all_vct/all_players_ids.csv", index=False)
     teams.to_csv(f"all_vct/all_teams_ids.csv", index=False)
-    agents.to_csv(f"all_vct/all_agents.csv", index=False)
+    # agents.to_csv(f"all_vct/all_agents.csv", index=False)
     matches_ids.to_csv(f"all_vct/all_matches_games_ids.csv", index = False)
     tournaments_stages_match_types_ids.to_csv("all_vct/all_tournaments_stages_match_types_ids.csv", index = False)
     teams_mapping.to_csv("all_vct/all_teams_mapping.csv", index=False)
