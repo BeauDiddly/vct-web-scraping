@@ -74,6 +74,11 @@ async def main():
                    "players_ids": {},
                    "tournaments_stages_matches_games_ids": []}
      
+    # test = {"Champions Tour CIS Stage 3: Challengers 2": matches_cards["Champions Tour CIS Stage 3: Challengers 2"]}
+
+    # async with aiohttp.ClientSession() as session:
+    #     tasks = [scraping_matches_data(tournament_name, cards, tournaments_ids, stages_ids, matches_semaphore, session) for tournament_name, cards in test.items()]
+    #     results = await asyncio.gather(*tasks)
 
     async with aiohttp.ClientSession() as session:
         tasks = [scraping_matches_data(tournament_name, cards, tournaments_ids, stages_ids, matches_semaphore, session) for tournament_name, cards in matches_cards.items()]
@@ -84,6 +89,8 @@ async def main():
     for result in results:
         for dictionary in result:
             for name, data in dictionary.items():
+                # if name == "maps_scores":
+                #     all_results[name].extend(data)
                 if name == "team_mapping" or name == "teams_ids" or name == "players_ids":
                     all_results[name].update(data)
                 else:

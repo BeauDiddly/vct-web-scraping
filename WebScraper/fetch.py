@@ -120,12 +120,12 @@ async def scraping_card_data(tournament_name, card, tournaments_ids, stages_ids,
             teams = card.find("div", class_="match-item-vs").find_all(recursive=False)
 
 
-            team_a = teams[0].find("div").text.strip("\n").strip("\t")
+            team_a = teams[0].find("div").text.strip("\n").strip("\t").strip()
 
             if not team_a:
                 team_a = "TBD"
 
-            team_b = teams[1].find("div").text.strip("\n").strip("\t")
+            team_b = teams[1].find("div").text.strip("\n").strip("\t").strip()
 
             if not team_b:
                 team_b = "TBD"
@@ -193,7 +193,8 @@ async def scraping_card_data(tournament_name, card, tournaments_ids, stages_ids,
                 team_b_id = team_b_id.split("/")[2]
             else:
                 team_b_id = pd.NA
-
+            # print(team_a, team_a_id)
+            # print(team_b, team_b_id)
             results["teams_ids"][team_a] = team_a_id
             results["teams_ids"][team_b] = team_b_id
 
@@ -206,20 +207,16 @@ async def scraping_card_data(tournament_name, card, tournaments_ids, stages_ids,
                 except AttributeError: #abbrievated name for team a was not found which means the players name will be missing
                     print(f"Couldn't find the abbrievated name for {team_a}")
                     print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}")
-                    return {}
-
-                if not team_a_abbriev:
                     team_a_abbriev = team_a
+
                 
                 try:
                     team_b_abbriev = overview_tables[1].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
                 except AttributeError: #abbrievated name for team b was not found which means the players name will be missing
                     print(f"Couldn't find the abbrievated name for {team_b}")
                     print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}")
-                    return {}
-
-                if not team_b_abbriev:
                     team_b_abbriev = team_b
+
 
                 if team_a_abbriev not in team_mapping:
                     team_mapping[team_a_abbriev] = team_a
@@ -236,7 +233,7 @@ async def scraping_card_data(tournament_name, card, tournaments_ids, stages_ids,
                     games_id[id] = map_name
                     results["maps_played"].append([tournament_name, stage_name, match_type_name, match_name, map_name])
                     results["tournaments_stages_matches_games_ids"].append([tournament_name, tournament_id, stage_name, stage_id, match_type_name, match_name, match_id, map_name, id])
-
+                # print(games_id)
                 maps_notes = match_soup.find_all("div", class_="match-header-note")
                 extract_maps_notes(maps_notes, results, team_mapping, [tournament_name, stage_name, match_type_name, match_name])
                 
