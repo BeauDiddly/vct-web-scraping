@@ -17,7 +17,8 @@ misnamed_teams = {"BLISS": "Team Bliss", "WaVii": "Team WaVii", "Arrow": "Team A
                     "Azules": "Azules Esports", "Reaper": "The Reaper", "SPACE": "Space Walkers", "SPX": "Storks Phalanx", "NTH": "SchwarzerLand",
                     "RIVAL": "Rival Esports Alpha", "TAIYO": "Taiyo eSports", "ex-WC": "ex-Wildcard Gaming", "MXBSS": "MXB South Side", "VCTRY": "VCTRY Esports",
                     "ODIUM": "Odium", "Cavalry": "Cavalry Esports", "Focus": "Team Focus", "Fre": " Frederikssund Vikings", "GLD.GC": "Guild GC", "MANGAL": "TEAM MANGAL",
-                    "ŞAK": "Komşu's", "db": "DownBad", "Sampi": "Team Sampi"
+                    "ŞAK": "Komşu's", "db": "DownBad", "Sampi": "Team Sampi", "tftt": "tftteam", "tftteam, tftt": "tftteam", "GB": "Gamrbreakers", "InTenZive": "InTenZiveEU",
+                    "Bandits": "Bandit ESC"
 }
 
 agent_to_player = {"brimstone": "Nappi", "sova": "maik", "skye": "johkubb", "raze": "Puoli", "cypher": "akumeni", "breach": "johkubb", "omen": "Nappi",
