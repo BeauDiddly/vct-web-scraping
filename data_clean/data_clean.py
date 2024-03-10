@@ -34,6 +34,21 @@ def remove_white_spaces(df):
             df[column] = df[column].apply(lambda x: x.strip() if isinstance(x, str) else x)
     return df
 
+def convert_to_str(df):
+    for column in ["Team", "Team A", "Team B",
+                  "Eliminator Team", "Eliminated Team", "Player",
+                  "Player Team", "Enemy Team", "Enemy",
+                  "Eliminator", "Eliminated"]:
+        if column in df:
+            df[column] = df[column].astype(str)
+    return df
+
+def convert_to_int(df):
+    for column in ["Player ID", "Team ID", "Tournament ID", "Stage ID", "Match Type ID", "Match ID", "Game ID"]:
+        if column in df:
+            df[column] = pd.to_numeric(df[column], errors="coerce").astype("Int32")
+    return df
+
 def remove_white_spaces_in_between(df):
     if "Match Name" in df:
         df["Match Name"] = df["Match Name"].str.split().apply(lambda x: " ".join(x))
