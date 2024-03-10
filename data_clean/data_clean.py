@@ -17,9 +17,14 @@ misnamed_teams = {"BLISS": "Team Bliss", "WaVii": "Team WaVii", "Arrow": "Team A
                     "Azules": "Azules Esports", "Reaper": "The Reaper", "SPACE": "Space Walkers", "SPX": "Storks Phalanx", "NTH": "SchwarzerLand",
                     "RIVAL": "Rival Esports Alpha", "TAIYO": "Taiyo eSports", "ex-WC": "ex-Wildcard Gaming", "MXBSS": "MXB South Side", "VCTRY": "VCTRY Esports",
                     "ODIUM": "Odium", "Cavalry": "Cavalry Esports", "Focus": "Team Focus", "Fre": " Frederikssund Vikings", "GLD.GC": "Guild GC", "MANGAL": "TEAM MANGAL",
-                    "ŞAK": "Komşu's", "db": "DownBad", "Sampi": "Team Sampi", "tftt": "tftteam", "tftteam, tftt": "tftteam", "GB": "Gamrbreakers", "InTenZive": "InTenZiveEU",
-                    "Bandits": "Bandit ESC"
+                    "ŞAK": "Komşu's", "db": "DownBad", "Sampi": "Team Sampi", "tftt": "tftteam", "tftteam, tftt": "tftteam", "GB": "Gamebreakers", "InTenZive": "InTenZiveEU",
+                    "Bandits": "Bandit ESC", "Dont": "Dont Wanna Try Hard", "OW": "Overwatch"
 }
+
+misnamed_players = {"luk": "lukzera", "Λero": "Aero", "Playboi Joe": "velis", "WeDid": "wedid", "karma": "karmax1", "yeji": "shen", "xvr": "xeric",
+                    "Oblivion": "icarus", "nickszxz": "nicksz", "m0rea": "budimeisteR", "mikalulba": "Mikael", "zhar": "Asteriskk", "justreggae": "reggae",
+                    "BoBo": "Ender", "1000010": "01000010", "derilasong": "Fuqua", "Arquiza": "rkz", "par scofield": "parscofield", "florance": "flqrance",
+                    "stev0r": "stev0rr", "unfaiR aK": "Unfair", "alulba": "aluba"}
 
 agent_to_player = {"brimstone": "Nappi", "sova": "maik", "skye": "johkubb", "raze": "Puoli", "cypher": "akumeni", "breach": "johkubb", "omen": "Nappi",
                    "killjoy": "akumeni", "jett": "Puoli"}
