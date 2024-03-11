@@ -19,6 +19,7 @@ def main():
             df = remove_tabs_and_newlines(df)
             df = convert_to_str(df)
             df = fixed_team_names(df)
+            df = fixed_player_names(df)
             df = insert_missing_players(df)
             matches_result[year][file_name] = df
     for year, dataframes in matches_result.items():
@@ -38,6 +39,7 @@ def main():
             df = remove_tabs_and_newlines(df)
             df = convert_to_str(df)
             df = fixed_team_names(df)
+            df = fixed_player_names(df)
             agents_result[year][file_name] = df
     for year, dataframes in agents_result.items():
         for file_name, dataframe in dataframes.items():
@@ -54,7 +56,9 @@ def main():
             df = remove_white_spaces_in_between(df)
             df = remove_tabs_and_newlines(df)
             df = convert_to_str(df)
+            df = convert_nan_players_teams(df)
             df = fixed_team_names(df)
+            df = fixed_player_names(df)
             players_result[year][file_name] = df
     for year, dataframes in players_result.items():
         for file_name, dataframe in dataframes.items():
@@ -70,6 +74,7 @@ def main():
             df = remove_white_spaces(df)
             df = remove_white_spaces_in_between(df)
             df = remove_tabs_and_newlines(df)
+            df = convert_nan_players_teams(df)
             df = convert_to_int(df)
             df = convert_to_str(df)
             ids_result[year][file_name] = df

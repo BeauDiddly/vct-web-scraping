@@ -24,7 +24,7 @@ misnamed_teams = {"BLISS": "Team Bliss", "WaVii": "Team WaVii", "Arrow": "Team A
 misnamed_players = {"luk": "lukzera", "Λero": "Aero", "Playboi Joe": "velis", "WeDid": "wedid", "karma": "karmax1", "yeji": "shen", "xvr": "xeric",
                     "Oblivion": "icarus", "nickszxz": "nicksz", "m0rea": "budimeisteR", "mikalulba": "Mikael", "zhar": "Asteriskk", "justreggae": "reggae",
                     "BoBo": "Ender", "1000010": "01000010", "derilasong": "Fuqua", "Arquiza": "rkz", "par scofield": "parscofield", "florance": "flqrance",
-                    "stev0r": "stev0rr", "unfaiR aK": "Unfair", "alulba": "aluba"}
+                    "stev0r": "stev0rr", "unfaiR aK": "Unfair", "alulba": "aluba", "2": "002"}
 
 agent_to_player = {"brimstone": "Nappi", "sova": "maik", "skye": "johkubb", "raze": "Puoli", "cypher": "akumeni", "breach": "johkubb", "omen": "Nappi",
                    "killjoy": "akumeni", "jett": "Puoli"}
@@ -63,6 +63,22 @@ def fixed_team_names(df):
     for column in ["Team", "Team A", "Team B", "Eliminator Team", "Eliminated Team", "Player Team", "Enemy Team"]:
         if column in df:
             df[column] = df[column].map(misnamed_teams).fillna(df[column])
+    return df
+
+def fixed_player_names(df):
+    for column in ["Player", "Enemy", "Eliminator", "Eliminated"]:
+        if column in df:
+            df[column] = df[column].map(misnamed_players).fillna(df[column])
+    return df
+
+def convert_nan_players_teams(df):
+    if "Player" in df and "Team" in df:
+        nan_player_rows = df[df["Player"] == "nan"].index
+        for index in nan_player_rows:
+            df.loc[index, "Team"] = "MGS Spades"
+    elif "Player" in df:
+        missing_rows = df["Player"].isnull()
+        df.loc[missing_rows, "Player"] = "nan"
     return df
 
 def remove_tabs_and_newlines(df):
