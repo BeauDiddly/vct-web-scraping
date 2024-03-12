@@ -18,11 +18,11 @@ def main():
     for year in years:
         # agents_df = pd.read_csv(f"vct_{year}/all_values/all_agents.csv")
 
-        players_df = pd.read_csv(f"vct_{year}/ids/players_ids.csv")
+        players_df = pd.read_csv(f"cleaned_data/vct_{year}/ids/players_ids.csv")
+        # print(players_df[players_df["Player ID"] == 10207])
+        teams_df = pd.read_csv(f"cleaned_data/vct_{year}/ids/teams_ids.csv")
 
-        teams_df = pd.read_csv(f"vct_{year}/ids/teams_ids.csv")
-
-        team_mapping_df = pd.read_csv(f"vct_{year}/matches/team_mapping.csv")
+        team_mapping_df = pd.read_csv(f"cleaned_data/vct_{year}/matches/team_mapping.csv")
 
         teams_mapping_dfs[year] = team_mapping_df
 
@@ -59,6 +59,7 @@ def main():
         # agents = agents | all_agents
 
     for year in years:
+        # print(players_dfs[year][players_dfs[year]["Player"] == "nan"])
         matches_ids = pd.concat([matches_ids, matches_ids_dfs[year]], ignore_index=True)
         tournaments_stages_match_types_ids = pd.concat([tournaments_stages_match_types_ids,
                                                         tournaments_stages_match_types_ids_dfs[year]],
@@ -91,6 +92,8 @@ def main():
     matches_ids["Stage ID"] = pd.to_numeric(matches_ids["Stage ID"], errors="coerce").astype("Int32")
     matches_ids["Match Type ID"] = pd.to_numeric(matches_ids["Match Type ID"], errors="coerce").astype("Int32")
 
+    nan_player = players[players["Player ID"] == 10207].index
+    players.loc[nan_player, "Player"] = "nan"
 
     players.to_csv(f"all_vct/all_players_ids.csv", index=False)
     teams.to_csv(f"all_vct/all_teams_ids.csv", index=False)
