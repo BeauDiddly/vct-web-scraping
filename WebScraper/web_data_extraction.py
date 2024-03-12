@@ -630,20 +630,14 @@ def extract_players_stats(stats_trs, match_type_dict, global_players_agents, pla
                 player, team = player_info[0].text, player_info[1].text
                 if stage_name == "All Stages" and match_type_name == "All Match Types":
                     filtered = df[(df["Player"] == player) & (df["Tournament"] == tournament_name)]
-                    try:
-                        team = ", ".join(filtered["Team"].unique()).strip(", ")
-                    except TypeError:
-                        print("ERROR")
-                        print(player, team, tournament_name, stage_name, match_type_name, agent, " is causing this issue")
-                        print("Their team was missing during the scraping ")
                 else:
                     filtered = df[(df["Player"] == player) & (df["Tournament"] == tournament_name) & (df["Stage"] == stage_name) & (df["Match Type"] == match_type_name)]
-                    try:
-                        team = ", ".join(filtered["Team"].unique()).strip(", ")
-                    except:
-                        print("ERROR")
-                        print(player, team, tournament_name, stage_name, match_type_name, agent, " is causing this issue")
-                        sys.exit(1)
+                try:
+                    team = ", ".join(sorted(filtered["Team"].unique())).strip(", ")
+                except:
+                    print("ERROR")
+                    print(player, team, tournament_name, stage_name, match_type_name, agent, " is causing this issue")
+                    sys.exit(1)
                 team_dict = match_type_dict.setdefault(team, {})
                 player_dict = team_dict.setdefault(player, {})
             elif class_name == "mod-agents":
@@ -652,9 +646,9 @@ def extract_players_stats(stats_trs, match_type_dict, global_players_agents, pla
                 player_agents_set = players_agents.setdefault(player, set())
                 global_players_agents_set = global_players_agents.setdefault(player, set())
                 if stage_name == "All" and match_type_name == "All": 
-                    agents = ", ".join(global_players_agents_set).strip(", ")
+                    agents = ", ".join(sorted(global_players_agents_set)).strip(", ")
                 elif agent == "all" and len(player_agents_set) > 1:
-                    agents = ", ".join(player_agents_set).strip(", ")
+                    agents = ", ".join(sorted(player_agents_set)).strip(", ")
                 elif agent == "all" and len(player_agents_set) == 1:
                     break
                 else:

@@ -334,6 +334,22 @@ async def scraping_agents_data(tournament_name, stages, semaphore, session):
     return results
 
 
+
+# async def processing_each_agents(match_type_dict, global_players_agents, players_agents, tournament_name, stage_name, match_type_name, url, df, agent, session ):
+#     async with asyncio.Semaphore(2):
+#         print(f"Collecting data for {agent} {tournament_name}, {stage_name}, {match_type_name}")
+#         try:
+#             page = await fetch(f"{url}&min_rounds=0&agent={agent}", session)
+#         except MaxReentriesReached as e:
+#             print(f"Error: {e}")
+#             sys.exit(1)
+#         await asyncio.sleep(random.uniform(0, 1))
+#         soup = BeautifulSoup(page, "html.parser")
+#         stats_trs = soup.find_all("tr")[1:]
+
+#         if len(stats_trs) >= 1 and stats_trs[0].find("td"):
+#             extract_players_stats(stats_trs, match_type_dict, global_players_agents, players_agents, df, tournament_name, stage_name, match_type_name, agent)
+
 async def scraping_player_stats_match_type_helper(tournament_name, stage_name, match_type_name, url, df, semaphore, session):
     async with semaphore:
         result = {}
@@ -342,6 +358,12 @@ async def scraping_player_stats_match_type_helper(tournament_name, stage_name, m
         stage_dict = tournament_dict.setdefault(stage_name, {})
         match_type_dict = stage_dict.setdefault(match_type_name, {})
         players_agents = {}
+        # tasks = [processing_each_agents(match_type_dict, global_players_agents, players_agents, tournament_name, stage_name,
+        #                             match_type_name, url, df, agent, session) for agent in all_agents[:-1]]
+        # await asyncio.gather(*tasks)
+
+        # await processing_each_agents(match_type_dict, global_players_agents, players_agents, tournament_name, stage_name,
+        #                             match_type_name, url, df, all_agents[-1], session)
         for agent in all_agents:
             print(f"Collecting data for {agent} {tournament_name}, {stage_name}, {match_type_name}")
             try:
@@ -353,7 +375,7 @@ async def scraping_player_stats_match_type_helper(tournament_name, stage_name, m
             soup = BeautifulSoup(page, "html.parser")
             stats_trs = soup.find_all("tr")[1:]
 
-            if len(stats_trs) == 1:
+            if len(stats_trs) == 1 and not stats_trs[0].find("td"):
                 continue
 
             extract_players_stats(stats_trs, match_type_dict, global_players_agents, players_agents, df, tournament_name, stage_name, match_type_name, agent)
