@@ -13,7 +13,7 @@ def main():
         year = years[i]
         for file in file_list:
             file_name = file.split("/")[2]
-            df = pd.read_csv(file)
+            df = csv_to_df(file)
             df = remove_white_spaces(df)
             df = remove_white_spaces_in_between(df)
             df = remove_tabs_and_newlines(df)
@@ -33,7 +33,7 @@ def main():
         year = years[i]
         for file in file_list:
             file_name = file.split("/")[2]
-            df = pd.read_csv(file)
+            df = csv_to_df(file)
             df = remove_white_spaces(df)
             df = remove_white_spaces_in_between(df)
             df = remove_tabs_and_newlines(df)
@@ -51,7 +51,7 @@ def main():
         year = years[i]
         for file in file_list:
             file_name = file.split("/")[2]
-            df = pd.read_csv(file)
+            df = csv_to_df(file)
             df = remove_white_spaces(df)
             df = remove_white_spaces_in_between(df)
             df = remove_tabs_and_newlines(df)
@@ -70,11 +70,11 @@ def main():
         year = years[i]
         for file in file_list:
             file_name = file.split("/")[2]
-            df = pd.read_csv(file)
+            df = csv_to_df(file)
             df = remove_white_spaces(df)
             df = remove_white_spaces_in_between(df)
             df = remove_tabs_and_newlines(df)
-            df = convert_nan_players_teams(df)
+            # df = convert_nan_players_teams(df)
             df = add_missing_player(df, year)
             df = convert_to_int(df)
             df = convert_to_str(df)

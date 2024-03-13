@@ -1,5 +1,13 @@
 import pandas as pd
 
+na_values = ['', '#N/A', '#N/A N/A', '#NA', '-1.#IND',
+            '-1.#QNAN', '-NaN', '-nan', '1.#IND',
+            '1.#QNAN', 'N/A', 'NULL', 'NaN',
+            'n/a', 'null']
+
+def csv_to_df(file):
+    return pd.read_csv(file, na_values = na_values, keep_default_na=False)
+
 misnamed_teams = {"BLISS": "Team Bliss", "WaVii": "Team WaVii", "Arrow": "Team Arrow", "FNLTY": "Finality", "100su": "Mujig 100su",
                     "RRQ": "Rex Regum Qeon", "NXLGA": "NXLG Academy", "57RBB": "57 Rach Bunh Binh", "Kantic": "Kantic Gaming",
                     "NAJIN": "NAJIN Rivals", "ex-R5": "ex-Recon 5", "Swa": "Sway eSports", "SR.GC": "Shopify Rebellion GC",
@@ -137,10 +145,10 @@ def convert_nan_players_teams(df):
         filtered_indices = df.index[howie_2_condition]
         df.loc[filtered_indices, "Team"] = "Trident Esports"
 
-    elif "Player" in df and "Player ID" in df:
-        player_nan_condiiton = (df["Player ID"] == 10207) & (df["Player"].isnull())
-        filtered_indices = df.index[player_nan_condiiton]
-        df.loc[filtered_indices, "Player"] = "nan"
+    # elif "Player" in df and "Player ID" in df:
+    #     player_nan_condiiton = (df["Player ID"] == 10207) & (df["Player"].isnull())
+    #     filtered_indices = df.index[player_nan_condiiton]
+    #     df.loc[filtered_indices, "Player"] = "nan"
     return df
 
 def remove_tabs_and_newlines(df):
