@@ -126,7 +126,7 @@ def convert_nan_players_teams(df):
         df.loc[filtered_indices, "Team"] = "EXEN Esports"
 
         filtered_indices = df.index[wendigo_2021_condition]
-        df.loc[filtered_indices, "Team"] = "Chilling In Space"
+        df.loc[filtered_indices, "Team"] = "Chilling in Space"
 
         filtered_indices = df.index[wendigo_2022_condition]
         df.loc[filtered_indices, "Team"] = "Team MystiC"
@@ -147,6 +147,20 @@ def remove_tabs_and_newlines(df):
     if "Map" in df:
         df["Map"] = df["Map"].str.replace("\t", "").replace("\n", "")
         df["Map"] = df["Map"].str.split("\n").str[0]
+    return df
+
+def add_missing_player(df, year):
+    if "Player" in df and "Player ID" in df:
+        if year == 2021:
+            df.loc[len(df.index)] = ["pATE", 9505]
+            df.loc[len(df.index)] = ["Wendigo", 26880]
+            # missing_pATE = pd.Series(["pATE", 9505], index=df.columns)
+            # missing_Wendigo = pd.Series(["Wendigo", 26880], index=df.columns)
+            # df = pd.concat([df, missing_pATE, missing_Wendigo], ignore_index=True)
+        elif year == 2022:
+            df.loc[len(df.index)] = ["Wendigo", 26880]
+            # missing_Wendigo = pd.Series(["Wendigo", 26880], index=df.columns)
+            # df = pd.concat([df, missing_Wendigo], ignore_index=True)
     return df
 
 def insert_missing_players(df):

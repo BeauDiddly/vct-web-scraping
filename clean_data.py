@@ -75,6 +75,7 @@ def main():
             df = remove_white_spaces_in_between(df)
             df = remove_tabs_and_newlines(df)
             df = convert_nan_players_teams(df)
+            df = add_missing_player(df, year)
             df = convert_to_int(df)
             df = convert_to_str(df)
             ids_result[year][file_name] = df
