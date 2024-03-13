@@ -26,7 +26,14 @@ misnamed_teams = {"BLISS": "Team Bliss", "WaVii": "Team WaVii", "Arrow": "Team A
                     "RIVAL": "Rival Esports Alpha", "TAIYO": "Taiyo eSports", "ex-WC": "ex-Wildcard Gaming", "MXBSS": "MXB South Side", "VCTRY": "VCTRY Esports",
                     "ODIUM": "Odium", "Cavalry": "Cavalry Esports", "Focus": "Team Focus", "Fre": " Frederikssund Vikings", "GLD.GC": "Guild GC", "MANGAL": "TEAM MANGAL",
                     "ŞAK": "Komşu's", "db": "DownBad", "Sampi": "Team Sampi", "tftt": "tftteam", "tftteam, tftt": "tftteam", "GB": "Gamebreakers", "InTenZive": "InTenZiveEU",
-                    "Bandits": "Bandit ESC", "Dont": "Dont Wanna Try Hard", "OW": "Overwatch"
+                    "Bandits": "Bandit ESC", "Dont": "Dont Wanna Try Hard", "OW": "Overwatch", "tftt, tftteam": "tftteam", "KJlA": "KJlACCHblE", "mcch": "mcchicken",
+                    "sile": "silence", "Kron": "KronBars", "Holl": "Hollywood", "sile, silience": "silence", "Holl, Hollywood": "Hollywood", "Kron, KronBars": "KronBars",
+                    "Tens": "Tensei Esports", "Thic": "ThiccWRECK", "Synt": "Synthetic", "Inte": "Interstate 95", "Dial": "Dialed In", "ATK": "ATK Mode",
+                    "Wind": "Windstorm", "Swag": "Swagoi", "Pira": "Pirate Nation", "Puls": "Pulsar", "Jumb": "Jumba", "Scru": "Scrub Garden", "Arli": "Arlington E.C.",
+                    "Dial, Dialed In": "Dialed In", "Pira, Pireate Nation": "Pirate Nation", "YKS": "Yankees", "FIA": "FREAKSINACTION", "Clan, Clan Infamous": "Clan Infamous",
+                    "GMG, GOMA": "GOMA", "GMG": "GOMA", "EOA, Euphoira": "Euphoria", "GHS": "Gehenna Sweepers", "GHS, Gehenna Sweepers": "Gehenna Sweepers", "Gwan, GwangDae": "GwangDae",
+                    "OLDG": "OLDGUYZ", "v0rt, v0rteX 5": "v0rteX 5", "MM": "Mob Mentality eSports", "Enig": "Enigma", "Doub": "DoubleCross eSports", "RESE": "Reservoir dogs",
+                    "just": "justtry", "Les": "Les Babouches", "Anth": "Anthrax", "74, Nanashi no Gonbee": "Nanashi no Gonbee" 
 }
 
 misnamed_players = {"luk": "lukzera", "Λero": "Aero", "Playboi Joe": "velis", "WeDid": "wedid", "karma": "karmax1", "yeji": "shen", "xvr": "xeric",
