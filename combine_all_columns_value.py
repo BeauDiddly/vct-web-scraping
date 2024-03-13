@@ -1,5 +1,7 @@
 import pandas as pd
 import math 
+from data_clean.data_clean import csv_to_df
+
 def main():
     years = ["2021", "2022", "2023"]
 
@@ -18,16 +20,16 @@ def main():
     for year in years:
         # agents_df = pd.read_csv(f"vct_{year}/all_values/all_agents.csv")
 
-        players_df = pd.read_csv(f"cleaned_data/vct_{year}/ids/players_ids.csv")
+        players_df = csv_to_df(f"cleaned_data/vct_{year}/ids/players_ids.csv")
         # print(players_df[players_df["Player ID"] == 10207])
-        teams_df = pd.read_csv(f"cleaned_data/vct_{year}/ids/teams_ids.csv")
+        teams_df = csv_to_df(f"cleaned_data/vct_{year}/ids/teams_ids.csv")
 
-        team_mapping_df = pd.read_csv(f"cleaned_data/vct_{year}/matches/team_mapping.csv")
+        team_mapping_df = csv_to_df(f"cleaned_data/vct_{year}/matches/team_mapping.csv")
 
         teams_mapping_dfs[year] = team_mapping_df
 
-        tournaments_stages_matches_games_ids_df = pd.read_csv(f"cleaned_data/vct_{year}/ids/tournaments_stages_matches_games_ids.csv")
-        tournaments_stages_match_types_ids_df = pd.read_csv(f"cleaned_data/vct_{year}/ids/tournaments_stages_match_types_ids.csv")
+        tournaments_stages_matches_games_ids_df = csv_to_df(f"cleaned_data/vct_{year}/ids/tournaments_stages_matches_games_ids.csv")
+        tournaments_stages_match_types_ids_df = csv_to_df(f"cleaned_data/vct_{year}/ids/tournaments_stages_match_types_ids.csv")
 
         # all_agents = set(agents_df['Agents'])
 
