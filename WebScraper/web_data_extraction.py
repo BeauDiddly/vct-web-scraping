@@ -4,6 +4,8 @@ import traceback
 import Levenshtein
 from bs4 import Tag, Comment, BeautifulSoup
 import sys
+from compute_stats.compute_stats import compute_stats
+
 overview_stats_titles = ["", "", "Rating", "Average Combat Score", "Kills", "Deaths", "Assists", "Kills - Deaths (KD)",
                         "Kill, Assist, Trade, Survive %", "Average Damage per Round", "Headshot %", "First Kills",
                         "First Deaths", "Kills - Deaths (FKD)"]
@@ -23,6 +25,7 @@ methods = {"elim": "Elimination", "boom": "Detonated", "defuse": "Defused", "tim
 
 cjk_pattern = re.compile(r'[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]')
 pattern = r'/(\w+)\.png'
+
 
 def extract_games_id(games_id_divs, games_id, results, list):
     tournament_name = list[0]
@@ -231,10 +234,12 @@ def extract_overview_stats(overview_stats, games_id, team_mapping, results, list
                             player_id = pd.NA
                         try:
                             result = td.find("a").find_all("div")
-                        except AttributeError: #This row did not contain the player and team name
-                            break
-                        player = result[0].text.strip()
-                        team = result[1].text.strip()
+                            player = result[0].text.strip()
+                            team = result[1].text.strip()
+                        except AttributeError: #This row did not contain a clickable link to the player
+                            player_info = td.find("div").find("div").find_all("div")
+                            player = player_info[0].text.strip()
+                            team = player_info[1].text.strip()
                         try:
                             team = team_mapping[team]
                         except KeyError: #Either the team name does not contain latin characters or they did not used the abbrievated name
@@ -259,6 +264,8 @@ def extract_overview_stats(overview_stats, games_id, team_mapping, results, list
                             agent = img.get("alt")
                             agents_played.append(agent)
                         agents = ", ".join(agents_played)
+                        if "agents" in player_dict:
+                            agents = f"{player_dict['agents']}, {agents}"
                         player_dict["agents"] = agents
                     elif class_name in ["mod-stat mod-vlr-kills", "mod-stat", "mod-stat mod-vlr-assists", "mod-stat mod-kd-diff",
                                         "mod-stat mod-fb", "mod-stat mod-fd", "mod-stat mod-fk-diff"]:
@@ -269,29 +276,39 @@ def extract_overview_stats(overview_stats, games_id, team_mapping, results, list
                             stat_name = overview_stats_titles[index % len(overview_stats_titles)]
                             if not all_stat and not attack_stat and not defend_stat:
                                 all_stat, attack_stat, defend_stat = pd.NA, pd.NA, pd.NA
+                            if stat_name in player_dict:
+                                all_stat, attack_stat, defend_stat = compute_stats(all_stat, attack_stat, defend_stat, stat_name, player_dict)
                             player_dict[stat_name] = {"both": all_stat, "attack": attack_stat, "defend": defend_stat}
                         else:
                             all_stat = stats[0]
                             all_stat = all_stat.text.strip()
+                            attack_stat, defend_stat = pd.NA, pd.NA
                             stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                            player_dict[stat_name] = {"both": all_stat, "attack": pd.NA, "defend": pd.NA}
+                            if stat_name in player_dict:
+                                all_stat, attack_stat, defend_stat = compute_stats(all_stat, attack_stat, defend_stat, stat_name, player_dict)
+                            player_dict[stat_name] = {"both": all_stat, "attack": attack_stat, "defend": defend_stat}
                     elif class_name == "mod-stat mod-vlr-deaths":
                         stats = td.find("span").find_all("span")[1].find_all("span")
                         if len(stats) == 3:
                             all_stat, attack_stat, defend_stat = td.find("span").find_all("span")[1].find_all("span")
                             all_stat, attack_stat, defend_stat = all_stat.text.strip(), attack_stat.text.strip(), defend_stat.text.strip()
                             stat_name = overview_stats_titles[index % len(overview_stats_titles)]
+                            if stat_name in player_dict:
+                                all_stat, attack_stat, defend_stat = compute_stats(all_stat, attack_stat, defend_stat, stat_name, player_dict)
                             player_dict[stat_name] = {"both": all_stat, "attack": attack_stat, "defend": defend_stat}
                         else:
                             all_stat = stats[0]
                             all_stat = all_stat.text.strip()
+                            attack_stat, defend_stat = pd.NA, pd.NA
                             stat_name = overview_stats_titles[index % len(overview_stats_titles)]
-                            player_dict[stat_name] = {"both": all_stat, "attack": pd.NA, "defend": pd.NA}
+                            if stat_name in player_dict:
+                                all_stat, attack_stat, defend_stat = compute_stats(all_stat, attack_stat, defend_stat, stat_name, player_dict)
+                            player_dict[stat_name] = {"both": all_stat, "attack": attack_stat, "defend": defend_stat}
     sides = ["both", "attack", "defend"]
     for map_name, team in overview_dict.items():
         for team_name, player in team.items():
             for player_name, data in player.items():
-                    agents = data["agents"]
+                    agents = ", ".join(sorted(set(data["agents"].split(", "))))
                     rating = data["Rating"]
                     acs = data["Average Combat Score"]
                     kills = data["Kills"]
