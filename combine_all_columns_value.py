@@ -93,6 +93,7 @@ def main():
 
     matches_ids["Stage ID"] = pd.to_numeric(matches_ids["Stage ID"], errors="coerce").astype("Int32")
     matches_ids["Match Type ID"] = pd.to_numeric(matches_ids["Match Type ID"], errors="coerce").astype("Int32")
+    players["Player ID"] = pd.to_numeric(players["Player ID"], errors="coerce").astype("Int32")
 
     nan_player = players[players["Player ID"] == 10207].index
     players.loc[nan_player, "Player"] = "nan"

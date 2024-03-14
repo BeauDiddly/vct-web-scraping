@@ -27,13 +27,14 @@ misnamed_teams = {"BLISS": "Team Bliss", "WaVii": "Team WaVii", "Arrow": "Team A
                     "ODIUM": "Odium", "Cavalry": "Cavalry Esports", "Focus": "Team Focus", "Fre": " Frederikssund Vikings", "GLD.GC": "Guild GC", "MANGAL": "TEAM MANGAL",
                     "ŞAK": "Komşu's", "db": "DownBad", "Sampi": "Team Sampi", "tftt": "tftteam", "tftteam, tftt": "tftteam", "GB": "Gamebreakers", "InTenZive": "InTenZiveEU",
                     "Bandits": "Bandit ESC", "Dont": "Dont Wanna Try Hard", "OW": "Overwatch", "tftt, tftteam": "tftteam", "KJlA": "KJlACCHblE", "mcch": "mcchicken",
-                    "sile": "silence", "Kron": "KronBars", "Holl": "Hollywood", "sile, silience": "silence", "Holl, Hollywood": "Hollywood", "Kron, KronBars": "KronBars",
-                    "Tens": "Tensei Esports", "Thic": "ThiccWRECK", "Synt": "Synthetic", "Inte": "Interstate 95", "Dial": "Dialed In", "ATK": "ATK Mode",
+                    "sile": "silence", "Kron": "KronBars", "Holl": "Hollywood", "sile, silence": "silence", "Holl, Hollywood": "Hollywood", "Kron, KronBars": "KronBars",
+                    "Tens": "Tensei Esports", "Thic": "ThiccWRECK", "Synt": "Synthetic", "Inte": "Interstate 95", "Dial": "Dialed In", "ATK": "ATK Mode", "Pira, Pirate Nation": "Pirate Nation",
                     "Wind": "Windstorm", "Swag": "Swagoi", "Pira": "Pirate Nation", "Puls": "Pulsar", "Jumb": "Jumba", "Scru": "Scrub Garden", "Arli": "Arlington E.C.",
                     "Dial, Dialed In": "Dialed In", "Pira, Pireate Nation": "Pirate Nation", "YKS": "Yankees", "FIA": "FREAKSINACTION", "Clan, Clan Infamous": "Clan Infamous",
-                    "GMG, GOMA": "GOMA", "GMG": "GOMA", "EOA, Euphoira": "Euphoria", "GHS": "Gehenna Sweepers", "GHS, Gehenna Sweepers": "Gehenna Sweepers", "Gwan, GwangDae": "GwangDae",
+                    "GMG, GOMA": "GOMA", "GMG": "GOMA", "EPA, Euphoria": "Euphoria", "GHS": "Gehenna Sweepers", "GHS, Gehenna Sweepers": "Gehenna Sweepers", "Gwan, GwangDae": "GwangDae",
                     "OLDG": "OLDGUYZ", "v0rt, v0rteX 5": "v0rteX 5", "MM": "Mob Mentality eSports", "Enig": "Enigma", "Doub": "DoubleCross eSports", "RESE": "Reservoir dogs",
-                    "just": "justtry", "Les": "Les Babouches", "Anth": "Anthrax", "74, Nanashi no Gonbee": "Nanashi no Gonbee" 
+                    "just": "justtry", "Les": "Les Babouches", "Anth": "Anthrax", "74, Nanashi no Gonbee": "Nanashi no Gonbee", "Endavant": "Team Endavant", "Rese": "Reservoir dogs",
+
 }
 
 misnamed_players = {"luk": "lukzera", "Λero": "Aero", "Playboi Joe": "velis", "WeDid": "wedid", "karma": "karmax1", "yeji": "shen", "xvr": "xeric",
