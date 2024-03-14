@@ -39,7 +39,7 @@ def extract_games_id(games_id_divs, games_id, results, list):
         if div.get("data-game-id") and div.get("data-disabled") == "0":
             id = div.get("data-game-id")
             map = re.sub(r"\d+|\t|\n", "", div.text.strip())
-            if map != "N/A":
+            if  map != "N/A":
                 games_id[id] = map
     for id, map in games_id.items():
         if map != "All Maps":
@@ -132,7 +132,7 @@ def extract_methods(overview_stats, games_id, results, list):
             map = games_id[id]
         except KeyError:
             continue
-        if map == "All Maps":
+        if pd.notna(map) and map == "All Maps":
             continue
         rounds = info.find_all("div", class_="vlr-rounds-row")
         outcomes = {team_a: {"elim": 0, "boom": 0, "defuse": 0, "time": 0, "eliminated": 0, "failed_to_defuse": 0, "failed_to_detonate": 0, "failed_to_plant": 0},
