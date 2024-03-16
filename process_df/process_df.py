@@ -28,6 +28,18 @@ def convert_missing_number(df):
             df[column] = pd.to_numeric(df[column], errors="coerce").astype("Int32")
     return df
 
+def add_missing_ids(df, column, missing_numbers, null_count):
+    df.loc[df[column].isnull(), column] = missing_numbers[:null_count]
+
+def get_missing_numbers(df, column):
+   min_id = int(df[column].min())
+   max_id = int(df[column].max())
+   all_numbers = set(range(min_id, max_id + 1))
+   null_count = df[column].isnull().sum()
+   missing_numbers = sorted(all_numbers - set(df[column]))
+   np.random.shuffle(missing_numbers)
+   return null_count, missing_numbers
+
 
 def convert_column_to_str(df, column_name):
     df[column_name] = df[column_name].astype(str)

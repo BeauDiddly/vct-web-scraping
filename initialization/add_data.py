@@ -10,42 +10,42 @@ from process_df.process_df import *
 
 
 
+def add_tournaments_stages_match_types(df, engine):
+   df = df[["Tournament", "Tournament ID", "Stage", "Stage ID", "Match Type", "Match Type ID", "Year"]]
+   df = df.drop_duplicates()
+   null_stage_count, missing_stage_ids = get_missing_numbers(df, "Stage ID")
+   null_match_type_count, missing_match_type_ids = get_missing_numbers(df, "Match Type ID")
+   add_missing_ids(df, "Stage ID", missing_stage_ids, null_stage_count)
+   add_missing_ids(df, "Match Type ID", missing_match_type_ids, null_match_type_count)
+   add_tournaments(df, engine)
+   add_stages(df, engine)
+   add_match_types(df, engine)
+
 def add_tournaments(df, engine):
-   tournaments_df = df[["Tournament", "Tournament ID", "Year"]]
-   strip_white_space(tournaments_df, "Tournament")
-   tournaments_df = tournaments_df.drop_duplicates()
-   tournaments_df = reorder_columns(tournaments_df, ["Tournament ID", "Tournament", "Year"])
-   tournaments_df = rename_columns(tournaments_df, {"Tournament ID": "tournament_id", "Tournament": "tournament", "Year": "year"})
-   tournaments_df.to_sql("tournaments", engine, index=False, if_exists = "append")
+   df = df[["Tournament", "Tournament ID", "Year"]]
+   df = df.drop_duplicates()
+   df = reorder_columns(df, ["Tournament ID", "Tournament", "Year"])
+   df = rename_columns(df, {"Tournament ID": "tournament_id", "Tournament": "tournament", "Year": "year"})
+   df.to_sql("tournaments", engine, index=False, if_exists = "append")
     
 def add_stages(df, engine):
-   stages_df = df[["Tournament ID", "Stage", "Stage ID", "Year"]]
-   strip_white_space(stages_df, "Stage")
-   stages_df = stages_df.drop_duplicates()
-   stages_df.loc[stages_df["Stage ID"].isnull(), "Stage ID"] = stages_df["Tournament ID"] * 1000
-   stages_df["Stage ID"] = pd.to_numeric(stages_df["Stage ID"])
-   stages_df = reorder_columns(stages_df, ["Stage ID", "Tournament ID", "Stage", "Year"])
-   stages_df = rename_columns(stages_df, {"Stage ID": "stage_id", "Tournament ID": "tournament_id", "Stage": "stage", "Year": "year"})
-   stages_df.to_sql("stages", engine, index=False, if_exists="append")
+   df = df[["Tournament ID", "Stage", "Stage ID", "Year"]]
+   df = df.drop_duplicates()
+   df = reorder_columns(df, ["Stage ID", "Tournament ID", "Stage", "Year"])
+   df = rename_columns(df, {"Stage ID": "stage_id", "Tournament ID": "tournament_id", "Stage": "stage", "Year": "year"})
+   df.to_sql("stages", engine, index=False, if_exists="append")
 
 def add_match_types(df, engine):
-   match_types_df = df[["Tournament ID", "Stage ID", "Match Type", "Match Type ID", "Year"]]
-   strip_white_space(match_types_df, "Match Type")
-   match_types_df = match_types_df.drop_duplicates()
-   match_types_df.loc[match_types_df["Stage ID"].isnull(), "Stage ID"] = match_types_df["Tournament ID"] * 1000 
-   match_types_df.loc[match_types_df["Match Type ID"].isnull(), "Match Type ID"] = match_types_df["Stage ID"] * 100 
-   match_types_df["Match Type ID"] = match_types_df["Match Type ID"].fillna(0000)
-   match_types_df["Stage ID"] = pd.to_numeric(match_types_df["Stage ID"])
-   match_types_df["Match Type ID"] = pd.to_numeric(match_types_df["Match Type ID"])
-   match_types_df = reorder_columns(match_types_df, ["Match Type ID", "Tournament ID", "Stage ID", "Match Type", "Year"])
-   match_types_df = rename_columns(match_types_df, {"Match Type ID": "match_type_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id", 
+   df = df[["Tournament ID", "Stage ID", "Match Type", "Match Type ID", "Year"]]
+   df = df.drop_duplicates()
+   df = reorder_columns(df, ["Match Type ID", "Tournament ID", "Stage ID", "Match Type", "Year"])
+   df = rename_columns(df, {"Match Type ID": "match_type_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id", 
                                                    "Match Type": "match_type", "Year": "year"})
-   match_types_df.to_sql("match_types", engine, index=False, if_exists="append")
+   df.to_sql("match_types", engine, index=False, if_exists="append")
 
 
 def add_matches(df, engine):
    matches_df = df[["Tournament ID", "Stage ID", "Match Type ID", "Match Name", "Match ID", "Year"]]
-   strip_white_space(matches_df, "Match Name")
    matches_df = matches_df.drop_duplicates()
    matches_df = reorder_columns(matches_df, ["Match ID", "Tournament ID", "Stage ID", "Match Type ID", "Match Name", "Year"])
    matches_df = rename_columns(matches_df, {"Match ID": "match_id", "Tournament ID": "tournament_id",
@@ -53,55 +53,28 @@ def add_matches(df, engine):
                                              "Match Name": "match", "Year": "year"})
    matches_df.to_sql("matches", engine, index=False, if_exists="append")
 
-# def add_games(df, engine):
-#    games_df = df[["Tournament ID", "Stage ID", "Match Type ID", "Match ID", "Game ID", "Map", "Year"]]
-#    games_df = games_df.drop_duplicates()
-#    games_df = reorder_columns(games_df, ["Game ID", "Tournament ID", "Stage ID", "Match Type ID", "Match ID", "Map", "Year"])
-#    games_df = rename_columns(games_df, {"Game ID": "game_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id",
-#                                  "Match Type ID": "match_type_id", "Match ID": "match_id", 
-#                                  "Map": "map", "Year": "year"})
-#    games_df.to_sql("games", engine, index=False, if_exists="append")
 
 
-
-def add_teams(df, engine):
-   teams_df = df[["Team", "Team ID"]]
-   teams_df = teams_df.drop_duplicates()
-   strip_white_space(teams_df, "Team")
-   teams_df["Team ID"] = teams_df["Team ID"].fillna(0000)
-   teams_df = convert_column_to_int(teams_df, "Team ID")
-   teams_df = reorder_columns(teams_df, {"Team ID", "Team"})
-   teams_df = rename_columns(teams_df, {"Team ID": "team_id", "Team": "team"})
-   teams_df.to_sql("teams", engine, index=False, if_exists="append")
+def add_teams(df, multiple_teams, engine):
+   df = df[["Team", "Team ID"]]
+   df = df.drop_duplicates()
+   multiple_teams_df = pd.DataFrame({"Team": multiple_teams})
+   df = pd.concat([df, multiple_teams_df], ignore_index=True)
+   null_team_count, missing_team_id = get_missing_numbers(df, "Team ID")
+   add_missing_ids(df, "Team ID", missing_team_id, null_team_count)
+   df = reorder_columns(df, {"Team ID", "Team"})
+   df = rename_columns(df, {"Team ID": "team_id", "Team": "team"})
+   df.to_sql("teams", engine, index=False, if_exists="append")
 
 def add_players(df, engine):
-   players_df = df[["Player", "Player ID"]]
-   players_df = players_df.drop_duplicates()
-   players_df = reorder_columns(players_df, {"Player ID", "Player"})
-   min_id = int(players_df["Player ID"].min())
-   max_id = int(players_df["Player ID"].max())
-   all_numbers = set(range(min_id, max_id + 1))
-   null_count = players_df["Player ID"].isnull().sum()
-   missing_numbers = sorted(all_numbers - set(players_df["Player ID"]))
-   np.random.shuffle(missing_numbers)
-   players_df.loc[players_df["Player ID"].isnull(), "Player ID"] = missing_numbers[:null_count]
-   players_df = rename_columns(players_df, {"Player ID": "player_id", "Player": "player"})
-   players_df.to_sql("players", engine, index=False, if_exists="append")
+   df = df[["Player", "Player ID"]]
+   df = df.drop_duplicates()
+   null_player_count, missing_player_id = get_missing_numbers(df, "Player ID")
+   add_missing_ids(df, "Player ID", missing_player_id, null_player_count)
+   df = reorder_columns(df, {"Player ID", "Player"})
+   df = rename_columns(df, {"Player ID": "player_id", "Player": "player"})
+   df.to_sql("players", engine, index=False, if_exists="append")
 
-# async def insert_data(curr, dataframe, insertion_function, table_name):
-#    start_time = time.time()
-#    now = datetime.now()
-
-#    print(f"Adding data to {table_name}")
-#    tasks = [insertion_function(curr, row) for _, row in dataframe.iterrows()]
-#    await asyncio.gather(*tasks)
-#    print(f"Done adding data to {table_name}")
-#    end_time = time.time()
-#    elasped_time = end_time - start_time
-#    hours, remainder = divmod(elasped_time, 3600)
-#    minutes, seconds = divmod(remainder, 60)
-
-#    print(f"Inserting data to {table_name} time: {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds")
    
 
 async def add_drafts(file, year, curr, engine):
