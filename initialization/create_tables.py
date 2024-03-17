@@ -50,19 +50,38 @@ def create_matches_table(curr):
    """
    execute_query(curr, query)
 
-# def create_games_table(curr):
-#    query = """
-#    CREATE TABLE IF NOT EXISTS games (
-#       game_id INT PRIMARY KEY,
-#       tournament_id INT REFERENCES tournaments(tournament_id),
-#       stage_id INT REFERENCES stages(stage_id),
-#       match_type_id INT REFERENCES match_types(match_type_id),
-#       match_id INT REFERENCES matches(match_id),
-#       map VARCHAR(255),
-#       year INT
-#    );
-#    """
-#    execute_query(curr, query)
+def create_agents_table(curr):
+   query = """
+   CREATE TABLE IF NOT EXISTS agents (
+      agent_id INT PRIMARY KEY,
+      agent VARCHAR(255) NOT NULL
+   );
+   """
+   execute_query(curr, query)
+
+def create_maps_table(curr): 
+   query = """
+   CREATE TABLE IF NOT EXISTS maps (
+      map_id INT PRIMARY KEY,
+      map VARCHAR(255) NOT NULL
+   );
+   """
+   execute_query(curr, query)
+
+
+def create_games_table(curr):
+   query = """
+   CREATE TABLE IF NOT EXISTS games (
+      game_id INT PRIMARY KEY,
+      tournament_id INT REFERENCES tournaments(tournament_id),
+      stage_id INT REFERENCES stages(stage_id),
+      match_type_id INT REFERENCES match_types(match_type_id),
+      match_id INT REFERENCES matches(match_id),
+      map_id INT REFERENCES maps(map_id),
+      year INT
+   );
+   """
+   execute_query(curr, query)
 
 def create_teams_table(curr):
    query = """
@@ -93,8 +112,8 @@ def create_draft_phase_table(curr):
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
          team_id INT REFERENCES teams(team_id),
+         map_id INT REFERENCES maps(map_id),
          action VARCHAR(255),
-         map VHARCHAR(255),
          year INT
       );
    """
@@ -109,7 +128,7 @@ def create_eco_rounds_table(curr):
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
          team_id INT REFERENCES teams(team_id),
-         map VARCHAR(255),
+         map_id INT REFERENCES maps(map_id),
          round_number INT,
          loadout_value VARCHAR(255)
          credits VARCHAR(255),
@@ -130,7 +149,7 @@ def create_eco_stats_table(curr):
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
          team_id INT REFERENCES teams(team_id),
-         map VARCHAR(255),
+         map_id INT REFERENCES maps(map_id),
          eco_type VARCHAR(255),
          initiated INT NULL,
          won INT,
@@ -152,7 +171,7 @@ def create_kills_table(curr):
          player_id INT REFERENCES players(player_id),
          enemy_team_id INT REFERENCES teams(team_id),
          enemy_id INT REFERENCES players(player_id),
-         map VARCHAR(255),
+         map_id INT REFERENCES maps(map_id),
          player_kills INT,
          enemy_kills INT,
          difference INT,
@@ -173,8 +192,8 @@ def create_kills_stats_table(curr):
          match_id INT REFERENCES matches(match_id),
          team_id INT REFERENCES teams(team_id),
          player_id INT REFERENCES players(player_id),
-         map, VARCHAR(255),
-         agent VARCHAR(255),
+         map_id INT REFERENCES maps(map_id),
+         agent_id INT REFERENCES agents(agent_id),
          two_kills INT NULL,
          three_kills INT NULL,
          four_kills INT NULL,
@@ -201,7 +220,7 @@ def create_maps_played_table(curr):
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
-         map VARCHAR(255),
+         map_id INT REFERENCES maps(map_id),
          year INT NOT NULL
 
       );
@@ -216,6 +235,7 @@ def create_maps_scores_table(curr):
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
+         map_id INT REFERENCES maps(map_id),
          team_a_id INT REFERENCES teams(team_id),
          team_b_id INT REFERENCES teams(team_id),
          team_a_score INT,
@@ -243,8 +263,8 @@ def create_overview_table(curr):
          match_id INT REFERENCES matches(match_id),
          player_id INT REFERENCES players(player_id),
          team_id INT REFERENCES teams(team_id),
-         map VARCHAR(255),
-         agents VARCHAR(255),
+         map_id INT REFERENCES maps(map_id),
+         agent_id INT REFERENCES agents(agent_id),
          rating INT NULL,
          average_combat_score INT NULL,
          kills INT NULL,
@@ -272,14 +292,14 @@ def create_rounds_kills_table(curr):
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
+         map_id INT REFERENCES maps(map_id),
          eliminator_team_id INT REFERENCES teams(team_id),
          eliminated_team_id INT REFERENCES teams(team_id),
          eliminated_id INT REFERENCES players(player_id),
          eliminator_id INT REFERENCES players(player_id),
-         map VARCHAR(255),
          round_number VARCHAR(255),
-         eliminator_agent VARCHAR(255),
-         eliminated_agent VARCHAR(255),
+         eliminator_agent_id INT REFERENCES agents(agent_id),
+         eliminated_agent_id INT REFERENCES agents(agent_id),
          kill_type VARCHAR(255),
          year INT NOT NULL
       );
@@ -313,7 +333,7 @@ def create_win_loss_methods_count_table(curr):
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
          team_id INT REFERENCES teams(team_id),
-         map VARCHAR(255),
+         map_id INT REFERENCES maps(map_id),
          elimination INT,
          detonated INT,
          defused INT,
@@ -334,7 +354,7 @@ def create_win_loss_methods_round_number_table(curr):
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
          team_id INT REFERENCES teams(team_id),
-         map VARCHAR(255),
+         map_id INT REFERENCES maps(map_id),
          method VARCHAR(255),
          outcome VARCHAR(255)
       )
@@ -349,8 +369,8 @@ def create_agents_pick_rates_table(curr):
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
-         map VARCHAR(255),
-         agent VARCHAR(255),
+         map_id INT REFERENCES maps(map_id),
+         agent_id INT REFERENCES agents(agent_id),
          pick_rate DECIMAL,
          year INT NOT NULL
       );
@@ -364,7 +384,7 @@ def create_maps_stats_table(curr):
       tournament_id INT REFERENCES tournaments(tournament_id),
       stage_id INT REFERENCES stages(stage_id),
       match_type_id INT REFERENCES match_types(match_type_id),
-      map VARCHAR(255),
+      map_id INT REFERENCES maps(map_id),
       total_maps_played INT,
       attacker_win_percentage DECIMAL,
       defender_win_percentage DECIMAL,
@@ -381,8 +401,8 @@ def create_teams_picked_agents_table(curr):
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
          team_id INT REFERENCES teams(team_id),
-         map VARCHAR(255),
-         agent VARCHAR(255),
+         map_id INT REFERENCES maps(map_id),
+         agent_id INT REFERENCES agents(agent_id),
          total_wins_by_map INT,
          total_loss_by_map INT,
          total_maps_played INT,
@@ -400,7 +420,7 @@ def create_players_stats_table(curr):
          match_type_id INT REFERENCES match_types(match_type_id),
          player_id INT REFERENCES players(player_id),
          team_id INT REFERENCES teams(team_id),
-         agents VARCHAR(255),
+         agent_id INT REFERENCES agents(agent_id),
          rounds_played INT,
          rating DECIMAL,
          average_combat_score INT,
@@ -426,6 +446,8 @@ def create_players_stats_table(curr):
    execute_query(curr, query)
 
 def create_all_tables(curr):
+   create_agents_table(curr)
+   create_maps_table(curr)
    create_tournaments_table(curr)
    create_stages_table(curr)
    create_match_types_table(curr)

@@ -29,6 +29,7 @@ def convert_missing_number(df):
     return df
 
 def add_missing_ids(df, column, missing_numbers, null_count):
+    print(column)
     df.loc[df[column].isnull(), column] = missing_numbers[:null_count]
 
 def get_missing_numbers(df, column):

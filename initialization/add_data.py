@@ -8,9 +8,22 @@ import time
 from datetime import datetime
 from process_df.process_df import *
 
+def add_agents(engine):
+   all_agents = ["astra", "breach", "brimstone", "chamber", "cypher", "deadlock", "fade", "gekko", "harbor", "iso", "jett", "kayo",
+              "killjoy", "neon", "omen", "phoenix", "raze", "reyna", "sage", "skye", "sova", "viper", "yoru"]
+   agent_ids = {agent: sum(ord(char) for char in agent) for agent in all_agents}
+   df = pd.DataFrame(list(agent_ids.items()), columns=["agent", "agent_id"])
+   df = reorder_columns(df, {"agent_id", "agent"})
+   df.to_sql("agents", engine, index=False, if_exists="append")
+   
+def add_maps(engine):
+   all_maps = ["bind", "haven", "split", "ascent", "icebox", "breeze", "fracture", "pearl", "lotus", "sunset"]
+   map_ids = {map: sum(ord(char) for char in map) for map in all_maps}
+   df = pd.DataFrame(list(map_ids.items()), columns=["map", "map_id"])
+   df = reorder_columns(df, {"map_id", "map"})
+   df.to_sql("maps", engine, index=False, if_exists="append")
 
-
-def add_tournaments_stages_match_types(df, engine):
+def add_tournaments_stages_match_types_matches(df, engine):
    df = df[["Tournament", "Tournament ID", "Stage", "Stage ID", "Match Type", "Match Type ID", "Year"]]
    df = df.drop_duplicates()
    null_stage_count, missing_stage_ids = get_missing_numbers(df, "Stage ID")
