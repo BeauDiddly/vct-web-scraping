@@ -29,7 +29,6 @@ def convert_missing_number(df):
     return df
 
 def add_missing_ids(df, column, missing_numbers, null_count):
-    print(column)
     df.loc[df[column].isnull(), column] = missing_numbers[:null_count]
 
 def get_missing_numbers(df, column):
@@ -159,6 +158,15 @@ async def process_players(pool, df):
         tasks = [await process_column(conn, df, column, "player_id", "players", "player") for column in player_columns if column in df]
         # await asyncio.gather(*tasks)
 
+async def process_agents(pool, df):
+    async with pool.acquire() as conn:
+        agent_columns = ["Agent", "Agents"]
+        tasks = [await process_column(conn, df, column, "agent_id", "agents", "agent") for column in agent_columns if column in df]
+
+async def process_maps(pool, df):
+    async with pool.acquire() as conn:
+        map_columns = ["Map"]
+        tasks = [await process_column(conn, df, column, "map_id", "maps", "map") for column in map_columns if column in df]
 
 async def change_reference_name_to_id(df, year):
     db_url = create_db_url()
@@ -166,7 +174,8 @@ async def change_reference_name_to_id(df, year):
         await asyncio.gather(
             process_tournaments_stages_match_types_matches(pool, df, year),
             process_players(pool, df),
-            process_teams(pool, df)
+            process_teams(pool, df),
+            process_maps(pool, df)
         )
 
     return df

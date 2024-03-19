@@ -1,62 +1,45 @@
 import os
-from Connect.connect import connect
+from Connect.connect import connect, engine
 from initialization.create_tables import create_all_tables
 import asyncio
 from initialization.add_data import *
-
+from find_csv_files.find_csv_files import find_csv_files
+from Connect.config import config
 
 async def main():
+    start_time = time.time()
+    now = datetime.now()
+    years = [2021, 2022, 2023]
     conn, curr = connect()
-    unique_ids = set()
-    create_all_tables(curr)
-    add_data_reference_tables(curr, unique_ids)
-    drafts = pd.read_csv("matches/draft_phase.csv")
-    eco_rounds = pd.read_csv("matches/eco_rounds.csv")
-    eco_stats = pd.read_csv("matches/eco_stats.csv")
-    kills = pd.read_csv("matches/kills.csv")
-    kills_stats = pd.read_csv("matches/kills_stats.csv")
-    maps_played = pd.read_csv("matches/maps_played.csv")
-    maps_scores = pd.read_csv("matches/maps_scores.csv")
-    overview = pd.read_csv("matches/overview.csv")
-    rounds_kills = pd.read_csv("matches/rounds_kills.csv")
-    scores = pd.read_csv("matches/scores.csv")
-    pick_rates = pd.read_csv("agents/agents_pick_rates.csv")
-    maps_stats = pd.read_csv("agents/maps_stats.csv")
-    teams_picked_agents = pd.read_csv("agents/teams_picked_agents.csv")
-    players_stats = pd.read_csv("players_stats/players_stats.csv")
-    tables_and_dataframes = [
-        ("Drafts", drafts, add_drafts),
-        ("Eco Rounds", eco_rounds, add_eco_rounds),
-        ("Eco Stats", eco_stats, add_eco_stats),
-        ("Kills", kills, add_kills),
-        ("Kills Stats", kills_stats, add_kills_stats),
-        ("Maps Played", maps_played, add_maps_played),
-        ("Maps Scores", maps_scores, add_maps_scores),
-        ("Overview", overview, add_overview),
-        ("Rounds Kills", rounds_kills, add_rounds_kills),
-        ("Scores", scores, add_scores),
-        ("Pick Rates", pick_rates, add_agents_pick_rates),
-        ("Maps Stats", maps_stats, add_maps_stats),
-        ("Teams Picked Agents", teams_picked_agents, add_teams_picked_agents),
-        ("Players Stats", players_stats, add_players_stats),
-    ]
-    tasks = []
+    sql_alchemy_engine = engine()
+    db_conn_info = config()
 
-    for table_name, dataframe, insertion_function in tables_and_dataframes:
-        task =insert_data(curr, dataframe, insertion_function, table_name)
-        tasks.append(task)
-    await asyncio.gather(*tasks)
-    # tasks = all_data_table_functions(curr)
-    # await asyncio.gather(add_drafts(curr), add_eco_rounds(curr), add_eco_stats(curr),
-    #        add_kills(curr), add_kills_stats(curr), add_maps_played(curr),
-    #        add_maps_scores(curr), add_overview(curr), add_rounds_kills(curr),
-    #        add_scores(curr), add_agents_pick_rates(curr), add_maps_stats(curr),
-    #        add_teams_picked_agents(curr), add_players_stats(curr))
-    # loop.close()
+    csv_files = [find_csv_files(f"{os.getcwd()}/vct_{year}/matches", "matches", year) for year in years]
+    print(csv_files)
 
-    conn.commit()
-    curr.close()
-    conn.close()
+    await add_drafts(csv_files[2][8], years[2], sql_alchemy_engine)
+    # await add_eco_rounds(csv_files[1][11], years[1], sql_alchemy_engine)
+    # await add_eco_stats(csv_files[1][3], years[1], sql_alchemy_engine)
+    # await add_kills(csv_files[1][1], years[1], sql_alchemy_engine)
+    # await add_kills_stats(csv_files[1][5], years[1], sql_alchemy_engine)
+    # await add_maps_played(csv_files[1][0], years[1], sql_alchemy_engine)
+    # await add_maps_scores(csv_files[1][12], years[1], sql_alchemy_engine)
+    # await add_overview(csv_files[1][9], years[1], sql_alchemy_engine)
+    # await add_rounds_kills(csv_files[1][10], years[1], sql_alchemy_engine)
+    # await add_scores(csv_files[1][4], years[1], sql_alchemy_engine)
+    # await add_win_loss_methods_count(csv_files[1][6], years[1], sql_alchemy_engine)
+    # await add_win_loss_methods_round_number(csv_files[0][2], years[0], sql_alchemy_engine)
+
+    end_time = time.time()
+    elasped_time = end_time - start_time
+    hours, remainder = divmod(elasped_time, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    print(f"Time: {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds")
+    # rounds_kills = pd.read_csv("matches/rounds_kills.csv")
+
+    # conn.commit()
+    # curr.close()
+    # conn.close()
 
 if __name__ == '__main__':
     asyncio.run(main())

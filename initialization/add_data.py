@@ -17,13 +17,13 @@ def add_agents(engine):
    df.to_sql("agents", engine, index=False, if_exists="append")
    
 def add_maps(engine):
-   all_maps = ["bind", "haven", "split", "ascent", "icebox", "breeze", "fracture", "pearl", "lotus", "sunset"]
+   all_maps = ["Bind", "Haven", "Split", "Ascent", "Icebox", "Breeze", "Fracture", "Pearl", "Lotus", "Sunset", "All Maps"]
    map_ids = {map: sum(ord(char) for char in map) for map in all_maps}
    df = pd.DataFrame(list(map_ids.items()), columns=["map", "map_id"])
    df = reorder_columns(df, {"map_id", "map"})
    df.to_sql("maps", engine, index=False, if_exists="append")
 
-def add_tournaments_stages_match_types_matches(df, engine):
+def add_tournaments_stages_match_types(df, engine):
    df = df[["Tournament", "Tournament ID", "Stage", "Stage ID", "Match Type", "Match Type ID", "Year"]]
    df = df.drop_duplicates()
    null_stage_count, missing_stage_ids = get_missing_numbers(df, "Stage ID")
@@ -33,6 +33,11 @@ def add_tournaments_stages_match_types_matches(df, engine):
    add_tournaments(df, engine)
    add_stages(df, engine)
    add_match_types(df, engine)
+   upper_round_df = df[(df["Tournament ID"] == 560) &
+                       (df["Stage ID"] == 1096) &
+                       (df["Match Type"] == "Upper Round 1")]
+   upper_round_id = upper_round_df["Match Type ID"].values[0]
+   return upper_round_id
 
 def add_tournaments(df, engine):
    df = df[["Tournament", "Tournament ID", "Year"]]
@@ -57,22 +62,24 @@ def add_match_types(df, engine):
    df.to_sql("match_types", engine, index=False, if_exists="append")
 
 
-def add_matches(df, engine):
-   matches_df = df[["Tournament ID", "Stage ID", "Match Type ID", "Match Name", "Match ID", "Year"]]
-   matches_df = matches_df.drop_duplicates()
-   matches_df = reorder_columns(matches_df, ["Match ID", "Tournament ID", "Stage ID", "Match Type ID", "Match Name", "Year"])
-   matches_df = rename_columns(matches_df, {"Match ID": "match_id", "Tournament ID": "tournament_id",
+def add_matches(df, upper_round_id, engine):
+   filtered = df[(df["Tournament ID"] == 560) &
+                  (df["Stage ID"] == 1096) &
+                  (df["Match Type"] == "Upper Round 1")]
+   df = df[["Tournament ID", "Stage ID", "Match Type ID", "Match Name", "Match ID", "Year"]]
+   df.loc[filtered.index, "Match Type ID"] = upper_round_id
+   df = df.drop_duplicates()
+   df = reorder_columns(df, ["Match ID", "Tournament ID", "Stage ID", "Match Type ID", "Match Name", "Year"])
+   df = rename_columns(df, {"Match ID": "match_id", "Tournament ID": "tournament_id",
                                              "Stage ID": "stage_id", "Match Type ID": "match_type_id", 
                                              "Match Name": "match", "Year": "year"})
-   matches_df.to_sql("matches", engine, index=False, if_exists="append")
+   df.to_sql("matches", engine, index=False, if_exists="append")
 
 
 
-def add_teams(df, multiple_teams, engine):
+def add_teams(df, engine):
    df = df[["Team", "Team ID"]]
    df = df.drop_duplicates()
-   multiple_teams_df = pd.DataFrame({"Team": multiple_teams})
-   df = pd.concat([df, multiple_teams_df], ignore_index=True)
    null_team_count, missing_team_id = get_missing_numbers(df, "Team ID")
    add_missing_ids(df, "Team ID", missing_team_id, null_team_count)
    df = reorder_columns(df, {"Team ID", "Team"})
@@ -90,18 +97,18 @@ def add_players(df, engine):
 
    
 
-async def add_drafts(file, year, curr, engine):
+async def add_drafts(file, year, engine):
    drafts_df = csv_to_df(file)
-   strip_white_space(drafts_df, "Match Type")
-   strip_white_space(drafts_df, "Match Name")
+   # strip_white_space(drafts_df, "Match Type")
+   # strip_white_space(drafts_df, "Match Name")
    drafts_df = await change_reference_name_to_id(drafts_df, year)
    drafts_df = convert_column_to_int(drafts_df, "Team ID")
    drafts_df["year"] = year
    drafts_df = create_ids(drafts_df)
-   drafts_df = drop_columns(drafts_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team"])
+   drafts_df = drop_columns(drafts_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team", "Map"])
    drafts_df = rename_columns(drafts_df, {"index": "draft_id","Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id", "Match ID": "match_id",
-                                          "Team ID": "team_id", "Action": "action", "Map": "map"})
-   drafts_df = reorder_columns(drafts_df, ["draft_id", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "action", "map", "year"])
+                                          "Team ID": "team_id", "Action": "action", "Map ID": "map_id"})
+   drafts_df = reorder_columns(drafts_df, ["draft_id", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "map_id", "action", "year"])
    print(drafts_df.sample(n=20))
    # drafts_df.to_sql("drafts", engine, index=False, if_exists="append")
 
