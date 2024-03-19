@@ -99,8 +99,6 @@ def add_players(df, engine):
 
 async def add_drafts(file, year, engine):
    drafts_df = csv_to_df(file)
-   # strip_white_space(drafts_df, "Match Type")
-   # strip_white_space(drafts_df, "Match Name")
    drafts_df = await change_reference_name_to_id(drafts_df, year)
    drafts_df = convert_column_to_int(drafts_df, "Team ID")
    drafts_df["year"] = year
@@ -114,19 +112,19 @@ async def add_drafts(file, year, engine):
 
 async def add_eco_rounds(file, year, engine):
    eco_rounds_df = csv_to_df(file)
-   strip_white_space(eco_rounds_df, "Match Type")
-   strip_white_space(eco_rounds_df, "Match Name")
-   strip_white_space(eco_rounds_df, "Team")
    eco_rounds_df = await change_reference_name_to_id(eco_rounds_df, year)
    eco_rounds_df["year"] = year
    eco_rounds_df = convert_column_to_int(eco_rounds_df, "Team ID")
+   eco_rounds_df = k_to_numeric(eco_rounds_df, "Loadout Value")
+   eco_rounds_df = k_to_numeric(eco_rounds_df, "Remaining Credits")
+   eco_rounds_df = get_eco_type(eco_rounds_df, "Type")
    eco_rounds_df = create_ids(eco_rounds_df)
-   eco_rounds_df = drop_columns(eco_rounds_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team"])
+   eco_rounds_df = drop_columns(eco_rounds_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team", "Map"])
    eco_rounds_df = rename_columns(eco_rounds_df, {"index": "eco_round_id","Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id", "Match ID": "match_id",
-                                          "Team ID": "team_id", "Map": "map", "Round Number": "round_number", "Loadout Value": "loadout_value",
+                                          "Team ID": "team_id", "Map ID": "map_id", "Round Number": "round_number", "Loadout Value": "loadout_value",
                                           "Remaining Credits": "credits", "Type": "eco_type", "Outcome": "outcome"})
    eco_rounds_df = reorder_columns(eco_rounds_df, ["eco_round_id", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id",
-                                             "map", "round_number", "loadout_value", "credits", "eco_type", "outcome", "year"])
+                                             "map_id", "round_number", "loadout_value", "credits", "eco_type", "outcome", "year"])
    print(eco_rounds_df.sample(n=20))
    # eco_rounds_df.to_sql("eco_rounds", engine, index=False, if_exists="append", chunksize = 10000)
       

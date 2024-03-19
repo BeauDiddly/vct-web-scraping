@@ -40,13 +40,23 @@ def get_missing_numbers(df, column):
    np.random.shuffle(missing_numbers)
    return null_count, missing_numbers
 
-
-def convert_column_to_str(df, column_name):
-    df[column_name] = df[column_name].astype(str)
+def k_to_numeric(df, column):
+    df[column] = df[column].str.replace("k", "")
+    df[column] = df[column].astype(float)
+    df[column] *= 1000
+    df[column] = df[column].astype(int)
     return df
 
-def convert_column_to_int(df, column_name):
-    df[column_name] = pd.to_numeric(df[column_name]).astype(int)
+def get_eco_type(df, column):
+    df[column] = df[column].str.split(":").str[0]
+    return df
+
+def convert_column_to_str(df, column):
+    df[column] = df[column].astype(str)
+    return df
+
+def convert_column_to_int(df, column):
+    df[column] = pd.to_numeric(df[column]).astype(int)
     return df
 
 def drop_columns(df, column_names):
