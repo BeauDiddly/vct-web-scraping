@@ -159,6 +159,39 @@ def convert_nan_players_teams(df):
     #     df.loc[filtered_indices, "Player"] = "nan"
     return df
 
+def get_all_agents_played_for_kills_stats(df):
+    filtered_df = df[df["Map"] != "All Maps"]
+    filtered_df = df[["Tournament", "Stage", "Match Type", "Match Name", "Team", "Player", "Agent"]]
+    agents_dict = {}
+    for tournament, stage, match_type, match_name, team, player, agent in \
+        zip(filtered_df["Tournament"], filtered_df["Stage"], filtered_df["Match Type"], filtered_df["Match Name"],
+            filtered_df["Team"], filtered_df["Player"], filtered_df["Agent"]):
+        if pd.notna(player) and pd.notna(agent):
+            agents_dict.setdefault((tournament, stage, match_type, match_name, team, player), set()).add(agent)
+    for tuple, agents in agents_dict.items():
+        agents_dict[tuple] = ", ".join(sorted(list(agents)))
+    all_maps_rows = df[df["Map"] == "All Maps"]
+    for tuple, agents in agents_dict.items():
+        if "," in agents:
+            tournament, stage, match_type, match_name, team, player = tuple[0], tuple[1], tuple[2], tuple[3], tuple[4], tuple[5]
+            mask = (all_maps_rows["Tournament"] == tournament) & \
+                (all_maps_rows["Stage"] == stage) & \
+                (all_maps_rows["Match Type"] == match_type) & \
+                (all_maps_rows["Match Name"] == match_name) & \
+                (all_maps_rows["Team"] == team) & \
+                (all_maps_rows["Player"] == player)
+            all_maps_rows.loc[mask, "Agent"] = agents
+    df.loc[df["Map"] == "All Maps"] = all_maps_rows
+    #         mask_dict[tuple] = mask
+    
+    # for tuple, mask in mask_dict.items():
+    #         agents = agents_dict[tuple]
+    #         df.loc[mask, "Agent"] = agents
+    return df
+
+
+    
+
 def remove_tabs_and_newlines(df):
     if "Map" in df:
         df["Map"] = df["Map"].str.replace("\t", "").replace("\n", "")

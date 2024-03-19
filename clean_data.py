@@ -13,6 +13,7 @@ def main():
         year = years[i]
         for file in file_list:
             file_name = file.split("/")[2]
+            print(file_name)
             df = csv_to_df(file)
             df = remove_white_spaces(df)
             df = remove_white_spaces_in_between(df)
@@ -21,6 +22,8 @@ def main():
             df = fixed_team_names(df)
             df = fixed_player_names(df)
             df = insert_missing_players(df)
+            if file_name == "kills_stats.csv":
+                df = get_all_agents_played_for_kills_stats(df)
             matches_result[year][file_name] = df
     for year, dataframes in matches_result.items():
         for file_name, dataframe in dataframes.items():
