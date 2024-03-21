@@ -147,23 +147,24 @@ async def add_eco_stats(file, year, engine):
 async def add_kills(file, year, engine):
    kills_df = csv_to_df(file)
    
-   strip_white_space(kills_df, "Stage")
-   strip_white_space(kills_df, "Match Type")
-   strip_white_space(kills_df, "Match Name")
-   strip_white_space(kills_df, "Player Team")
-   strip_white_space(kills_df, "Enemy Team")
    kills_df = await change_reference_name_to_id(kills_df, year)
-   kills_df = convert_missing_number(kills_df, "Player Kills")
-   kills_df = convert_missing_number(kills_df, "Enemy Kills")
-   kills_df = convert_missing_number(kills_df, "Difference")
-   kills_df = convert_column_to_int(kills_df, "Team ID")
+   kills_df = convert_missing_number(kills_df)
+   # kills_df = convert_missing_number(kills_df, "Enemy Kills")
+   # kills_df = convert_missing_number(kills_df, "Difference")
+   kills_df = convert_column_to_int(kills_df, "Player Team ID")
+   kills_df = convert_column_to_int(kills_df, "Enemy Team ID")
+   kills_df = convert_column_to_int(kills_df, "Player ID")
+   kills_df = convert_column_to_int(kills_df, "Enemy ID")
    kills_df = create_ids(kills_df)
-   kills_df = drop_columns(kills_df, ["Tournament", "Stage", "Match Type", "Match Name", "Player Team", "Player", "Enemy Team", "Enemy"])
+   kills_df["year"] = year
+   kills_df = drop_columns(kills_df, ["Tournament", "Stage", "Match Type", "Match Name", "Player Team", "Player", "Enemy Team", "Enemy", "Map"])
+   kills_df = rename_columns(kills_df, {"index": "kills_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id",
+                                        "Match ID": "match_id", "Player Team ID": "player_team_id", "Player ID": "player_id", "Enemy Team ID": "enemy_team_id",
+                                        "Enemy ID": "enemy_id", "Map ID": "map_id", "Player Kills": "player_kills", "Enemy Kills": "enemy_kills", "Difference": "difference",
+                                        "Kill Type": "kill_type"})
+   kills_df = reorder_columns(kills_df, ["kills_id", "tournament_id", "stage_id", "match_type_id", "match_id", "player_team_id", "player_id", "enemy_team_id", "enemy_id",
+                                         "map_id", "player_kills", "enemy_kills", "difference", "kill_type", "year"])
    print(kills_df.sample(n=20))
-   # kills_df = rename_columns(kills_df, {"index": "kills_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id",
-   #                                      "Match ID": "match_id", "Player Team ID": "player_team_id", "Player ID": "player_id", "Enemy Team ID": "enemy_team_id",
-   #                                      "Enemy ID": "enemy_id", "Map": "map",})
-   # print(kills_df.sample(n=20))
    
    # print(f"Adding kills")
 
