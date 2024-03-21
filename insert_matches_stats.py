@@ -18,8 +18,8 @@ async def main():
     print(csv_files)
 
     # await add_drafts(csv_files[2][8], years[2], sql_alchemy_engine)
-    await add_eco_rounds(csv_files[2][11], years[2], sql_alchemy_engine)
-    # await add_eco_stats(csv_files[1][3], years[1], sql_alchemy_engine)
+    # await add_eco_rounds(csv_files[2][11], years[2], sql_alchemy_engine)
+    await add_eco_stats(csv_files[2][3], years[2], sql_alchemy_engine)
     # await add_kills(csv_files[1][1], years[1], sql_alchemy_engine)
     # await add_kills_stats(csv_files[1][5], years[1], sql_alchemy_engine)
     # await add_maps_played(csv_files[1][0], years[1], sql_alchemy_engine)

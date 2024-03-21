@@ -130,19 +130,15 @@ async def add_eco_rounds(file, year, engine):
       
 async def add_eco_stats(file, year, engine):
    eco_stats_df = csv_to_df(file)
-   strip_white_space(eco_stats_df, "Stage")
-   strip_white_space(eco_stats_df, "Match Type")
-   strip_white_space(eco_stats_df, "Match Name")
-   strip_white_space(eco_stats_df, "Team")
    eco_stats_df = await change_reference_name_to_id(eco_stats_df, year)
    eco_stats_df["year"] = year
-   eco_stats_df = convert_missing_number(eco_stats_df, "Initiated")
+   eco_stats_df = convert_missing_number(eco_stats_df)
    eco_stats_df = convert_column_to_int(eco_stats_df, "Team ID")
    eco_stats_df = create_ids(eco_stats_df)
-   eco_stats_df = drop_columns(eco_stats_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team"])
+   eco_stats_df = drop_columns(eco_stats_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team", "Map"])
    eco_stats_df = rename_columns(eco_stats_df, {"index": "eco_stat_id","Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id", "Match ID": "match_id",
-                                          "Team ID": "team_id", "Map": "map", "Type": "type", "Initiated": "initiated", "Won": "won"})
-   eco_stats_df = reorder_columns(eco_stats_df, ["eco_stat_id", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "map", "type", "initiated", "won"])
+                                          "Team ID": "team_id", "Map ID": "map_id", "Type": "type", "Initiated": "initiated", "Won": "won"})
+   eco_stats_df = reorder_columns(eco_stats_df, ["eco_stat_id", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "map_id", "type", "initiated", "won"])
    print(eco_stats_df.sample(n=20))
    # eco_stats_df.to_sql("eco_stats", engine, index=False, if_exists="append", chunksize = 10000)
    
