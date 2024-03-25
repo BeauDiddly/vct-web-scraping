@@ -182,6 +182,16 @@ def create_kills_table(curr):
    """
    execute_query(curr, query)
 
+def create_kills_stats_agents_table(curr):
+   query = """
+      CREATE TABLE IF NOT EXISTS kills_stats_agents (
+         kills_stats_id INT REFERENCES kills_stats(kill_stat_id),
+         agent_id INT REFERENCES agents(agent_id),
+         PRIMARY KEY (kills_stats_id, agent_id)
+      );
+   """
+   execute_query(curr, query)
+
 def create_kills_stats_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS kills_stats (
@@ -193,7 +203,6 @@ def create_kills_stats_table(curr):
          team_id INT REFERENCES teams(team_id),
          player_id INT REFERENCES players(player_id),
          map_id INT REFERENCES maps(map_id),
-         agent_id INT REFERENCES agents(agent_id),
          two_kills INT NULL,
          three_kills INT NULL,
          four_kills INT NULL,

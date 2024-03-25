@@ -149,8 +149,6 @@ async def add_kills(file, year, engine):
    
    kills_df = await change_reference_name_to_id(kills_df, year)
    kills_df = convert_missing_number(kills_df)
-   # kills_df = convert_missing_number(kills_df, "Enemy Kills")
-   # kills_df = convert_missing_number(kills_df, "Difference")
    kills_df = convert_column_to_int(kills_df, "Player Team ID")
    kills_df = convert_column_to_int(kills_df, "Enemy Team ID")
    kills_df = convert_column_to_int(kills_df, "Player ID")
@@ -168,28 +166,28 @@ async def add_kills(file, year, engine):
    
    # print(f"Adding kills")
 
-
 async def add_kills_stats(file, year, engine):
    kills_stats_df = csv_to_df(file)
-   strip_white_space(kills_stats_df, "Stage")
-   strip_white_space(kills_stats_df, "Match Type")
-   strip_white_space(kills_stats_df, "Match Name")
-   strip_white_space(kills_stats_df, "Team")
-   strip_white_space(kills_stats_df, "Player")
-
+   kills_stats_df["year"] = year
+   # multiple_agents_df = kills_stats_df[kills_stats_df["Agent"].str.contains(",")]
+   # single_agents_df = kills_stats_df[-kills_stats_df["Agent"].str.contains(",")]
    kills_stats_df = await change_reference_name_to_id(kills_stats_df, year)
-   kills_stats_df = convert_missing_number(kills_stats_df, "2k")
-   kills_stats_df = convert_missing_number(kills_stats_df, "3k")
-   kills_stats_df = convert_missing_number(kills_stats_df, "4k")
-   kills_stats_df = convert_missing_number(kills_stats_df, "5k")
-   kills_stats_df = convert_missing_number(kills_stats_df, "1v1")
-   kills_stats_df = convert_missing_number(kills_stats_df, "1v2")
-   kills_stats_df = convert_missing_number(kills_stats_df, "1v3")
-   kills_stats_df = convert_missing_number(kills_stats_df, "1v4")
-   kills_stats_df = convert_missing_number(kills_stats_df, "1v5")
+   kills_stats_df = convert_missing_number(kills_stats_df)
    kills_stats_df = create_ids(kills_stats_df)
-   kills_stats_df = drop_columns(kills_stats_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team", "Player"])
+   kills_stats_df = drop_columns(kills_stats_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team", "Player", "Map"])
+   kills_stats_df = rename_columns(kills_stats_df, {"index": "kills_stats_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id",
+                                                    "Match ID": "match_id", "Map ID": "map_id", "Team ID": "team_id", "Player ID": "player_id", "Agents": "agents",
+                                                    "Econ": "econ", "Spike Plants": "spike_plants", "Spike Defuses": "spike_defuses"})
+   kills_stats_df = reorder_columns(kills_stats_df, ["kills_stats_id", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "player_id", "map_id", "agents",
+                                                     "2k", "3k", "4k", "5k", "1v1", "1v2", "1v3", "1v4", "1v5", "econ", "spike_plants", "spike_defuses"])
+   agents_df = kills_stats_df[["kills_stats_id", "agents"]]
+   agents_df = splitting_agents(agents_df)
+   agents_df = rename_columns(agents_df, {"agents": "agent"})
+   kills_stats_df = drop_columns(kills_stats_df, ["agents"])
+   agents_df = await change_reference_name_to_id(agents_df, year)
+   agents_df["year"] = year
    print(kills_stats_df.sample(n=20))
+   print(agents_df)
 
 
 async def add_maps_played(file, year, engine):

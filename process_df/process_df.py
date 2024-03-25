@@ -76,16 +76,30 @@ def create_tuples(df):
     tuples = [tuple(x) for x in df.values]
     return tuples
 
+def splitting_agents(df):
+    df["agents"] = df["agents"].str.split(", ")
+    df = df.explode("agents")
+    return df
+
+def seperate_agents(ids):
+    single_agent_ids = []
+    multiple_agent_ids = []
+    single_agents = []
+    multiple_agents = []
+    for id in ids:
+        value = list(id.values())[0]
+        if isinstance(value, list):
+            multiple_agent_ids.append(id)
+            multiple_agents.append(value)
+        else:
+            single_agent_ids.append(id)
+            single_agents.append(value)
+    return single_agent_ids, single_agents, multiple_agent_ids, multiple_agents
+
 def create_conditions_values_1d(df, ids, column):
     conditions, values = [], []
     for id in ids:
-        try:
-            name, id = next(iter(id.items()), (None, None))
-        except:
-            print(column)
-            print(ids)
-            print(id)
-            sys.exit()
+        name, id = next(iter(id.items()), (None, None))
         conditions.append(df[column] == name)
         values.append(id)
     return conditions, values
@@ -170,7 +184,7 @@ async def process_players(pool, df):
 
 async def process_agents(pool, df):
     async with pool.acquire() as conn:
-        agent_columns = ["Agent", "Agents"]
+        agent_columns = ["agent", "Eliminator Agent", "Eliminated Agent"]
         tasks = [await process_column(conn, df, column, "agent_id", "agents", "agent") for column in agent_columns if column in df]
 
 async def process_maps(pool, df):
@@ -185,7 +199,8 @@ async def change_reference_name_to_id(df, year):
             process_tournaments_stages_match_types_matches(pool, df, year),
             process_players(pool, df),
             process_teams(pool, df),
-            process_maps(pool, df)
+            process_maps(pool, df),
+            process_agents(pool, df)
         )
 
     return df
