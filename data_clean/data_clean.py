@@ -1,12 +1,8 @@
 import pandas as pd
 
-na_values = ['', '#N/A', '#N/A N/A', '#NA', '-1.#IND',
-            '-1.#QNAN', '-NaN', '-nan', '1.#IND',
-            '1.#QNAN', 'N/A', 'NULL', 'NaN',
-            'n/a', 'null']
 
 def csv_to_df(file):
-    return pd.read_csv(file, na_values = na_values, keep_default_na=False)
+    return pd.read_csv(file, keep_default_na=True)
 
 misnamed_teams = {"BLISS": "Team Bliss", "WaVii": "Team WaVii", "Arrow": "Team Arrow", "FNLTY": "Finality", "100su": "Mujig 100su",
                     "RRQ": "Rex Regum Qeon", "NXLGA": "NXLG Academy", "57RBB": "57 Rach Bunh Binh", "Kantic": "Kantic Gaming",
@@ -15,13 +11,13 @@ misnamed_teams = {"BLISS": "Team Bliss", "WaVii": "Team WaVii", "Arrow": "Team A
                     "NRAGE": "ENRAGE", "BK ROG": "BK ROG Esports", "kom4ka": "komand04ka", "eXiLe": "eXiLe eSports", "Orbit": "Orbit",
                     "XCN": "VOIN DRIP", "CNL": "VOIN DRIP", "FAV": "FAV gaming", "New": "New Team", "AE": "AKIHABARA ENCOUNT",
                     "Rebe": "Rebellion Arts", "YA": "Ingenuity", "Team": "rööcivarkaat", "ROISS": "Roisseur", "XTM": "VOIN DRIP",
-                    "Recca.P'": "Recca Project", "YTX": "VOIN DRIP", "TOKYO": "Tokyo", "INRE": "SchwarzerLand", "ICC": "SchwarzerLand",
+                    "Recca.P": "Recca Project", "YTX": "VOIN DRIP", "TOKYO": "Tokyo", "INRE": "SchwarzerLand", "ICC": "SchwarzerLand",
                     "INS": "SchwarzerLand", "BB": "SchwarzerLand", "no n": "SchwarzerLand", "tp2luz": "tp i 2 luza", "TMSPACE": "TEAM SPACE",
                     "VEXEC": "ValorantEXEC", "DLWZK": "DELIRAWOW", "Wolves": "Wolves of Hell", "BENCH": "Benchwarmers", "sauce": "sas elle",
                     "Sangal": "Sangal Esports", "Vend": "Recca Project", "R&MB": "rice and meatballs", "Wygers": "Wygers Argentina",
                     "Procyon": "Procyon Team", "PÊEK": "PÊEK Gaming", "Whynot": "WhynotVLR", "anime": "animeshniki", "ZMM.B": "Zero MarksMen Black",
                     "SR.GC": "Shopify Rebellion GC", "ASTRO": "Astro Esports", "BLIND": "Blind Esports", "IGZ": "SchwarzerLand", "VOX.HK": "VOX Hakaishin",
-                    "FTZ.R": "ForteZ Regulus", "KRAKEN": "KRAKEN ESC", "STY": "SchwarzerLand", "UAESA.G": "UAESA Green", "ZMM.S'": "Zero MarksMen Silver",
+                    "FTZ.R": "ForteZ Regulus", "KRAKEN": "KRAKEN ESC", "STY": "SchwarzerLand", "UAESA.G": "UAESA Green", "ZMM.S": "Zero MarksMen Silver",
                     "Azules": "Azules Esports", "Reaper": "The Reaper", "SPACE": "Space Walkers", "SPX": "Storks Phalanx", "NTH": "SchwarzerLand",
                     "RIVAL": "Rival Esports Alpha", "TAIYO": "Taiyo eSports", "ex-WC": "ex-Wildcard Gaming", "MXBSS": "MXB South Side", "VCTRY": "VCTRY Esports",
                     "ODIUM": "Odium", "Cavalry": "Cavalry Esports", "Focus": "Team Focus", "Fre": " Frederikssund Vikings", "GLD.GC": "Guild GC", "MANGAL": "TEAM MANGAL",
@@ -34,16 +30,20 @@ misnamed_teams = {"BLISS": "Team Bliss", "WaVii": "Team WaVii", "Arrow": "Team A
                     "GMG, GOMA": "GOMA", "GMG": "GOMA", "EPA, Euphoria": "Euphoria", "GHS": "Gehenna Sweepers", "GHS, Gehenna Sweepers": "Gehenna Sweepers", "Gwan, GwangDae": "GwangDae",
                     "OLDG": "OLDGUYZ", "v0rt, v0rteX 5": "v0rteX 5", "MM": "Mob Mentality eSports", "Enig": "Enigma", "Doub": "DoubleCross eSports", "RESE": "Reservoir dogs",
                     "just": "justtry", "Les": "Les Babouches", "Anth": "Anthrax", "74, Nanashi no Gonbee": "Nanashi no Gonbee", "Endavant": "Team Endavant", "Rese": "Reservoir dogs",
+                    "CK": "Cock Esports", "VT": "VITEAZ", "RR": "Rage's Rangos", "M5": "Morioh Cho", "Orbi": "VOIN DRIP", "XcN": "VOIN DRIP", "Play": "GRN Esports",
+                    "OVA": "Secret Esports", "MCK": "Mastery", "owna": "Ziomki Poziomki", "Devi": "ValorEitis", "1VR": "Karasuno", "SE": "VITEAZ",
+                    "illm": "Galaxie Punk Esport", "BRK": "Hide In Smoke", "Mega": "OfficialFragBoys", "SUPR": "Laia Nation", "SEN": "The Noah Aiello",
+                    "bc": "OmegaKek", "RC": "Goldhorn Gaming", "NRG": "Mega Minors", "eU": "HDMI Port", "Ento": "Devision Esports", "GHST": "Boosted Immortals",
+                    "FREE": "Rage's Rangos", "NBL": "Chilling in Space", "ABX": "Veggie Straws", "RESO": "Slaughter House", "PK": "sadHours", "FaZe": "South East Movement",
+                    "V1": "Relentless Esports", "GT": "OES Solo", "Lemo": "Reborn", "seek": "Rekreational Esports"
 
 }
 
 misnamed_players = {"luk": "lukzera", "Λero": "Aero", "Playboi Joe": "velis", "WeDid": "wedid", "karma": "karmax1", "yeji": "shen", "xvr": "xeric",
                     "Oblivion": "icarus", "nickszxz": "nicksz", "m0rea": "budimeisteR", "mikalulba": "Mikael", "zhar": "Asteriskk", "justreggae": "reggae",
                     "BoBo": "Ender", "1000010": "01000010", "derilasong": "Fuqua", "Arquiza": "rkz", "par scofield": "parscofield", "florance": "flqrance",
-                    "stev0r": "stev0rr", "unfaiR aK": "Unfair", "alulba": "aluba", "2": "002"}
+                    "stev0r": "stev0rr", "unfaiR aK": "Unfair", "alulba": "aluba", "2": "002", "kETTU": "pATE", "Laika": "Wendigo", "HaoHao": "Howie"}
 
-agent_to_player = {"brimstone": "Nappi", "sova": "maik", "skye": "johkubb", "raze": "Puoli", "cypher": "akumeni", "breach": "johkubb", "omen": "Nappi",
-                   "killjoy": "akumeni", "jett": "Puoli"}
 
 
 def remove_white_spaces(df):
@@ -62,7 +62,7 @@ def convert_to_str(df):
                   "Player Team", "Enemy Team", "Enemy",
                   "Eliminator", "Eliminated"]:
         if column in df:
-            df[column] = df[column].astype(str)
+            df[column] = df[column].astype("string")
     return df
 
 def convert_to_int(df):
@@ -93,44 +93,98 @@ def convert_nan_players_teams(df):
         player_nan_condition = (df['Tournament'] == 'Champions Tour Philippines Stage 1: Challengers 2') & \
                                (df['Stage'].isin(['All Stages', 'Qualifier 1'])) & \
                                (df['Match Type'].isin(['Round of 16', 'All Match Types'])) & \
-                               (df['Player'] == 'nan') & \
-                               (df["Team"] == "nan")
+                               (df['Player'].isna()) & \
+                               (df["Team"].isna())
         missing_bjk_condition = (df["Tournament"] == "Champions Tour Turkey Stage 1: Challengers 3") & \
                                 (df["Stage"] == "Open Qualifier") & \
                                 (df["Match Type"] == "Round of 32") & \
                                 (df["Player"].isin(["Noffe", "m4rco", "vlt", "daNN", "MrFaliN"])) & \
-                                (df["Team"] == "nan")
+                                (df["Team"].isna())
         pATE_condition = (df['Tournament'].isin(["Champions Tour Europe Stage 3: Challengers 2",
                                                 "Champions Tour Europe Stage 3: Challengers 1", "Champions Tour Europe Stage 1: Challengers 1"])) & \
                          (df['Stage'].isin(['Open Qualifier', "Qualifier", 'All Stages'])) & \
                          (df['Match Type'].isin(['Round of 256', "Round of 128", 'All Match Types'])) & \
                          (df['Player'] == 'pATE') & \
-                         (df["Team"] == "nan")
+                         (df["Team"].isna())
         wendigo_2021_condition = (df['Tournament'] == "Champions Tour North America Stage 2: Challengers 2") & \
                          (df['Stage'].isin(['Open Qualifier', 'All Stages'])) & \
                          (df['Match Type'].isin(["Round of 128", 'All Match Types'])) & \
                          (df['Player'] == 'Wendigo') & \
-                         (df["Team"] == "nan")
+                         (df["Team"].isna())
         
         wendigo_2022_condition = (df['Tournament'] == "Champions Tour North America Stage 2: Challengers") & \
                          (df['Stage'].isin(["Open Qualifier #1", "Open Qualifier #2", 'All Stages'])) & \
                          (df['Match Type'].isin(["Round of 128", "Round of 64", 'All Match Types'])) & \
                          (df['Player'] == 'Wendigo') & \
-                         (df["Team"] == "nan")
+                         (df["Team"].isna())
 
         howie_1_condition = (df['Tournament'] == "Oceania Tour: Stage 1") & \
                          (df['Stage'].isin(['Open Qualifier', 'All Stages'])) & \
                          (df['Match Type'].isin(["Round of 16", "Quarterfinals", "Lower Bracket Semifinals", "Lower Bracket Consolation Finals",
                                                  'All Match Types'])) & \
                          (df['Player'] == 'Howie') & \
-                         (df["Team"] == "nan")
+                         (df["Team"].isna())
 
         howie_2_condition = (df['Tournament'] == "Oceania Tour: Stage 2") & \
                          (df['Stage'].isin(['Open Qualifier', 'All Stages'])) & \
                          (df['Match Type'].isin(["Round of 16", 'All Match Types'])) & \
                          (df['Player'] == 'Howie') & \
-                         (df["Team"] == "nan")
-        
+                         (df["Team"].isna())
+        if "Match Name" in df:
+            roocivarkaat_players_condition = (df["Tournament"] == "Champions Tour Europe Stage 3: Challengers 1") & \
+                                             (df["Stage"] == "Open Qualifier") & \
+                                             (df["Match Type"] == "Round of 256") & \
+                                             (df["Match Name"] == "rööcivarkaat vs Team Name") & \
+                                             (df["Player"].isna())
+            filtered_rows = df[roocivarkaat_players_condition]
+            for index, row in filtered_rows.iterrows():
+                agent = row["Agent"]
+                player = ""
+                if agent == "skye" or agent == "breach":
+                    player = "johkubb"
+                elif agent == "brimstone" or agent == "omen":
+                    player = "Nappi"
+                elif agent == "killjoy" or agent == "cypher":
+                    player = "akumeni"
+                elif agent == "raze" or agent == "jett":
+                    player = "Puoli"
+                elif agent == "sova":
+                    player = "maik"
+                df.at[index, "Player"] = player
+            filtered_indices = df.index[roocivarkaat_players_condition]
+            df.loc[filtered_indices, "Team"] = "rööcivarkaat"
+
+
+            japanese_team_player_condition = (df["Tournament"] == "Champions Tour Japan Stage 1: Challengers Week 1") & \
+                                             (df["Stage"] == "Open Qualifier") & \
+                                             (df["Match Type"] == "Group B") & \
+                                             (df["Match Name"] == "ややーず vs Storks Phalanx") & \
+                                             (df["Player"].isna())
+            
+            wrong_team_condition = japanese_team_player_condition & ((df["Team"] == "Storks Phalanx") | df["Team"].isna())
+
+            filtered_indices = df.index[wrong_team_condition]
+            df.loc[filtered_indices, "Team"] = "ややーず"
+
+            missing_players_condition = japanese_team_player_condition & (df["Player"].isna())
+
+
+            filtered_rows = df[missing_players_condition]
+
+            for index, row in filtered_rows.iterrows():
+                agent = row["Agent"]
+                player = ""
+                if agent == "kayo" or agent == "cypher":
+                    player = "hatty"
+                elif agent == "sova" or agent == "astra":
+                    player = "YAYA"
+                elif agent == "viper" or agent == "sage":
+                    player = "Shinryaku"
+                elif agent == "chamber" or agent == "raze":
+                    player = "RIA"
+                elif agent == "jett":
+                    player = "Defectio"
+                df.at[index, "Player"] = player
 
         filtered_indices = df.index[player_nan_condition]
         df.loc[filtered_indices, "Team"] = "MGS Spades"
@@ -153,40 +207,17 @@ def convert_nan_players_teams(df):
         filtered_indices = df.index[howie_2_condition]
         df.loc[filtered_indices, "Team"] = "Trident Esports"
 
-    # elif "Player" in df and "Player ID" in df:
-    #     player_nan_condiiton = (df["Player ID"] == 10207) & (df["Player"].isnull())
-    #     filtered_indices = df.index[player_nan_condiiton]
-    #     df.loc[filtered_indices, "Player"] = "nan"
     return df
+
+def unique_sorted_agents(agents):
+    return ", ".join(list(sorted(set(agents))))
 
 def get_all_agents_played_for_kills_stats(df):
     filtered_df = df[df["Map"] != "All Maps"]
     filtered_df = df[["Tournament", "Stage", "Match Type", "Match Name", "Team", "Player", "Agent"]]
-    agents_dict = {}
-    for tournament, stage, match_type, match_name, team, player, agent in \
-        zip(filtered_df["Tournament"], filtered_df["Stage"], filtered_df["Match Type"], filtered_df["Match Name"],
-            filtered_df["Team"], filtered_df["Player"], filtered_df["Agent"]):
-        if pd.notna(player) and pd.notna(agent):
-            agents_dict.setdefault((tournament, stage, match_type, match_name, team, player), set()).add(agent)
-    for tuple, agents in agents_dict.items():
-        agents_dict[tuple] = ", ".join(sorted(list(agents)))
-    all_maps_rows = df[df["Map"] == "All Maps"]
-    for tuple, agents in agents_dict.items():
-        if "," in agents:
-            tournament, stage, match_type, match_name, team, player = tuple[0], tuple[1], tuple[2], tuple[3], tuple[4], tuple[5]
-            mask = (all_maps_rows["Tournament"] == tournament) & \
-                (all_maps_rows["Stage"] == stage) & \
-                (all_maps_rows["Match Type"] == match_type) & \
-                (all_maps_rows["Match Name"] == match_name) & \
-                (all_maps_rows["Team"] == team) & \
-                (all_maps_rows["Player"] == player)
-            all_maps_rows.loc[mask, "Agent"] = agents
-    df.loc[df["Map"] == "All Maps"] = all_maps_rows
-    #         mask_dict[tuple] = mask
-    
-    # for tuple, mask in mask_dict.items():
-    #         agents = agents_dict[tuple]
-    #         df.loc[mask, "Agent"] = agents
+    agents_played_df = filtered_df.groupby(["Tournament", "Stage", "Match Type", "Match Name", "Team", "Player"])["Agent"].agg(unique_sorted_agents).reset_index()
+    merged_df = pd.merge(df, agents_played_df, on=["Tournament", "Stage", "Match Type", "Match Name", "Team", "Player"], how="left")
+    df.loc[df["Map"] == "All Maps", "Agent"] = merged_df["Agent_y"].fillna(merged_df["Agent_x"])
     return df
 
 
@@ -203,27 +234,23 @@ def add_missing_player(df, year):
         if year == 2021:
             df.loc[len(df.index)] = ["pATE", 9505]
             df.loc[len(df.index)] = ["Wendigo", 26880]
-            # missing_pATE = pd.Series(["pATE", 9505], index=df.columns)
-            # missing_Wendigo = pd.Series(["Wendigo", 26880], index=df.columns)
-            # df = pd.concat([df, missing_pATE, missing_Wendigo], ignore_index=True)
         elif year == 2022:
             df.loc[len(df.index)] = ["Wendigo", 26880]
-            # missing_Wendigo = pd.Series(["Wendigo", 26880], index=df.columns)
-            # df = pd.concat([df, missing_Wendigo], ignore_index=True)
+    df.drop_duplicates(inplace=True)
     return df
 
-def insert_missing_players(df):
-    for column in ["Player", "Eliminator", "Eliminated"]:
-        for another_column in ["Agent", "Agents"]:
-            if column in df and another_column in df:
-                missing_player_rows = df[df[column].isna()]
+# def insert_missing_players(df):
+#     for column in ["Player", "Eliminator", "Eliminated"]:
+#         for another_column in ["Agent", "Agents"]:
+#             if column in df and another_column in df:
+#                 missing_player_rows = df[df[column].isna()]
 
-                for i, row in missing_player_rows.iterrows():
-                    agent = row[another_column]
-                    if agent in agent_to_player:
-                        player = agent_to_player[agent]
-                        df.at[i, column] = player
-                    # else:
-                    #     print(row)
-    return df
+#                 for i, row in missing_player_rows.iterrows():
+#                     agent = row[another_column]
+#                     if agent in agent_to_player:
+#                         player = agent_to_player[agent]
+#                         df.at[i, column] = player
+#                     # else:
+#                     #     print(row)
+#     return df
 

@@ -21,7 +21,7 @@ def main():
             df = convert_to_str(df)
             df = fixed_team_names(df)
             df = fixed_player_names(df)
-            df = insert_missing_players(df)
+            df = convert_nan_players_teams(df)
             if file_name == "kills_stats.csv":
                 df = get_all_agents_played_for_kills_stats(df)
             matches_result[year][file_name] = df
@@ -77,7 +77,6 @@ def main():
             df = remove_white_spaces(df)
             df = remove_white_spaces_in_between(df)
             df = remove_tabs_and_newlines(df)
-            # df = convert_nan_players_teams(df)
             df = add_missing_player(df, year)
             df = convert_to_int(df)
             df = convert_to_str(df)
