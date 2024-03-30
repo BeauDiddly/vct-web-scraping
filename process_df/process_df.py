@@ -7,10 +7,10 @@ import asyncio
 import numpy as np
 import sys
 
-na_values = ['', '#N/A', '#N/A N/A', '#NA', '-1.#IND',
-            '-1.#QNAN', '-NaN', '-nan', '1.#IND',
-            '1.#QNAN', 'N/A', 'NULL', 'NaN',
-            'n/a', 'null']
+# na_values = ['', '#N/A', '#N/A N/A', '#NA', '-1.#IND',
+#             '-1.#QNAN', '-NaN', '-nan', '1.#IND',
+#             '1.#QNAN', 'N/A', 'NULL', 'NaN',
+#             'n/a', 'null']
 
 def strip_white_space(df, column_name):
     df.loc[:, column_name] = df[column_name].str.strip()
@@ -70,7 +70,7 @@ def rename_columns(df, columns_names):
     return df.rename(columns=columns_names)
 
 def csv_to_df(file):
-    return pd.read_csv(file, na_values = na_values, keep_default_na=False)
+    return pd.read_csv(file)
 
 def create_tuples(df):
     tuples = [tuple(x) for x in df.values]

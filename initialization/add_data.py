@@ -192,12 +192,14 @@ async def add_kills_stats(file, year, engine):
 
 async def add_maps_played(file, year, engine):
    maps_played_df = csv_to_df(file)
-   strip_white_space(maps_played_df, "Stage")
-   strip_white_space(maps_played_df, "Match Type")
-   strip_white_space(maps_played_df, "Match Name")
+   # strip_white_space(maps_played_df, "Stage")
+   # strip_white_space(maps_played_df, "Match Type")
+   # strip_white_space(maps_played_df, "Match Name")
    maps_played_df = await change_reference_name_to_id(maps_played_df, year)
    maps_played_df = create_ids(maps_played_df)
-   maps_played_df = drop_columns(maps_played_df, ["Tournament", "Stage", "Match Type", "Match Name"])
+   maps_played_df = drop_columns(maps_played_df, ["Tournament", "Stage", "Match Type", "Match Name", "Map"])
+   maps_played_df = rename_columns(maps_played_df, {"index": "maps_played_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id",
+                                                    "Match ID": "match_id", "Map ID": "map_id"})
    print(maps_played_df.sample(n=20))
 
 async def add_maps_scores(file, year, engine):
