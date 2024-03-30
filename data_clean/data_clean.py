@@ -218,6 +218,7 @@ def get_all_agents_played_for_kills_stats(df):
     agents_played_df = filtered_df.groupby(["Tournament", "Stage", "Match Type", "Match Name", "Team", "Player"])["Agent"].agg(unique_sorted_agents).reset_index()
     merged_df = pd.merge(df, agents_played_df, on=["Tournament", "Stage", "Match Type", "Match Name", "Team", "Player"], how="left")
     df.loc[df["Map"] == "All Maps", "Agent"] = merged_df["Agent_y"].fillna(merged_df["Agent_x"])
+    df = df.rename(columns={"Agent": "Agents"})
     return df
 
 
@@ -237,6 +238,14 @@ def add_missing_player(df, year):
         elif year == 2022:
             df.loc[len(df.index)] = ["Wendigo", 26880]
     df.drop_duplicates(inplace=True)
+    df.reset_index(drop=True, inplace=True)
+    return df
+
+def add_missing_abbriev(df, year):
+    if "Abbreviated" in df:
+        if year == 2022:
+            df.loc[df["Full Name"] == "ややーず", "Abbreviated"] = "ややーず" 
+    df.reset_index(drop=True, inplace=True)
     return df
 
 # def insert_missing_players(df):

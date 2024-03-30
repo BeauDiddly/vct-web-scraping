@@ -61,6 +61,11 @@ def main():
         # agents = agents | all_agents
 
     for year in years:
+        matches_ids_dfs[year].reset_index(drop=True, inplace=True)
+        tournaments_stages_match_types_ids_dfs[year].reset_index(drop=True, inplace=True)
+        players_dfs[year].reset_index(drop=True, inplace=True)
+        teams_dfs[year].reset_index(drop=True, inplace=True)
+        teams_mapping_dfs[year].reset_index(drop=True, inplace=True)
         # print(players_dfs[year][players_dfs[year]["Player"] == "nan"])
         matches_ids = pd.concat([matches_ids, matches_ids_dfs[year]], ignore_index=True)
         tournaments_stages_match_types_ids = pd.concat([tournaments_stages_match_types_ids,
@@ -76,8 +81,7 @@ def main():
     teams.drop_duplicates(inplace=True)
     matches_ids.drop_duplicates(inplace=True)
     tournaments_stages_match_types_ids.drop_duplicates(inplace=True)
-    teams_mapping.drop_duplicates(inplace=True)
-
+    teams_mapping.drop_duplicates(subset=["Abbreviated", "Full Name"], inplace=True)
     missing_rows = matches_ids[matches_ids["Match Type ID"].isnull()]
     missing_match_types = missing_rows[["Tournament", "Tournament ID", "Stage", "Stage ID", "Match Type", "Match Type ID", "Year"]].drop_duplicates()
 

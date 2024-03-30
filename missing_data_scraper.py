@@ -101,16 +101,17 @@ def main():
         dataframes[file_name] = convert_to_str(dataframe)
         dataframes[file_name] = fixed_team_names(dataframe)
         dataframes[file_name] = fixed_player_names(dataframe)
-        dataframes[file_name] = insert_missing_players(dataframe)
 
 
         
     for file_name, dataframe in dataframes.items():
         if file_name == "players_ids" or file_name == "teams_ids":
             original_df = csv_to_df(f"cleaned_data/vct_2021/ids/{file_name}.csv")
+            dataframe.reset_index(drop=True, inplace=True)
+            original_df.reset_index(drop=True, inplace=True)
             original_df = pd.concat([original_df, dataframe], ignore_index=True)
-            original_df = convert_to_int(original_df)
             original_df = original_df.drop_duplicates()
+            original_df = convert_to_int(original_df)
             original_df.reset_index(drop=True, inplace=True)
                     # dataframe.to_csv(f"test/{file_name}.csv", encoding="utf-8", index=False)
             original_df.to_csv(f"cleaned_data/vct_2021/ids/{file_name}.csv")
@@ -122,16 +123,17 @@ def main():
                 (original_df["Match Type"] == dataframe.loc[0, "Match Type"])
             ][0]
             original_df = pd.concat([original_df.iloc[:first_occurence_index], dataframe, original_df.iloc[first_occurence_index:]]).reset_index(drop=True)
-            original_df = convert_to_int(original_df)
             original_df = original_df.drop_duplicates()
+            original_df = convert_to_int(original_df)
+            original_df.reset_index(drop=True, inplace=True)
             original_df.to_csv(f"cleaned_data/vct_2021/ids/{file_name}.csv")
         elif file_name == "team_mapping":
             original_df = csv_to_df(f"cleaned_data/vct_2021/matches/{file_name}.csv")
             original_df = pd.concat([original_df, dataframe], ignore_index=True)
-            original_df = original_df.drop_duplicates()
+            original_df = original_df.drop_duplicates(subset=["Abbreviated", "Full Name"])
+            original_df.reset_index(drop=True, inplace=True)
             original_df.to_csv(f"cleaned_data/vct_2021/matches/{file_name}.csv")
         else:
-            print(file_name)
             original_df = csv_to_df(f"cleaned_data/vct_2021/matches/{file_name}.csv")
             first_occurence_index = original_df.index[
                 (original_df["Tournament"] == dataframe.loc[0, "Tournament"]) &

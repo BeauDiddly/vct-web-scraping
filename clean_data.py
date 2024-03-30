@@ -13,17 +13,17 @@ def main():
         year = years[i]
         for file in file_list:
             file_name = file.split("/")[2]
-            print(file_name)
             df = csv_to_df(file)
             df = remove_white_spaces(df)
             df = remove_white_spaces_in_between(df)
             df = remove_tabs_and_newlines(df)
-            df = convert_to_str(df)
+            df = add_missing_abbriev(df, year)
             df = fixed_team_names(df)
             df = fixed_player_names(df)
             df = convert_nan_players_teams(df)
             if file_name == "kills_stats.csv":
                 df = get_all_agents_played_for_kills_stats(df)
+            df = convert_to_str(df)    
             matches_result[year][file_name] = df
     for year, dataframes in matches_result.items():
         for file_name, dataframe in dataframes.items():
@@ -40,9 +40,9 @@ def main():
             df = remove_white_spaces(df)
             df = remove_white_spaces_in_between(df)
             df = remove_tabs_and_newlines(df)
-            df = convert_to_str(df)
             df = fixed_team_names(df)
             df = fixed_player_names(df)
+            df = convert_to_str(df)
             agents_result[year][file_name] = df
     for year, dataframes in agents_result.items():
         for file_name, dataframe in dataframes.items():
@@ -58,10 +58,10 @@ def main():
             df = remove_white_spaces(df)
             df = remove_white_spaces_in_between(df)
             df = remove_tabs_and_newlines(df)
-            df = convert_to_str(df)
             df = convert_nan_players_teams(df)
             df = fixed_team_names(df)
             df = fixed_player_names(df)
+            df = convert_to_str(df)
             players_result[year][file_name] = df
     for year, dataframes in players_result.items():
         for file_name, dataframe in dataframes.items():
