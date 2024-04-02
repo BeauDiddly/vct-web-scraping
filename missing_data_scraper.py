@@ -114,7 +114,7 @@ def main():
             original_df = convert_to_int(original_df)
             original_df.reset_index(drop=True, inplace=True)
                     # dataframe.to_csv(f"test/{file_name}.csv", encoding="utf-8", index=False)
-            original_df.to_csv(f"cleaned_data/vct_2021/ids/{file_name}.csv")
+            original_df.to_csv(f"cleaned_data/vct_2021/ids/{file_name}.csv", index=False)
         elif file_name == "tournaments_stages_matches_games_ids":
             original_df = csv_to_df(f"cleaned_data/vct_2021/ids/{file_name}.csv")
             first_occurence_index = original_df.index[
@@ -126,13 +126,13 @@ def main():
             original_df = original_df.drop_duplicates()
             original_df = convert_to_int(original_df)
             original_df.reset_index(drop=True, inplace=True)
-            original_df.to_csv(f"cleaned_data/vct_2021/ids/{file_name}.csv")
+            original_df.to_csv(f"cleaned_data/vct_2021/ids/{file_name}.csv", index=False)
         elif file_name == "team_mapping":
             original_df = csv_to_df(f"cleaned_data/vct_2021/matches/{file_name}.csv")
             original_df = pd.concat([original_df, dataframe], ignore_index=True)
             original_df = original_df.drop_duplicates(subset=["Abbreviated", "Full Name"])
             original_df.reset_index(drop=True, inplace=True)
-            original_df.to_csv(f"cleaned_data/vct_2021/matches/{file_name}.csv")
+            original_df.to_csv(f"cleaned_data/vct_2021/matches/{file_name}.csv", index=False)
         else:
             original_df = csv_to_df(f"cleaned_data/vct_2021/matches/{file_name}.csv")
             first_occurence_index = original_df.index[
@@ -141,7 +141,7 @@ def main():
                 (original_df["Match Type"] == dataframe.loc[0, "Match Type"])
             ][0]
             original_df = pd.concat([original_df.iloc[:first_occurence_index], dataframe, original_df.iloc[first_occurence_index:]]).reset_index(drop=True)
-            original_df.to_csv(f"cleaned_data/vct_2021/matches/{file_name}.csv")
+            original_df.to_csv(f"cleaned_data/vct_2021/matches/{file_name}.csv", index=False)
         # original_df.to_csv(f"test/{file_name}.csv", encoding="utf-8", index=False)
 
 
