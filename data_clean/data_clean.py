@@ -186,8 +186,19 @@ def convert_nan_players_teams(df):
                     player = "Defectio"
                 df.at[index, "Player"] = player
 
+
+            player_nan_overview_condition = (df['Tournament'] == 'Champions Tour Philippines Stage 1: Challengers 2') & \
+                               (df['Stage'] == 'Qualifier 1') & \
+                               (df['Match Type'] == 'Round of 16') & \
+                               (df['Player'].isna()) & \
+                               (df["Match Name"] == "KADILIMAN vs MGS Spades")
+            filtered_indices = df.index[player_nan_overview_condition]
+            df.loc[filtered_indices, "Player"] = "nan"
+
+
         filtered_indices = df.index[player_nan_condition]
         df.loc[filtered_indices, "Team"] = "MGS Spades"
+        df.loc[filtered_indices, "Player"] = "nan"
 
         filtered_indices = df.index[missing_bjk_condition]
         df.loc[filtered_indices, "Team"] = "Beşiktaş Esports"
@@ -233,12 +244,14 @@ def remove_tabs_and_newlines(df):
 def add_missing_player(df, year):
     if "Player" in df and "Player ID" in df:
         if year == 2021:
+            nan_player = df[df["Player ID"] == 10207].index
+            df.loc[nan_player, "Player"] = "nan"
             df.loc[len(df.index)] = ["pATE", 9505]
             df.loc[len(df.index)] = ["Wendigo", 26880]
         elif year == 2022:
             df.loc[len(df.index)] = ["Wendigo", 26880]
-    df.drop_duplicates(inplace=True)
-    df.reset_index(drop=True, inplace=True)
+        df.drop_duplicates(inplace=True)
+        df.reset_index(drop=True, inplace=True)
     return df
 
 def add_missing_abbriev(df, year):
