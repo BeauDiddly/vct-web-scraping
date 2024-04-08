@@ -40,7 +40,7 @@ def main():
     games_id_divs = match_soup.find("div", class_="vm-stats-gamesnav").find_all("div")
     games_id = {}
     extract_games_id(games_id_divs, games_id, results, ["Champions Tour Turkey Stage 1: Challengers 3", "Open Qualifier", "Round of 32", "Typhone vs Beşiktaş Esports",
-                                                        339, 689, 12398])
+                                                        339, 698, 12398])
     extract_methods(overview_stats, games_id, results, ["Champions Tour Turkey Stage 1: Challengers 3", "Open Qualifier", "Round of 32", "Typhone vs Beşiktaş Esports",
                                                         "Typhone", "Beşiktaş Esports"])
     maps_headers = match_soup.find_all("div", class_="vm-stats-game-header")
