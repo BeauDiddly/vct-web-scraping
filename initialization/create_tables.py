@@ -229,7 +229,7 @@ def create_maps_played_table(curr):
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
-         map_id INT REFERENCES maps(map_id),
+         map_id INT REFERENCES maps(map_id) NULL,
          year INT NOT NULL
 
       );
@@ -353,6 +353,7 @@ def create_win_loss_methods_count_table(curr):
          time_expiry_failed_to_plant INT
       );
    """
+   execute_query(curr, query)
 
 def create_win_loss_methods_round_number_table(curr):
    query = """
@@ -366,9 +367,9 @@ def create_win_loss_methods_round_number_table(curr):
          map_id INT REFERENCES maps(map_id),
          method VARCHAR(255),
          outcome VARCHAR(255)
-      )
-"""
-
+      );
+   """
+   execute_query(curr, query)
 
 def create_agents_pick_rates_table(curr):
    query = """

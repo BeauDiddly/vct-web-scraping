@@ -201,6 +201,7 @@ async def add_maps_played(file, year, engine):
    maps_played_df = drop_columns(maps_played_df, ["Tournament", "Stage", "Match Type", "Match Name", "Map"])
    maps_played_df = rename_columns(maps_played_df, {"index": "maps_played_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id",
                                                     "Match ID": "match_id", "Map ID": "map_id"})
+   maps_played_df = reorder_columns(maps_played_df, ["maps_played_id", "tournament_id", "stage_id", "match_type_id", "match_id", "map_id"])
    print(maps_played_df.sample(n=20))
 
 async def add_maps_scores(file, year, engine):
@@ -217,52 +218,6 @@ async def add_maps_scores(file, year, engine):
    maps_scores_df = convert_missing_number(maps_scores_df, "Team B Overtime Score")
    maps_scores_df = create_ids(maps_scores_df)
    print(maps_scores_df.sample(n=20))
-   # print(f"Adding maps scores")
-   # maps_scores = pd.read_csv("matches/maps_scores.csv")
-   # query = """
-   #    INSERT INTO maps_scores (
-   #       tournament_id, stage_id, match_type_id, match_id, map_id, 
-   #       team_a_id, team_a_score, team_a_attack_score, team_a_defender_score, team_a_overtime_score,
-   #       team_b_id, team_b_score, team_b_attack_score, team_b_defender_score, team_b_overtime_score,
-   #       duration
-   #    ) VALUES (
-   #       %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s, %s,
-   #       %s
-   #    );
-   # """
-   # # for index, row in maps_scores.iterrows():
-   # tournament = row["Tournament"]
-   # stage = row["Stage"]
-   # match_type = row["Match Type"]
-   # match_name = row["Match Name"]
-   # map = row["Map"]
-   # team_a = row["Team A"]
-   # team_a_score = row["Team A Score"]
-   # team_a_attack_score = row["Team A Attacker Score"]
-   # team_a_defender_score = row["Team A Defender Score"]
-   # team_a_overtime_score = check_na(row["Team A Overtime Score"], "int")
-   # team_b = row["Team B"]
-   # team_b_score = row["Team B Score"]
-   # team_b_attack_score = row["Team B Attacker Score"]
-   # team_b_defender_score = row["Team B Defender Score"]
-   # team_b_overtime_score = check_na(row["Team B Overtime Score"], "int")
-   # duration = check_na(row["Duration"], "interval")
-   # tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
-   # stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
-   # match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
-   # match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
-   # map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
-   # team_a_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team_a)
-   # team_b_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team_b)
-   # data = (tournament_id, stage_id, match_type_id, match_id, map_id,
-   #          team_a_id, team_a_score, team_a_attack_score, team_a_defender_score, team_a_overtime_score,
-   #          team_b_id, team_b_score, team_b_attack_score, team_b_defender_score, team_b_overtime_score,
-   #          duration)
-   # execute_query(curr, query, data)
-   # print(f"Done adding maps scores")
-   # await asyncio.sleep(0)
 
 
 async def add_overview(file, year, engine):
@@ -276,53 +231,7 @@ async def add_overview(file, year, engine):
    overview_df = create_ids(overview_df)
    overview_df = drop_columns(overview_df, ["Tournament", "Stage", "Match Type", "Match Name", "Player", "Team"])
    print(overview_df.sample(n=20))
-   # print("Adding overview")
-   # overview = pd.read_csv("matches/overview.csv")
-   # query = """
-   #    INSERT INTO overview (
-   #       tournament_id, stage_id, match_type_id, match_id, map_id, player_id, team_id, agent_id,
-   #       rating, average_combat_score, kills, deaths, assists, kill_deaths, kast_percentage, adr, headshot_percentage, first_kills, first_deaths, fkd, side
-   #    )
-   #    VALUES (
-   #       %s, %s, %s, %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-   #    );
-   # """
-   # for index, row in overview.iterrows():
-   # tournament = row["Tournament"]
-   # stage = row["Stage"]
-   # match_type = row["Match Type"]
-   # match_name = row["Match Name"]
-   # map = row["Map"]
-   # team = row["Team"]
-   # player = row["Player"]
-   # agent = row["Agents"]
-   # rating = check_na(row["Rating"], "int")
-   # average_combat_score = check_na(row["Average Combat Score"], "int")
-   # kills = check_na(row["Kills"], "int")
-   # deaths = check_na(row["Deaths"], "int")
-   # assists = check_na(row["Assists"], "int")
-   # kill_deaths = check_na(row["Kill - Deaths (KD)"], "int")
-   # kast = check_na(row["Kill, Assist, Trade, Survive %"], "percentage")
-   # adr = check_na(row["Average Damage per Round"], "int")
-   # headshot_percentage = check_na(row["Headshot %"], "percentage")
-   # first_kills = check_na(row["First Kills"], "int")
-   # first_deaths = check_na(row["First Deaths"], "int")
-   # fkd = check_na(row["Kills - Deaths (FKD)"], "int")
-   # side = row["Side"]
-   # tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
-   # stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
-   # match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
-   # match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
-   # map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
-   # team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team)
-   # player_id = retrieve_foreign_key(curr, "player_id", "players", "player_name", player)
-   # agent_id = retrieve_foreign_key(curr, "agent_id", "agents", "agent_name", agent)
-   # data = (tournament_id, stage_id, match_type_id, match_id, map_id, player_id, team_id, agent_id,
-   #          rating, average_combat_score, kills, deaths, assists, kill_deaths, kast, adr, headshot_percentage, first_kills, first_deaths, fkd, side)
-   # execute_query(curr, query, data)
-   # print(f"Done adding overview")
-   # await asyncio.sleep(0)
+
 
 
 async def add_rounds_kills(df, year, engine):
@@ -337,54 +246,6 @@ async def add_rounds_kills(df, year, engine):
    rounds_kills_df = drop_columns(rounds_kills_df, ["Tournament", "Stage", "Match Type", "Match Name", "Eliminator", "Eliminator Team", "Eliminated", "Eliminated Team"])
    print(rounds_kills_df.sample(n=20))
 
-   # print(f"Adding rounds kills")
-   # rounds_kills = pd.read_csv("matches/rounds_kills.csv")
-   # print(list(rounds_kills.columns))
-   # query = """
-   #    INSERT INTO rounds_kills (
-   #       tournament_id, stage_id, match_type_id, match_id, map_id, round_number,
-   #       eliminator_team_id, eliminator_id, eliminator_agent_id,
-   #       eliminated_team_id, eliminated_id, eliminated_agent_id,
-   #       kill_type
-   #    ) VALUES (
-   #       %s, %s, %s, %s, %s, %s,
-   #       %s, %s, %s,
-   #       %s, %s, %s,
-   #       %s
-   #    );
-   # """
-   # for index, row in rounds_kills.iterrows():
-   # tournament = row["Tournament"]
-   # stage = row["Stage"]
-   # match_type = row["Match Type"]
-   # match_name = row["Match Name"]
-   # map = row["Map"]
-   # round_number = row["Round Number"]
-   # eliminator_team = row["Eliminator Team"]
-   # eliminator = row["Eliminator"]
-   # eliminator_agent = row["Eliminator Agent"]
-   # eliminated_team = row['Eliminated Team']
-   # eliminated = row["Eliminated"]
-   # eliminated_agent = row["Eliminated Agent"]
-   # kill_type = row["Kill Type"]
-   # tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
-   # stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
-   # match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
-   # match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
-   # map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
-   # eliminator_team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", eliminator_team)
-   # eliminator_id = retrieve_foreign_key(curr, "player_id", "players", "player_name", eliminator)
-   # eliminator_agent_id = retrieve_foreign_key(curr, "agent_id", "agents", "agent_name", eliminator_agent)
-   # eliminated_team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", eliminated_team)
-   # eliminated_id = retrieve_foreign_key(curr, "player_id", "players", "player_name", eliminated)
-   # eliminated_agent_id = retrieve_foreign_key(curr, "agent_id", "agents", "agent_name", eliminated_agent)
-   # data = (tournament_id, stage_id, match_type_id, match_id, map_id, round_number,
-   #          eliminator_team_id, eliminator_id, eliminator_agent_id,
-   #          eliminated_team_id, eliminated_id, eliminated_agent_id,
-   #          kill_type)
-   # execute_query(curr, query, data)
-   # print(f"Done adding rounds kills")
-   # await asyncio.sleep(0)
 
 async def add_scores(file, year, engine):
    scores_df = csv_to_df(file)
@@ -397,40 +258,7 @@ async def add_scores(file, year, engine):
    scores_df = create_ids(scores_df)
    scores_df = drop_columns(scores_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team A", "Team B"])
    print(scores_df.sample(n=20))
-   # print(f"Adding scores")
-   # scores = pd.read_csv("matches/scores.csv")
-   # query = """
-   #    INSERT INTO scores (
-   #       tournament_id, stage_id, match_type_id, match_id,
-   #       winner_id, loser_id,
-   #       winner_score, loser_score
-   #    ) VALUES (
-   #       %s, %s, %s, %s,
-   #       %s, %s,
-   #       %s, %s
-   #    );
-   # """
-   # # for index, row in scores.iterrows():
-   # tournament = row["Tournament"]
-   # stage = row["Stage"]
-   # match_type = row["Match Type"]
-   # match_name = row["Match Name"]
-   # winner = row["Winner"]
-   # loser = row["Loser"]
-   # winner_score = row["Winner Score"]
-   # loser_score = row["Loser Score"]
-   # tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
-   # stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
-   # match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
-   # match_id = retrieve_foreign_key(curr, "match_id", "matches", "match_name", match_name)
-   # winner_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", winner)
-   # loser_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", loser)
-   # data = (tournament_id, stage_id, match_type_id, match_id,
-   #          winner_id, loser_id,
-   #          winner_score, loser_score)
-   # execute_query(curr, query, data)
-   # print(f"Done adding scores")
-   # await asyncio.sleep(0)
+
 
 async def add_win_loss_methods_count(file, year, engine):
    win_loss_methods_count_df = csv_to_df(file)
@@ -464,33 +292,6 @@ async def add_agents_pick_rates(file, year, engine):
    agents_pick_rates_df = drop_columns(agents_pick_rates_df, ["Tournament", "Stage", "Match Type"])
    print(agents_pick_rates_df.sample(n=20))
 
-   # print(f"Adding agents pick rates")
-   # pick_rates = pd.read_csv("agents/agents_pick_rates.csv")
-   # query = """
-   #    INSERT INTO agents_pick_rates (
-   #       tournament_id, stage_id, match_type_id, map_id,
-   #       agent_id, pick_rate
-   #    ) VALUES (
-   #       %s, %s, %s, %s,
-   #       %s, %s
-   #    );
-   # """
-   # for index, row in pick_rates.iterrows():
-   # tournament = row["Tournament"]
-   # stage = row["Stage"]
-   # match_type = row["Match Type"]
-   # map = row["Map"]
-   # agent = row["Agent"]
-   # pick_rate = check_na(row["Pick Rate"], "percentage")
-   # tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
-   # stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
-   # match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
-   # map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
-   # agent_id = retrieve_foreign_key(curr, "agent_id", "agents", "agent_name", agent)
-   # data = (tournament_id, stage_id, match_type_id, map_id, agent_id, pick_rate)
-   # execute_query(curr, query, data)
-   # print(f"Done adding agents pick rates")
-   # await asyncio.sleep(0)
 
 async def add_maps_stats(file, year, engine):
    maps_stats_df = csv_to_df(file)
@@ -500,35 +301,6 @@ async def add_maps_stats(file, year, engine):
    maps_stats_df = create_ids(maps_stats_df)
    maps_stats_df = drop_columns(maps_stats_df, ["Tournament", "Stage", "Match Type"])
    print(maps_stats_df.sample(n=20))
-
-   # print(f"Adding maps stats")
-   # maps_stats = pd.read_csv("agents/maps_stats.csv")
-   # query = """
-   #    INSERT INTO maps_stats (
-   #       tournament_id, stage_id, match_type_id, map_id, 
-   #       total_maps_played, attacker_win_percentage, defender_win_percentage
-   #    ) VALUES (
-   #       %s, %s, %s, %s,
-   #       %s, %s, %s
-   #    );
-   # """
-   # for index, row in maps_stats.iterrows():
-   # tournament = row["Tournament"]
-   # stage = row["Stage"]
-   # match_type = row["Match Type"]
-   # map = row["Map"]
-   # total_maps_played = row["Total Maps Played"]
-   # attacker_win_percentage = float(row["Attacker Side Win Percentage"].strip("%")) / 100.0
-   # defender_win_percentage = float(row["Defender Side Win Percentage"].strip("%")) / 100.0
-   # tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
-   # stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
-   # match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
-   # map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
-
-   # data = (tournament_id, stage_id, match_type_id, map_id, total_maps_played, attacker_win_percentage, defender_win_percentage)
-   # execute_query(curr, query, data)
-   # print(f"Done adding maps stats")
-   # await asyncio.sleep(0)
 
 async def add_teams_picked_agents(file, year, engine):
    teams_picked_agents_df = csv_to_df(file)
@@ -540,38 +312,7 @@ async def add_teams_picked_agents(file, year, engine):
    teams_picked_agents_df = create_ids(teams_picked_agents_df)
    teams_picked_agents_df = drop_columns(teams_picked_agents_df, ["Tournament", "Stage", "Match Type"])
    print(teams_picked_agents_df.sample(n=20))
-   # print(f"Adding teams picked agents")
-   # teams_picked_agents = pd.read_csv("agents/teams_picked_agents.csv")
-   # query = """
-   #    INSERT INTO teams_picked_agents (
-   #       tournament_id, stage_id, match_type_id, map_id, team_id, 
-   #       agent_id, total_wins_by_map, total_loss_by_map, total_maps_played
-   #    ) VALUES (
-   #       %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s
-   #    );
-   # """
-   # for index, row in teams_picked_agents.iterrows():
-   # tournament = row["Tournament"]
-   # stage = row["Stage"]
-   # match_type = row["Match Type"]
-   # map = row["Map"]
-   # team = row["Team"]
-   # agent = row["Agent Picked"]
-   # total_wins_by_map = row["Total Wins By Map"]
-   # total_loss_by_map = row["Total Loss By Map"]
-   # total_maps_played = row["Total Maps Played"]
-   # tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
-   # stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
-   # match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
-   # map_id = retrieve_foreign_key(curr, "map_id", "maps", "map_name", map)
-   # team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team)
-   # agent_id = retrieve_foreign_key(curr, "agent_id", "agents", "agent_name", agent)
 
-   # data = (tournament_id, stage_id, match_type_id, map_id, team_id, agent_id, total_wins_by_map, total_loss_by_map, total_maps_played)
-   # execute_query(curr, query, data)
-   # print(f"Done adding teams picked agents")
-   # await asyncio.sleep(0)
 
 
 async def add_players_stats(file, year, engine):
@@ -583,66 +324,7 @@ async def add_players_stats(file, year, engine):
    players_stats_df = create_ids(players_stats_df)
    players_stats_df = drop_columns(players_stats_df, ["Tournament", "Stage", "Match Type", "Player", "Team"])
    print(players_stats_df.sample(n=20))
-   # print("Adding players stats")
-   # players_stats = pd.read_csv("players_stats/players_stats.csv")
-   # query = """
-   #    INSERT INTO players_stats (
-   #       tournament_id, stage_id, match_type_id, player_id, team_id, agents_id,
-   #       rounds_played, rating, average_combat_score, kills_deaths, kast, adr,
-   #       kills_per_round, assists_per_round, first_kills_per_round, first_deaths_per_round,
-   #       headshot_percentage, clutch_success, clutches_won, clutches_played, mksp,
-   #       kills, deaths, assists, first_kills, first_deaths
-   #    ) VALUES (
-   #       %s, %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s,
-   #       %s, %s, %s, %s, %s,
-   #       %s, %s, %s, %s, %s
-   #    );
-   # """
-   # for index, row in players_stats.iterrows():
-   # tournament = row["Tournament"]
-   # stage = row["Stage"]
-   # match_type = row["Match Type"]
-   # player = row["Player"]
-   # team = row["Team"]
-   # agents = row["Agents"]
-   # rounds_played = row["Rounds Played"]
-   # rating = check_na(row["Rating"], "int")
-   # average_combat_score = check_na(row["Average Combat Score"], "int")
-   # kills_deaths = row["Kills:Deaths"]
-   # kast = check_na(row["Kill, Assist, Trade, Survive %"], "percentage")
-   # adr = check_na(row["Average Damage per Round"], "int")
-   # kills_per_round = row["Kills Per Round"]
-   # assists_per_round = row["Assists Per Round"]
-   # first_kills_per_round = check_na(row["First Kills Per Round"], "int")
-   # first_deaths_per_round = check_na(row["First Deaths Per Round"], "int")
-   # headshot_percentage = check_na(row["Headshot %"], "percentage")
-   
-   # clutch_success = check_na(row["Clutch Success %"], "percentage")
 
-   # clutches_won, clutches_played = check_na(row["Clutches (won/played)"], "fraction")
-
-   # mksp = row["Maximum Kills in a Single Map"]
-   # kills = row["Kills"]
-   # deaths = row["Deaths"]
-   # assists = row["Assists"]
-   # first_kills = row["First Kills"]
-   # first_deaths = row["First Deaths"]
-   # tournament_id = retrieve_foreign_key(curr, "tournament_id", "tournaments", "tournament_name", tournament)
-   # stage_id = retrieve_foreign_key(curr, "stage_id", "stages", "stage_name", stage)
-   # match_type_id = retrieve_foreign_key(curr, "match_type_id", "match_types", "match_type_name", match_type)
-   # player_id = retrieve_foreign_key(curr, "player_id", "players", "player_name", player)
-   # team_id = retrieve_foreign_key(curr, "team_id", "teams", "team_name", team)
-   # agent_id = retrieve_foreign_key(curr, "agent_id", "agents", "agent_name", agents)
-   # data = (tournament_id, stage_id, match_type_id, player_id, team_id, agent_id,
-   #          rounds_played, rating, average_combat_score, kills_deaths, kast, adr,
-   #          kills_per_round, assists_per_round, first_kills_per_round, first_deaths_per_round,
-   #          headshot_percentage, clutch_success, clutches_won, clutches_played,
-   #          mksp, kills, deaths, assists, first_kills, first_deaths)      
-   # execute_query(curr, query, data)
-   # print("Done adding players stats")
-   # await asyncio.sleep(0)
 
 # def add_all_data(curr, unique_ids):
 #    add_tournaments(curr, unique_ids)

@@ -147,7 +147,7 @@ def create_matches_conditions_values(df, ids):
 
 async def process_column(conn, df, column, id_name, table_name, value_name):
     values = df[column].unique().tolist()
-    ids = [await retrieve_primary_key(conn, id_name, table_name, value_name, value) for value in values]
+    ids = [await retrieve_primary_key(conn, id_name, table_name, value_name, value) for value in values if pd.notna(value)]
     conditions, result_values = create_conditions_values_1d(df, ids, column)
     df[f"{column} ID"] = np.select(conditions, result_values, default=None)
 
