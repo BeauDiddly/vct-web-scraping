@@ -45,6 +45,9 @@ misnamed_players = {"luk": "lukzera", "Λero": "Aero", "Playboi Joe": "velis", "
                     "stev0r": "stev0rr", "unfaiR aK": "Unfair", "alulba": "aluba", "2": "002", "kETTU": "pATE", "Laika": "Wendigo", "HaoHao": "Howie"}
 
 
+misnamed_match_names = {"Gaming Barracks.fi vs Endavant": "Gaming Barracks.fi vs Team Endavant", "IVY vs Endavant": "IVY vs Team Endavant",
+                        "Endavant vs EXEN Esports": "Team Endavant vs EXEN Esports", "Endavant vs WLGaming Esports": "Team Endavant vs WLGaming Esports",
+                        "Oserv Esport vs Endavant":"Oserv Esport vs Team Endavant"}
 
 def remove_white_spaces(df):
     for column in ["Stage", "Match Type", "Match Name",
@@ -86,6 +89,11 @@ def fixed_player_names(df):
     for column in ["Player", "Enemy", "Eliminator", "Eliminated"]:
         if column in df:
             df[column] = df[column].map(misnamed_players).fillna(df[column])
+    return df
+
+def fixed_match_names(df):
+    if "Match Name" in df:
+        df["Match Name"] = df["Match Name"].map(misnamed_match_names).fillna(df["Match Name"])
     return df
 
 def convert_nan_players_teams(df):

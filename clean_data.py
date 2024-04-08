@@ -21,6 +21,7 @@ def main():
             df = add_missing_abbriev(df, year)
             df = fixed_team_names(df)
             df = fixed_player_names(df)
+            df = fixed_match_names(df)
             df = convert_nan_players_teams(df)
             if file_name == "kills_stats.csv":
                 df = get_all_agents_played_for_kills_stats(df)
