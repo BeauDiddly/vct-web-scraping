@@ -254,6 +254,11 @@ def add_missing_player(df, year):
         df.reset_index(drop=True, inplace=True)
     return df
 
+def remove_forfeited_matches(df):
+    if "Match Name" in df:
+        df = df[df["Match Name"] != "Ksenox vs Savage"]
+    return df
+
 def add_missing_abbriev(df, year):
     if "Abbreviated" in df:
         if year == 2022:

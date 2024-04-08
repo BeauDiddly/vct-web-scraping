@@ -17,6 +17,7 @@ def main():
             df = remove_white_spaces(df)
             df = remove_white_spaces_in_between(df)
             df = remove_tabs_and_newlines(df)
+            df = remove_forfeited_matches(df)
             df = add_missing_abbriev(df, year)
             df = fixed_team_names(df)
             df = fixed_player_names(df)
