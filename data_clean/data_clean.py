@@ -250,7 +250,7 @@ def add_missing_player(df, year):
             df.loc[len(df.index)] = ["Wendigo", 26880]
         elif year == 2022:
             df.loc[len(df.index)] = ["Wendigo", 26880]
-        df.drop_duplicates(inplace=True)
+        df.drop_duplicates(inplace=True, subset=["Player", "Player ID"])
         df.reset_index(drop=True, inplace=True)
     return df
 

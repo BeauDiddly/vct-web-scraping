@@ -3,9 +3,7 @@ import math
 from data_clean.data_clean import csv_to_df
 
 def main():
-    years = ["2021", "2022", "2023"]
-
-    agents = set()
+    years = [2021, 2022, 2023]
     players_dfs = {}
     players = pd.DataFrame()
     teams_dfs = {}
@@ -77,8 +75,8 @@ def main():
 
     # agents = pd.DataFrame({'Agents': list(agents)})
     
-    players.drop_duplicates(inplace=True)
-    teams.drop_duplicates(inplace=True)
+    players.drop_duplicates(inplace=True, subset=["Player", "Player ID"])
+    teams.drop_duplicates(inplace=True, subset=["Team", "Team ID"])
     matches_ids.drop_duplicates(inplace=True)
     tournaments_stages_match_types_ids.drop_duplicates(inplace=True)
     teams_mapping.drop_duplicates(subset=["Abbreviated", "Full Name"], inplace=True)
