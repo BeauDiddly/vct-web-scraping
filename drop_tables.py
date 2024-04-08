@@ -8,6 +8,7 @@ query = """
     DROP TABLE IF EXISTS eco_stats CASCADE;
     DROP TABLE IF EXISTS kills CASCADE;
     DROP TABLE IF EXISTS kills_stats CASCADE;
+    DROP TABLE IF EXISTS kills_stats_agents CASCADE;
     DROP TABLE IF EXISTS maps_played CASCADE;
     DROP TABLE IF EXISTS maps_scores CASCADE;
     DROP TABLE IF EXISTS overview CASCADE;
@@ -16,6 +17,8 @@ query = """
     DROP TABLE IF EXISTS agents_pick_rates CASCADE;
     DROP TABLE IF EXISTS maps_stats CASCADE;
     DROP TABLE IF EXISTS teams_picked_agents CASCADE;
+    DROP TABLE IF EXISTS win_loss_methods_count CASCADE;
+    DROP TABLE IF EXISTS win_loss_methods_round_number CASCADE;
     DROP TABLE IF EXISTS players_stats CASCADE;
     DROP TABLE IF EXISTS stages CASCADE;
     DROP TABLE IF EXISTS match_types CASCADE;
