@@ -69,25 +69,25 @@ def create_maps_table(curr):
    execute_query(curr, query)
 
 
-def create_games_table(curr):
-   query = """
-   CREATE TABLE IF NOT EXISTS games (
-      game_id INT PRIMARY KEY,
-      tournament_id INT REFERENCES tournaments(tournament_id),
-      stage_id INT REFERENCES stages(stage_id),
-      match_type_id INT REFERENCES match_types(match_type_id),
-      match_id INT REFERENCES matches(match_id),
-      map_id INT REFERENCES maps(map_id),
-      year INT
-   );
-   """
-   execute_query(curr, query)
+# def create_games_table(curr):
+#    query = """
+#    CREATE TABLE IF NOT EXISTS games (
+#       game_id INT PRIMARY KEY,
+#       tournament_id INT REFERENCES tournaments(tournament_id),
+#       stage_id INT REFERENCES stages(stage_id),
+#       match_type_id INT REFERENCES match_types(match_type_id),
+#       match_id INT REFERENCES matches(match_id),
+#       map_id INT REFERENCES maps(map_id),
+#       year INT
+#    );
+#    """
+#    execute_query(curr, query)
 
 def create_teams_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS teams (
          team_id INT PRIMARY KEY,
-         team VARCHAR(255) UNIQUE NOT NULL
+         team VARCHAR(255) NOT NULL
       );
       """
    execute_query(curr, query)
@@ -97,7 +97,7 @@ def create_players_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS players (
          player_id INT PRIMARY KEY,
-         player VARCHAR(255) UNIQUE NOT NULL
+         player VARCHAR(255) NOT NULL
       );
       """
    execute_query(curr, query)
@@ -130,7 +130,7 @@ def create_eco_rounds_table(curr):
          team_id INT REFERENCES teams(team_id),
          map_id INT REFERENCES maps(map_id),
          round_number INT,
-         loadout_value VARCHAR(255)
+         loadout_value VARCHAR(255),
          credits VARCHAR(255),
          eco_type VARCHAR(255),
          outcome VARCHAR(255),
@@ -464,19 +464,22 @@ def create_all_tables(curr):
    # create_games_table(curr)
    # create_agents_table(curr)
    # create_maps_table(curr)
-   # create_teams_table(curr)
-   # create_players_table(curr)
-   # create_draft_phase_table(curr)
-   # create_eco_rounds_table(curr)
-   # create_eco_stats_table(curr)
-   # create_kills_table(curr)
-   # create_kills_stats_table(curr)
-   # create_maps_played_table(curr)
-   # create_maps_scores_table(curr)
-   # create_overview_table(curr)
-   # create_rounds_kills_table(curr)
-   # create_scores_table(curr)
-   # create_agents_pick_rates_table(curr)
-   # create_maps_stats_table(curr)
-   # create_teams_picked_agents_table(curr)
-   # create_players_stats_table(curr)
+   create_teams_table(curr)
+   create_players_table(curr)
+   create_draft_phase_table(curr)
+   create_eco_rounds_table(curr)
+   create_eco_stats_table(curr)
+   create_kills_table(curr)
+   create_kills_stats_table(curr)
+   create_kills_stats_agents_table(curr)
+   create_maps_played_table(curr)
+   create_maps_scores_table(curr)
+   create_overview_table(curr)
+   create_rounds_kills_table(curr)
+   create_scores_table(curr)
+   create_agents_pick_rates_table(curr)
+   create_maps_stats_table(curr)
+   create_teams_picked_agents_table(curr)
+   create_players_stats_table(curr)
+   create_win_loss_methods_count_table(curr)
+   create_win_loss_methods_round_number_table(curr)
