@@ -81,6 +81,19 @@ def splitting_agents(df):
     df = df.explode("agents")
     return df
 
+def add_missing_player(df, year):
+    if "Player" in df and "Player ID" in df:
+        if year == 2021:
+            nan_player = df[df["Player ID"] == 10207].index
+            df.loc[nan_player, "Player"] = "nan"
+            df.loc[len(df.index)] = ["pATE", 9505]
+            df.loc[len(df.index)] = ["Wendigo", 26880]
+        elif year == 2022:
+            df.loc[len(df.index)] = ["Wendigo", 26880]
+        df.drop_duplicates(inplace=True, subset=["Player", "Player ID"])
+        df.reset_index(drop=True, inplace=True)
+    return df
+
 def seperate_agents(ids):
     single_agent_ids = []
     multiple_agent_ids = []

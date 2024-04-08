@@ -91,6 +91,7 @@ def add_players(df, engine):
    df = df.drop_duplicates()
    null_player_count, missing_player_id = get_missing_numbers(df, "Player ID")
    add_missing_ids(df, "Player ID", missing_player_id, null_player_count)
+   df = add_missing_player(df, 2021)
    df = reorder_columns(df, {"Player ID", "Player"})
    df = rename_columns(df, {"Player ID": "player_id", "Player": "player"})
    df.to_sql("players", engine, index=False, if_exists="append")
