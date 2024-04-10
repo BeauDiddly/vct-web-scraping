@@ -74,6 +74,9 @@ def convert_to_int(df):
             df[column] = pd.to_numeric(df[column], errors="coerce").astype("Int32")
     return df
 
+def remove_empty_agent_rows(df):
+    return df.dropna(subset=["Agents"], inplace=True)
+
 def remove_white_spaces_in_between(df):
     if "Match Name" in df:
         df["Match Name"] = df["Match Name"].str.split().apply(lambda x: " ".join(x))
