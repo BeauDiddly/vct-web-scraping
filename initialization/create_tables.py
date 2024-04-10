@@ -106,7 +106,7 @@ def create_players_table(curr):
 def create_draft_phase_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS drafts (
-         draft_id INT PRIMARY KEY,
+         index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
@@ -122,7 +122,7 @@ def create_draft_phase_table(curr):
 def create_eco_rounds_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS eco_rounds (
-         eco_round_id SERIAL PRIMARY KEY,
+         index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
@@ -131,8 +131,8 @@ def create_eco_rounds_table(curr):
          map_id INT REFERENCES maps(map_id),
          round_number INT,
          loadout_value VARCHAR(255),
-         credits VARCHAR(255),
-         eco_type VARCHAR(255),
+         remaining_credits VARCHAR(255),
+         type VARCHAR(255),
          outcome VARCHAR(255),
          year INT NOT NULL
 
@@ -143,14 +143,14 @@ def create_eco_rounds_table(curr):
 def create_eco_stats_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS eco_stats (
-         eco_stat_id SERIAL PRIMARY KEY,
+         index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
          match_id INT REFERENCES matches(match_id),
          team_id INT REFERENCES teams(team_id),
          map_id INT REFERENCES maps(map_id),
-         eco_type VARCHAR(255),
+         type VARCHAR(255),
          initiated INT NULL,
          won INT,
          year INT NOT NULL
@@ -162,7 +162,7 @@ def create_eco_stats_table(curr):
 def create_kills_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS kills (
-         kill_id SERIAL PRIMARY KEY,
+         index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
@@ -185,7 +185,7 @@ def create_kills_table(curr):
 def create_kills_stats_agents_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS kills_stats_agents (
-         kills_stats_id INT REFERENCES kills_stats(kill_stat_id),
+         index INT REFERENCES kills_stats(kill_stat_id),
          agent_id INT REFERENCES agents(agent_id),
          PRIMARY KEY (kills_stats_id, agent_id)
       );
@@ -195,7 +195,7 @@ def create_kills_stats_agents_table(curr):
 def create_kills_stats_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS kills_stats (
-         kill_stat_id SERIAL PRIMARY KEY,
+         index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
@@ -224,7 +224,7 @@ def create_kills_stats_table(curr):
 def create_maps_played_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS maps_played (
-         map_played_id SERIAL PRIMARY KEY,
+         index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
@@ -239,7 +239,7 @@ def create_maps_played_table(curr):
 def create_maps_scores_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS maps_scores (
-         map_score_id SERIAL PRIMARY KEY,
+         index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
@@ -248,11 +248,11 @@ def create_maps_scores_table(curr):
          team_a_id INT REFERENCES teams(team_id),
          team_b_id INT REFERENCES teams(team_id),
          team_a_score INT,
-         team_a_attack_score INT,
+         team_a_attacker_score INT,
          team_a_defender_score INT,
          team_a_overtime_score INT NULL,
          team_b_score INT,
-         team_b_attack_score INT,
+         team_b_attacker_score INT,
          team_b_defender_score INT,
          team_b_overtime_score INT NULL,
          duration INTERVAL NULL,
@@ -265,7 +265,7 @@ def create_maps_scores_table(curr):
 def create_overview_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS overview (
-         overview_id SERIAL PRIMARY KEY,
+         index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
@@ -296,7 +296,7 @@ def create_overview_table(curr):
 def create_rounds_kills_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS rounds_kills (
-         round_kill_id SERIAL PRIMARY KEY,
+         index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
@@ -318,7 +318,7 @@ def create_rounds_kills_table(curr):
 def create_scores_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS scores (
-         score_id SERIAL PRIMARY KEY,
+         index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
@@ -336,7 +336,7 @@ def create_scores_table(curr):
 def create_win_loss_methods_count_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS win_loss_methods_count (
-         win_loss_methods_count_id SERIAL PRIMARY KEY,
+         index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
@@ -358,7 +358,7 @@ def create_win_loss_methods_count_table(curr):
 def create_win_loss_methods_round_number_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS win_loss_methods_round_number (
-         win_loss_methods_round_number_id SERIAL PRIMARY KEY,
+         index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
@@ -374,7 +374,7 @@ def create_win_loss_methods_round_number_table(curr):
 def create_agents_pick_rates_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS agents_pick_rates (
-         pick_rate_id SERIAL PRIMARY KEY,
+         index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
@@ -390,7 +390,7 @@ def create_agents_pick_rates_table(curr):
 def create_maps_stats_table(curr):
    query = """
    CREATE TABLE IF NOT EXISTS maps_stats (
-      map_stat_id SERIAL PRIMARY KEY,
+      index INT PRIMARY KEY,
       tournament_id INT REFERENCES tournaments(tournament_id),
       stage_id INT REFERENCES stages(stage_id),
       match_type_id INT REFERENCES match_types(match_type_id),
@@ -406,7 +406,7 @@ def create_maps_stats_table(curr):
 def create_teams_picked_agents_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS teams_picked_agents (
-         team_picked_agent_id SERIAL PRIMARY KEY,
+         index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
@@ -424,7 +424,7 @@ def create_teams_picked_agents_table(curr):
 def create_players_stats_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS players_stats (
-         player_stat_id SERIAL PRIMARY KEY,
+         index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),

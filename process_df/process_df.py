@@ -19,7 +19,25 @@ def create_ids(df):
     df.reset_index(inplace=True)
     return df
 
-def convert_missing_number(df):
+def standardized_duration(df):
+    mask = df["Duration"].str.count(":") == 2
+    df.loc[mask, "Duration"] = "0" + df.loc[mask, "Duration"]
+
+    mask = df["Duration"].str.count(":") == 1
+    df.loc[mask, "Duration"] = "00:" + df.loc[mask, "Duration"]
+
+    df["Duration"].fillna("00:00:00", inplace=True)
+
+    hours = df['Duration'].str.split(':').str[0].astype(int)
+    minutes = df['Duration'].str.split(':').str[1].astype(int)
+    seconds = df['Duration'].str.split(':').str[2].astype(int)
+
+    df['Duration'] = hours * 3600 + minutes * 60 + seconds
+
+    return df
+
+
+def convert_missing_numbers(df):
     for column in ["Rating", "Average Combat Score", "Kills", "Deaths", "Assists", "Kills - Deaths (KD)", "Kill, Assist, Trade, Survive %",
                    "Average Damage per Round", "Headshot %", "First Kills", "First Deaths", "Kills - Deaths (FKD)", "Team A Overtime Score",
                    "Team B Overtime Score", "2k", "3k", "4k", "5k", "1v1", "1v2", "1v3", "1v4", "1v5", "Player Kills", "Enemy Kills", "Difference",
@@ -59,15 +77,27 @@ def convert_column_to_int(df, column):
     df[column] = pd.to_numeric(df[column]).astype(int)
     return df
 
-def drop_columns(df, column_names):
-    df = df.drop(columns=column_names)
+def drop_columns(df):
+    columns = ["Tournament", "Stage", "Match Type", "Match Name", "Team", "Map", "Player", "Player Team", "Enemy Team", "Enemy",
+               "Team A", "Team B", "Eliminator", "Eliminator Team", "Eliminated", "Eliminated Team"]
+    for column in columns:
+        if column in df:
+            df.drop(columns=column, inplace=True)
     return df
 
 def reorder_columns(df, column_names):
     return df.reindex(columns=column_names)
 
-def rename_columns(df, columns_names):
-    return df.rename(columns=columns_names)
+def rename_columns(df):
+
+    # columns = {"Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id", "Match ID": "match_id", "Team ID": "team_id",
+    #            "Player ID": "player_id", "Map ID": "map_id", "Tournament": "tournament", "Stage": "stage", "Match Type": "match_type", "Match Name": "match",
+    #            "Team": "team", "Player": "player", "Year": "year", "Action": "action", "Round Number": "round_number", "Loadout Value": "loadout_value",
+    #            "Remaining Credits": "remaining_credits", ""}
+    for column in df.columns:
+        new_column_name = column.lower().replace(" ", "_")
+        df.rename(columns={column: new_column_name}, inplace=True)
+    return df
 
 def csv_to_df(file):
     return pd.read_csv(file)

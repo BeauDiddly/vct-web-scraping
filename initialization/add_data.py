@@ -133,7 +133,7 @@ async def add_eco_stats(file, year, engine):
    eco_stats_df = csv_to_df(file)
    eco_stats_df = await change_reference_name_to_id(eco_stats_df, year)
    eco_stats_df["year"] = year
-   eco_stats_df = convert_missing_number(eco_stats_df)
+   eco_stats_df = convert_missing_numbers(eco_stats_df)
    eco_stats_df = convert_column_to_int(eco_stats_df, "Team ID")
    eco_stats_df = create_ids(eco_stats_df)
    eco_stats_df = drop_columns(eco_stats_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team", "Map"])
@@ -149,7 +149,7 @@ async def add_kills(file, year, engine):
    kills_df = csv_to_df(file)
    
    kills_df = await change_reference_name_to_id(kills_df, year)
-   kills_df = convert_missing_number(kills_df)
+   kills_df = convert_missing_numbers(kills_df)
    kills_df = convert_column_to_int(kills_df, "Player Team ID")
    kills_df = convert_column_to_int(kills_df, "Enemy Team ID")
    kills_df = convert_column_to_int(kills_df, "Player ID")
@@ -173,7 +173,7 @@ async def add_kills_stats(file, year, engine):
    # multiple_agents_df = kills_stats_df[kills_stats_df["Agent"].str.contains(",")]
    # single_agents_df = kills_stats_df[-kills_stats_df["Agent"].str.contains(",")]
    kills_stats_df = await change_reference_name_to_id(kills_stats_df, year)
-   kills_stats_df = convert_missing_number(kills_stats_df)
+   kills_stats_df = convert_missing_numbers(kills_stats_df)
    kills_stats_df = create_ids(kills_stats_df)
    kills_stats_df = drop_columns(kills_stats_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team", "Player", "Map"])
    kills_stats_df = rename_columns(kills_stats_df, {"index": "kills_stats_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id",
@@ -193,9 +193,6 @@ async def add_kills_stats(file, year, engine):
 
 async def add_maps_played(file, year, engine):
    maps_played_df = csv_to_df(file)
-   # strip_white_space(maps_played_df, "Stage")
-   # strip_white_space(maps_played_df, "Match Type")
-   # strip_white_space(maps_played_df, "Match Name")
    maps_played_df = await change_reference_name_to_id(maps_played_df, year)
    maps_played_df = create_ids(maps_played_df)
    maps_played_df = drop_columns(maps_played_df, ["Tournament", "Stage", "Match Type", "Match Name", "Map"])
@@ -206,17 +203,17 @@ async def add_maps_played(file, year, engine):
 
 async def add_maps_scores(file, year, engine):
    maps_scores_df = csv_to_df(file)
-   strip_white_space(maps_scores_df, "Stage")
-   strip_white_space(maps_scores_df, "Match Type")
-   strip_white_space(maps_scores_df, "Match Name")
-   strip_white_space(maps_scores_df, "Team A")
-   strip_white_space(maps_scores_df, "Team B")
    maps_scores_df = await change_reference_name_to_id(maps_scores_df, year)
    maps_scores_df = create_ids(maps_scores_df)
-   maps_scores_df = drop_columns(maps_scores_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team A", "Team B"])
-   maps_scores_df = convert_missing_number(maps_scores_df, "Team A Overtime Score")
-   maps_scores_df = convert_missing_number(maps_scores_df, "Team B Overtime Score")
-   maps_scores_df = create_ids(maps_scores_df)
+   maps_scores_df = drop_columns(maps_scores_df)
+   maps_scores_df = standardized_duration(maps_scores_df)
+   maps_scores_df = convert_missing_numbers(maps_scores_df)
+   maps_scores_df = rename_columns(maps_scores_df)
+   maps_scores_df = reorder_columns(maps_scores_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "map_id", "team_a_id",
+                                                     "team_b_id", "team_a_score", "team_a_attacker_score", "team_a_defender_score",
+                                                     "team_a_overtime_score", "team_b_score", "team_b_attacker_score",
+                                                     "team_b_defender_score", "team_b_overtime_score", "duration"])
+   maps_scores_df["year"]= year
    print(maps_scores_df.sample(n=20))
 
 
@@ -227,7 +224,7 @@ async def add_overview(file, year, engine):
    strip_white_space(overview_df, "Match Name")
    strip_white_space(overview_df, "Team")
    overview_df = await change_reference_name_to_id(overview_df, year)
-   overview_df = convert_missing_number(overview_df)
+   overview_df = convert_missing_numbers(overview_df)
    overview_df = create_ids(overview_df)
    overview_df = drop_columns(overview_df, ["Tournament", "Stage", "Match Type", "Match Name", "Player", "Team"])
    print(overview_df.sample(n=20))
