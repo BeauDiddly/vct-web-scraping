@@ -219,14 +219,17 @@ async def add_maps_scores(file, year, engine):
 
 async def add_overview(file, year, engine):
    overview_df = csv_to_df(file)
-   strip_white_space(overview_df, "Stage")
-   strip_white_space(overview_df, "Match Type")
-   strip_white_space(overview_df, "Match Name")
-   strip_white_space(overview_df, "Team")
    overview_df = await change_reference_name_to_id(overview_df, year)
+   overview_df = drop_columns(overview_df)
+   overview_df = convert_percentages(overview_df)
    overview_df = convert_missing_numbers(overview_df)
    overview_df = create_ids(overview_df)
-   overview_df = drop_columns(overview_df, ["Tournament", "Stage", "Match Type", "Match Name", "Player", "Team"])
+   overview_df = rename_columns(overview_df)
+   print(overview_df.columns)
+   overview_df = reorder_columns(overview_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "map_id", "player_id",  "team_id",
+                                               "agents", "rating", "acs", "kills", "deaths", "assists", "kd", "kast", "adpr", "headshot", "fk",
+                                               "fd", "fkd", "side"])
+   overview_df["year"] = year
    print(overview_df.sample(n=20))
 
 

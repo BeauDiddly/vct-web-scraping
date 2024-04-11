@@ -36,14 +36,22 @@ def standardized_duration(df):
 
     return df
 
+def convert_percentages(df):
+    columns = [ "Kill, Assist, Trade, Survive %", "Headshot %"]
+    for column in columns:
+        if column in df:
+            mask = df[column].str.contains("%", na=False)
+            df.loc[mask, column] = df.loc[mask, column].str.rstrip("%").astype(float) / 100
+    return df
+
 
 def convert_missing_numbers(df):
-    for column in ["Rating", "Average Combat Score", "Kills", "Deaths", "Assists", "Kills - Deaths (KD)", "Kill, Assist, Trade, Survive %",
-                   "Average Damage per Round", "Headshot %", "First Kills", "First Deaths", "Kills - Deaths (FKD)", "Team A Overtime Score",
+    for column in ["Rating", "Average Combat Score", "Kills", "Deaths", "Assists", "Kills - Deaths (KD)", "Average Damage per Round",
+                   "First Kills", "First Deaths", "Kills - Deaths (FKD)", "Team A Overtime Score",
                    "Team B Overtime Score", "2k", "3k", "4k", "5k", "1v1", "1v2", "1v3", "1v4", "1v5", "Player Kills", "Enemy Kills", "Difference",
                    "Initiated"]:
         if column in df:
-            df[column] = pd.to_numeric(df[column], errors="coerce").astype("Int32")
+            df[column] = pd.to_numeric(df[column], errors="coerce", downcast="float")
     return df
 
 def add_missing_ids(df, column, missing_numbers, null_count):
@@ -89,13 +97,20 @@ def reorder_columns(df, column_names):
     return df.reindex(columns=column_names)
 
 def rename_columns(df):
-
+    stats_columns = {"Average Combat Score": "acs", "Kills - Deaths (KD)": "kd", "Kill, Assist, Trade, Survive %": "kast",
+                     "Average Damage Per Round": "adpr", "Headshot %": "headshot", "First Kills": "fk", "First Deaths": "fd",
+                     "Kills - Deaths (FKD)": "fkd", "Kills:Deaths": "fd", "Kills Per Round": "kpr", "Assists Per Round": "apr",
+                     "First Kills Per Round": "fkpr", "First Deaths Per Round": "fdpr", "Clutch Success %": "clutch_success",
+                     "Clutches (won/played)": "clutches", "Maximum Kills in a Single Map": "mksp"}
     # columns = {"Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id", "Match ID": "match_id", "Team ID": "team_id",
     #            "Player ID": "player_id", "Map ID": "map_id", "Tournament": "tournament", "Stage": "stage", "Match Type": "match_type", "Match Name": "match",
     #            "Team": "team", "Player": "player", "Year": "year", "Action": "action", "Round Number": "round_number", "Loadout Value": "loadout_value",
     #            "Remaining Credits": "remaining_credits", ""}
     for column in df.columns:
-        new_column_name = column.lower().replace(" ", "_")
+        if column in stats_columns:
+            new_column_name = stats_columns[column]
+        else:    
+            new_column_name = column.lower().replace(" ", "_")
         df.rename(columns={column: new_column_name}, inplace=True)
     return df
 
