@@ -79,6 +79,17 @@ If you want to scrape players data
 $ python3 player_stats_scraper.py
 ```
 
+If you want to clean the data
+```
+$ python3 clean_data.py
+$ python missing_data_scraper.py
+```
+
+If you want to retrieve all the ids,
+```
+$ python3 combine_all_columns_value.py
+```
+
 ## Built With <a name="built_with"></a>
 - [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/)
 - [Pandas](https://pandas.pydata.org/)
