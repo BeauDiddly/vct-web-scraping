@@ -38,6 +38,22 @@ $ cd vct-web-scraping
 $ pip3 install -r requirements.txt
 ```
 
+### File Creation
+
+```
+$ mkdir cleaned_data all_vct
+$ cd cleaned_data
+$ mkdir vct_2021 vct_2022 vct_2023
+$ cd vct_2021 
+$ mkdir agents ids matches players_stats
+$ cd ..
+$ cd vct_2022
+$ mkdir agents ids matches players_stats
+$ cd ..
+$ cd vct_2023 
+$ mkdir agents ids matches players_stats
+```
+
 
 ## Rate Limit <a name = "rate_limit"></a>
 Please do not increase the scraping rate on the code to prevent overloading the scraper. Although there is [no robots.txt on vlr.gg](https://www.vlr.gg/30777/is-data-scraping-allowed), please do not overload vlr.gg's server.
