@@ -185,9 +185,10 @@ def create_kills_table(curr):
 def create_kills_stats_agents_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS kills_stats_agents (
-         index INT REFERENCES kills_stats(kill_stat_id),
+         index INT REFERENCES kills_stats(index),
          agent_id INT REFERENCES agents(agent_id),
-         PRIMARY KEY (kills_stats_id, agent_id)
+         year INT,
+         PRIMARY KEY (kills_stats_id, agent_id, year)
       );
    """
    execute_query(curr, query)
@@ -289,6 +290,17 @@ def create_overview_table(curr):
          side VARCHAR(255),
          year INT NOT NULL
 
+      );
+   """
+   execute_query(curr, query)
+
+def create_overview_agents_table(curr):
+   query = """
+      CREATE TABLE IF NOT EXISTS overview_agents (
+         index INT REFERENCES overview(index),
+         agent_id INT REFERENCES agents(agent_id),
+         year INT,
+         PRIMARY KEY (index, agent_id, year)
       );
    """
    execute_query(curr, query)
@@ -476,6 +488,7 @@ def create_all_tables(curr):
    create_maps_played_table(curr)
    create_maps_scores_table(curr)
    create_overview_table(curr)
+   create_overview_agents_table(curr)
    create_rounds_kills_table(curr)
    create_scores_table(curr)
    create_agents_pick_rates_table(curr)

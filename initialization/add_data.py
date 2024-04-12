@@ -230,7 +230,15 @@ async def add_overview(file, year, engine):
                                                "agents", "rating", "acs", "kills", "deaths", "assists", "kd", "kast", "adpr", "headshot", "fk",
                                                "fd", "fkd", "side"])
    overview_df["year"] = year
+   agents_df = overview_df[["index", "agents"]]
+   agents_df = splitting_agents(agents_df)
+   agents_df.rename(columns={"agents": "agent"}, inplace=True)
+   overview_df.drop(columns="agents", inplace=True)
+   agents_df = await change_reference_name_to_id(agents_df, year)
+   agents_df.drop(columns="agent", inplace=True)
+   agents_df["year"] = year
    print(overview_df.sample(n=20))
+   print(agents_df.sample(n=20))
 
 
 

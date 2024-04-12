@@ -122,7 +122,7 @@ def create_tuples(df):
     return tuples
 
 def splitting_agents(df):
-    df["agents"] = df["agents"].str.split(", ")
+    df.loc[:, "agents"] = df["agents"].str.split(", ")
     df = df.explode("agents")
     return df
 
