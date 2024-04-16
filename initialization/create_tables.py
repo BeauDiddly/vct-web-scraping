@@ -377,6 +377,7 @@ def create_win_loss_methods_round_number_table(curr):
          match_id INT REFERENCES matches(match_id),
          team_id INT REFERENCES teams(team_id),
          map_id INT REFERENCES maps(map_id),
+         round_number INT,
          method VARCHAR(255),
          outcome VARCHAR(255)
       );

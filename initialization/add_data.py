@@ -285,13 +285,13 @@ async def add_win_loss_methods_count(file, year, engine):
 
 async def add_win_loss_methods_round_number(file, year, engine):
    win_loss_methods_round_number_df = csv_to_df(file)
-   strip_white_space(win_loss_methods_round_number_df, "Stage")
-   strip_white_space(win_loss_methods_round_number_df, "Match Type")
-   strip_white_space(win_loss_methods_round_number_df, "Match Name")
-   strip_white_space(win_loss_methods_round_number_df, "Team")
    win_loss_methods_round_number_df = await change_reference_name_to_id(win_loss_methods_round_number_df, year)
    win_loss_methods_round_number_df = create_ids(win_loss_methods_round_number_df)
-   win_loss_methods_round_number_df = drop_columns(win_loss_methods_round_number_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team"])
+   win_loss_methods_round_number_df = drop_columns(win_loss_methods_round_number_df)
+   win_loss_methods_round_number_df = rename_columns(win_loss_methods_round_number_df)
+   win_loss_methods_round_number_df["year"] = year
+   win_loss_methods_round_number_df = reorder_columns(win_loss_methods_round_number_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id",
+                                                                                         "map_id", "round_number", "method", "outcome", "year"])
    print(win_loss_methods_round_number_df.sample(n=20))
 
 async def add_agents_pick_rates(file, year, engine):
