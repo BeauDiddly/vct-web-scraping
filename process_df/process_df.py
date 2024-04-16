@@ -90,7 +90,7 @@ def drop_columns(df):
     columns = ["Tournament", "Stage", "Match Type", "Match Name", "Team", "Map", "Player", "Player Team", "Enemy Team", "Enemy",
                "Team A", "Team B", "Eliminator", "Eliminator Team", "Eliminated", "Eliminated Team"]
     for column in columns:
-        if column in df:
+        if column in df and "Time Expiry (Failed to Plant)" not in df:
             df.drop(columns=column, inplace=True)
     return df
 
@@ -107,7 +107,7 @@ def rename_columns(df):
         if column in stats_columns:
             new_column_name = stats_columns[column]
         else:    
-            new_column_name = column.lower().replace(" ", "_")
+            new_column_name = column.lower().replace(" ", "_").replace("(", "").replace(")", "")
         df.rename(columns={column: new_column_name}, inplace=True)
     return df
 
@@ -229,7 +229,7 @@ async def process_teams(pool, df):
 async def process_players(pool, df):
     async with pool.acquire() as conn:
         player_columns = ["Player", "Enemy", "Eliminator", "Eliminated"]
-        tasks = [await process_column(conn, df, column, "player_id", "players", "player") for column in player_columns if column in df]
+        tasks = [await process_column(conn, df, column, "player_id", "players", "player") for column in player_columns if column in df and "Time Expiry (Failed to Plant)" not in df]
         # await asyncio.gather(*tasks)
 
 async def process_agents(pool, df):

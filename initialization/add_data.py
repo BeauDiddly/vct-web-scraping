@@ -271,13 +271,15 @@ async def add_scores(file, year, engine):
 
 async def add_win_loss_methods_count(file, year, engine):
    win_loss_methods_count_df = csv_to_df(file)
-   strip_white_space(win_loss_methods_count_df, "Stage")
-   strip_white_space(win_loss_methods_count_df, "Match Type")
-   strip_white_space(win_loss_methods_count_df, "Match Name")
-   strip_white_space(win_loss_methods_count_df, "Team")
+   print(win_loss_methods_count_df.columns)
    win_loss_methods_count_df = await change_reference_name_to_id(win_loss_methods_count_df, year)
    win_loss_methods_count_df = create_ids(win_loss_methods_count_df)
-   win_loss_methods_count_df = drop_columns(win_loss_methods_count_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team"])
+   win_loss_methods_count_df = drop_columns(win_loss_methods_count_df)
+   win_loss_methods_count_df = rename_columns(win_loss_methods_count_df)
+   win_loss_methods_count_df["year"] = year
+   win_loss_methods_count_df = reorder_columns(win_loss_methods_count_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id",
+                                                                           "map_id", 'elimination', 'detonated', 'defused', 'time_expiry_no_plant', "eliminated",
+                                                                           'defused_failed', 'detonation_denied', 'time_expiry_failed_to_plant', "year"])
    print(win_loss_methods_count_df.sample(n=20))
    
 

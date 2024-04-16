@@ -45,12 +45,8 @@ async def retrieve_primary_key(conn, primary_key, table, column_name, values, ye
                     """.format(primary_key, table, column_name)
             data = (value, )
         elif table == "teams":
-            if values != "Stay Small, Stay Second" and "," in values:
-                teams = [team.strip() for team in values.split(",")]
-                data = [(team, ) for team in teams]
-            else:
-                value = values
-                data = (value, )
+            value = values
+            data = (value, )
             query = """
                     SELECT {} FROM {} WHERE {} = $1;
                     """.format(primary_key, table, column_name)
@@ -61,25 +57,16 @@ async def retrieve_primary_key(conn, primary_key, table, column_name, values, ye
                     """.format(primary_key, table, column_name)
             data = (value,)
         elif table == "agents":
-            # if "," in values:
-            #     agents = [agent for agent in values.split(", ")]
-            #     data = [(agent, ) for agent in agents]
-            # else:
             value = values
             query = """
                     SELECT {} FROM {} WHERE {} = $1;
                     """.format(primary_key, table, column_name)
             data = (value,)
-    # if isinstance(data, list):
-    #     result = []
-    #     for entry in data:
-    #         result.append(await conn.fetchval(query, *entry))
-        # try:
-        # result = int("".join(map(str, result)))
-        # except:
-        #     print(teams)
-    # else:
-    result = await conn.fetchval(query, *data)
+    try:
+        result = await conn.fetchval(query, *data)
+    except:
+        print(table)
+        print(data)
     if result:
         return {values: result} 
     else:
