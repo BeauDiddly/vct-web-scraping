@@ -316,11 +316,11 @@ def create_rounds_kills_table(curr):
          map_id INT REFERENCES maps(map_id),
          eliminator_team_id INT REFERENCES teams(team_id),
          eliminated_team_id INT REFERENCES teams(team_id),
-         eliminated_id INT REFERENCES players(player_id),
          eliminator_id INT REFERENCES players(player_id),
-         round_number VARCHAR(255),
+         eliminated_id INT REFERENCES players(player_id),
          eliminator_agent_id INT REFERENCES agents(agent_id),
          eliminated_agent_id INT REFERENCES agents(agent_id),
+         round_number VARCHAR(255),
          kill_type VARCHAR(255),
          year INT NOT NULL
       );

@@ -244,14 +244,16 @@ async def add_overview(file, year, engine):
 
 async def add_rounds_kills(df, year, engine):
    rounds_kills_df = csv_to_df(df)
-   strip_white_space(rounds_kills_df, "Stage")
-   strip_white_space(rounds_kills_df, "Match Type")
-   strip_white_space(rounds_kills_df, "Match Name")
-   strip_white_space(rounds_kills_df, "Eliminator Team")
-   strip_white_space(rounds_kills_df, "Eliminated Team")
+   rounds_kills_df = convert_to_category(rounds_kills_df)
    rounds_kills_df = await change_reference_name_to_id(rounds_kills_df, year)
+   rounds_kills_df = drop_columns(rounds_kills_df)
    rounds_kills_df = create_ids(rounds_kills_df)
-   rounds_kills_df = drop_columns(rounds_kills_df, ["Tournament", "Stage", "Match Type", "Match Name", "Eliminator", "Eliminator Team", "Eliminated", "Eliminated Team"])
+   rounds_kills_df = rename_columns(rounds_kills_df)
+   rounds_kills_df = reorder_columns(rounds_kills_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id",
+                                                       "map_id", "eliminator_team_id", "eliminated_team_id",
+                                                       "eliminator_id", "eliminated_id", "eliminator_agent_id", "eliminated_agent_id",
+                                                       "round_number", "kill_type"])
+   rounds_kills_df["year"] = year
    print(rounds_kills_df.sample(n=20))
 
 

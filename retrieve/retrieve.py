@@ -55,7 +55,6 @@ async def retrieve_primary_key(conn, primary_key, table, column_name, values, ye
                     SELECT {} FROM {} WHERE {} = $1;
                     """.format(primary_key, table, column_name)
         elif table == "maps":
-            print(values)
             value = values
             query = """
                     SELECT {} FROM {} WHERE {} = $1;
