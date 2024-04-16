@@ -259,14 +259,13 @@ async def add_rounds_kills(df, year, engine):
 
 async def add_scores(file, year, engine):
    scores_df = csv_to_df(file)
-   strip_white_space(scores_df, "Stage")
-   strip_white_space(scores_df, "Match Type")
-   strip_white_space(scores_df, "Match Name")
-   strip_white_space(scores_df, "Team A")
-   strip_white_space(scores_df, "Team B")
    scores_df = await change_reference_name_to_id(scores_df, year)
    scores_df = create_ids(scores_df)
-   scores_df = drop_columns(scores_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team A", "Team B"])
+   scores_df = drop_columns(scores_df)
+   scores_df = rename_columns(scores_df)
+   scores_df["year"] = year
+   scores_df = reorder_columns(scores_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "team_a_id", "team_b_id",
+                                            "team_a_score", "team_b_score", "match_result", "year"])
    print(scores_df.sample(n=20))
 
 

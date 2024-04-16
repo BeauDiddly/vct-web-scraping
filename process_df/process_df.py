@@ -103,10 +103,6 @@ def rename_columns(df):
                      "Kills - Deaths (FKD)": "fkd", "Kills:Deaths": "fd", "Kills Per Round": "kpr", "Assists Per Round": "apr",
                      "First Kills Per Round": "fkpr", "First Deaths Per Round": "fdpr", "Clutch Success %": "clutch_success",
                      "Clutches (won/played)": "clutches", "Maximum Kills in a Single Map": "mksp"}
-    # columns = {"Tournament ID": "tournament_id", "Stage ID": "stage_id", "Match Type ID": "match_type_id", "Match ID": "match_id", "Team ID": "team_id",
-    #            "Player ID": "player_id", "Map ID": "map_id", "Tournament": "tournament", "Stage": "stage", "Match Type": "match_type", "Match Name": "match",
-    #            "Team": "team", "Player": "player", "Year": "year", "Action": "action", "Round Number": "round_number", "Loadout Value": "loadout_value",
-    #            "Remaining Credits": "remaining_credits", ""}
     for column in df.columns:
         if column in stats_columns:
             new_column_name = stats_columns[column]
@@ -150,7 +146,6 @@ def flatten_list_of_dicts(list_of_dicts):
 def create_conditions_values_1d(df, ids, column):
     conditions, values = [], []
     for key, value in ids.items():
-        # name, id = next(iter(id.items()), (None, None))
         conditions.append(df[column] == key)
         values.append(value)
     return conditions, values
@@ -168,8 +163,6 @@ def create_match_types_conditions_values(df, ids):
     conditions = []
     values = []
     for key, value in ids.items():
-        if key == 0:
-            print(key, value)
         conditions.append((df["Tournament ID"] == key[0]) & (df["Stage ID"] == key[1]) & (df["Match Type"] == key[2]))
         values.append(value)
     return conditions, values
@@ -201,7 +194,6 @@ async def process_tournaments_stages_match_types_matches(pool, df, year):
             tournament_ids = flatten_list_of_dicts(tournament_ids)
             conditions, values = create_conditions_values_1d(df, tournament_ids, "Tournament")
             df["Tournament ID"] = np.select(conditions, values)
-            # df["Tournament ID"] = df["Tournament ID"].astype("UInt16")
             if "Stage" in df:
                 stages = df[["Tournament ID", "Stage"]].drop_duplicates()
                 tuples = create_tuples(stages)
@@ -210,7 +202,6 @@ async def process_tournaments_stages_match_types_matches(pool, df, year):
                 stage_ids = flatten_list_of_dicts(stage_ids)
                 conditions, values = create_stages_conditions_values(df, stage_ids)
                 df["Stage ID"] = np.select(conditions, values)
-                # df["Stage ID"] = df["Stage ID"].astype("UInt16")
                 if "Match Type" in df:
                     match_types = df[["Tournament ID", "Stage ID", "Match Type"]].drop_duplicates()
                     tuples = create_tuples(match_types)
@@ -219,7 +210,6 @@ async def process_tournaments_stages_match_types_matches(pool, df, year):
                     match_types_ids = flatten_list_of_dicts(match_types_ids)
                     conditions, values = create_match_types_conditions_values(df, match_types_ids)
                     df["Match Type ID"] = np.select(conditions, values)
-                    # df["Match Type ID"] = df["Match Type ID"].astype("UInt16")
                 if "Match Name" in df:
                     matches = df[["Tournament ID", "Stage ID", "Match Type ID", "Match Name"]].drop_duplicates()
                     tuples = create_tuples(matches)
@@ -228,7 +218,6 @@ async def process_tournaments_stages_match_types_matches(pool, df, year):
                     matches_id = flatten_list_of_dicts(matches_id)
                     conditions, values = create_matches_conditions_values(df, matches_id)
                     df["Match ID"] = np.select(conditions, values)
-                    # df["Match ID"] = df["Match ID"].astype("UInt32")
 
 
 async def process_teams(pool, df):
