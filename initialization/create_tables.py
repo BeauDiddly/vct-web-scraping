@@ -391,7 +391,6 @@ def create_agents_pick_rates_table(curr):
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
-         match_id INT REFERENCES matches(match_id),
          map_id INT REFERENCES maps(map_id),
          agent_id INT REFERENCES agents(agent_id),
          pick_rate DECIMAL,

@@ -37,7 +37,7 @@ def standardized_duration(df):
     return df
 
 def convert_percentages(df):
-    columns = [ "Kill, Assist, Trade, Survive %", "Headshot %"]
+    columns = [ "Kill, Assist, Trade, Survive %", "Headshot %", "Pick Rate", "Attacker Side Win Percentage", "Defender Side Win Percentage"]
     for column in columns:
         if column in df:
             mask = df[column].str.contains("%", na=False)
@@ -80,7 +80,7 @@ def get_eco_type(df, column):
 def convert_to_category(df):
     columns = ["Tournament", "Stage", "Match Type", "Match Name", "Agents", "Eliminator", "Eliminated", "Eliminator Team", "Eliminated Team",
                "Eliminator Agent", "Eliminated Agent", "Team A", "Team B", "Player Team", "Enemy Team", "Team", "Player", "Player Team",
-               "Map"]
+               "Map", "Agent"]
     for column in columns:
         if column in df:
             df[column] = df[column].astype("category")
@@ -88,7 +88,7 @@ def convert_to_category(df):
 
 def drop_columns(df):
     columns = ["Tournament", "Stage", "Match Type", "Match Name", "Team", "Map", "Player", "Player Team", "Enemy Team", "Enemy",
-               "Team A", "Team B", "Eliminator", "Eliminator Team", "Eliminated", "Eliminated Team"]
+               "Team A", "Team B", "Eliminator", "Eliminator Team", "Eliminated", "Eliminated Team", "Agent"]
     for column in columns:
         if column in df and "Time Expiry (Failed to Plant)" not in df:
             df.drop(columns=column, inplace=True)
@@ -234,7 +234,7 @@ async def process_players(pool, df):
 
 async def process_agents(pool, df):
     async with pool.acquire() as conn:
-        agent_columns = ["agent", "Eliminator Agent", "Eliminated Agent"]
+        agent_columns = ["agent", "Eliminator Agent", "Eliminated Agent", "Agent"]
         tasks = [await process_column(conn, df, column, "agent_id", "agents", "agent") for column in agent_columns if column in df]
 
 async def process_maps(pool, df):

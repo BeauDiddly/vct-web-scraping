@@ -296,32 +296,40 @@ async def add_win_loss_methods_round_number(file, year, engine):
 
 async def add_agents_pick_rates(file, year, engine):
    agents_pick_rates_df = csv_to_df(file)
-   strip_white_space(agents_pick_rates_df, "Stage")
-   strip_white_space(agents_pick_rates_df, "Match Type")
    agents_pick_rates_df = await change_reference_name_to_id(agents_pick_rates_df, year)
    agents_pick_rates_df = create_ids(agents_pick_rates_df)
-   agents_pick_rates_df = drop_columns(agents_pick_rates_df, ["Tournament", "Stage", "Match Type"])
+   agents_pick_rates_df = drop_columns(agents_pick_rates_df)
+   agents_pick_rates_df = convert_percentages(agents_pick_rates_df)
+   agents_pick_rates_df = rename_columns(agents_pick_rates_df)
+   agents_pick_rates_df["year"] = year
+   agents_pick_rates_df = reorder_columns(agents_pick_rates_df, ["index", "tournament_id", "stage_id", "match_type_id", "map_id", "agent_id",
+                                                                 "pick_rate", "year"])
    print(agents_pick_rates_df.sample(n=20))
 
 
 async def add_maps_stats(file, year, engine):
    maps_stats_df = csv_to_df(file)
-   strip_white_space(maps_stats_df, "Stage")
-   strip_white_space(maps_stats_df, "Match Type")
    maps_stats_df = await change_reference_name_to_id(maps_stats_df, year)
    maps_stats_df = create_ids(maps_stats_df)
-   maps_stats_df = drop_columns(maps_stats_df, ["Tournament", "Stage", "Match Type"])
+   maps_stats_df = drop_columns(maps_stats_df)
+   maps_stats_df = convert_percentages(maps_stats_df)
+   maps_stats_df = rename_columns(maps_stats_df)
+   maps_stats_df['year'] = year
+   maps_stats_df = reorder_columns(maps_stats_df, ["index", "tournament_id", "stage_id", "match_type_id", "map_id", "total_maps_played",
+                                                   "attacker_side_win_percentage", "defender_side_win_percentage", "year"])
    print(maps_stats_df.sample(n=20))
 
 async def add_teams_picked_agents(file, year, engine):
    teams_picked_agents_df = csv_to_df(file)
-   strip_white_space(teams_picked_agents_df, "Stage")
-   strip_white_space(teams_picked_agents_df, "Match Type")
-   strip_white_space(teams_picked_agents_df, "Team")
-   teams_picked_agents_df = teams_picked_agents_df[teams_picked_agents_df["Team"] != "Typhone"]
+   # teams_picked_agents_df = teams_picked_agents_df[teams_picked_agents_df["Team"] != "Typhone"]
    teams_picked_agents_df = await change_reference_name_to_id(teams_picked_agents_df, year)
    teams_picked_agents_df = create_ids(teams_picked_agents_df)
-   teams_picked_agents_df = drop_columns(teams_picked_agents_df, ["Tournament", "Stage", "Match Type"])
+   teams_picked_agents_df = drop_columns(teams_picked_agents_df)
+   teams_picked_agents_df = rename_columns(teams_picked_agents_df)
+   teams_picked_agents_df["year"] = year
+   teams_picked_agents_df = reorder_columns(teams_picked_agents_df, ["index", "tournament_id", "stage_id", "match_type_id", "map_id",
+                                                                     "agent_id", "total_wins_by_map", "total_loss_by_map", "total_maps_played",
+                                                                     "year"])
    print(teams_picked_agents_df.sample(n=20))
 
 
