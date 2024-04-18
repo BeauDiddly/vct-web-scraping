@@ -188,7 +188,7 @@ def create_kills_stats_agents_table(curr):
          index INT REFERENCES kills_stats(index),
          agent_id INT REFERENCES agents(agent_id),
          year INT,
-         PRIMARY KEY (kills_stats_id, agent_id, year)
+         PRIMARY KEY (index, agent_id, year)
       );
    """
    execute_query(curr, query)
@@ -441,11 +441,9 @@ def create_players_stats_table(curr):
          stage_id INT REFERENCES stages(stage_id),
          match_type_id INT REFERENCES match_types(match_type_id),
          player_id INT REFERENCES players(player_id),
-         team_id INT REFERENCES teams(team_id),
-         agent_id INT REFERENCES agents(agent_id),
          rounds_played INT,
          rating DECIMAL,
-         average_combat_score INT,
+         acs INT,
          kills_deaths DECIMAL,
          kast DECIMAL,
          adr DECIMAL,
@@ -453,9 +451,10 @@ def create_players_stats_table(curr):
          apr DECIMAL,
          fkpr DECIMAL,
          fdpr DECIMAL,
-         headshot_percentage DECIMAL,
+         headshot DECIMAL,
          clutch_success DECIMAL NULL,
-         clutches VARCHAR(255),
+         clutch_won INT NULL,
+         clutch_played INT NULL,
          mksp INT,
          kills INT,
          deaths INT,
@@ -463,6 +462,28 @@ def create_players_stats_table(curr):
          fk INT,
          fd INT,
          year INT NOT NULL
+      );
+   """
+   execute_query(curr, query)
+
+def create_players_stats_agents_table(curr):
+   query = """
+      CREATE TABLE IF NOT EXISTS players_stats_agents (
+         index INT REFERENCES players_stats(index),
+         agent_id INT REFERENCES agents(agent_id),
+         year INT,
+         PRIMARY KEY (index, agent_id, year)
+      );
+   """
+   execute_query(curr, query)
+
+def create_players_stats_teams_table(curr):
+   query = """
+      CREATE TABLE IF NOT EXISTS players_stats_teams (
+         index INT REFERENCES players_stats(index),
+         team_id INT REFERENCES teams(team_id),
+         year INT,
+         PRIMARY KEY (index, team_id, year)
       );
    """
    execute_query(curr, query)
@@ -495,5 +516,7 @@ def create_all_tables(curr):
    create_maps_stats_table(curr)
    create_teams_picked_agents_table(curr)
    create_players_stats_table(curr)
+   create_players_stats_agents_table(curr)
+   create_players_stats_teams_table(curr)
    create_win_loss_methods_count_table(curr)
    create_win_loss_methods_round_number_table(curr)

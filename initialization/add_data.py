@@ -42,23 +42,22 @@ def add_tournaments_stages_match_types(df, engine):
 def add_tournaments(df, engine):
    df = df[["Tournament", "Tournament ID", "Year"]]
    df = df.drop_duplicates()
-   df = reorder_columns(df, ["Tournament ID", "Tournament", "Year"])
-   df = rename_columns(df, {"Tournament ID": "tournament_id", "Tournament": "tournament", "Year": "year"})
+   df = rename_columns(df)
+   df = reorder_columns(df, ["tournament_id", "tournament", "year"])
    df.to_sql("tournaments", engine, index=False, if_exists = "append")
     
 def add_stages(df, engine):
    df = df[["Tournament ID", "Stage", "Stage ID", "Year"]]
    df = df.drop_duplicates()
-   df = reorder_columns(df, ["Stage ID", "Tournament ID", "Stage", "Year"])
-   df = rename_columns(df, {"Stage ID": "stage_id", "Tournament ID": "tournament_id", "Stage": "stage", "Year": "year"})
+   df = rename_columns(df) 
+   df = reorder_columns(df, ["stage_id", "tournament_id", "stage", "year"])
    df.to_sql("stages", engine, index=False, if_exists="append")
 
 def add_match_types(df, engine):
    df = df[["Tournament ID", "Stage ID", "Match Type", "Match Type ID", "Year"]]
    df = df.drop_duplicates()
-   df = reorder_columns(df, ["Match Type ID", "Tournament ID", "Stage ID", "Match Type", "Year"])
-   df = rename_columns(df, {"Match Type ID": "match_type_id", "Tournament ID": "tournament_id", "Stage ID": "stage_id", 
-                                                   "Match Type": "match_type", "Year": "year"})
+   df = rename_columns(df)
+   df = reorder_columns(df, ["match_type_id", "tournament_id", "stage_id", "match_type", "year"])
    df.to_sql("match_types", engine, index=False, if_exists="append")
 
 
@@ -69,10 +68,9 @@ def add_matches(df, upper_round_id, engine):
    df = df[["Tournament ID", "Stage ID", "Match Type ID", "Match Name", "Match ID", "Year"]]
    df.loc[filtered.index, "Match Type ID"] = upper_round_id
    df = df.drop_duplicates()
-   df = reorder_columns(df, ["Match ID", "Tournament ID", "Stage ID", "Match Type ID", "Match Name", "Year"])
-   df = rename_columns(df, {"Match ID": "match_id", "Tournament ID": "tournament_id",
-                                             "Stage ID": "stage_id", "Match Type ID": "match_type_id", 
-                                             "Match Name": "match", "Year": "year"})
+   df.rename(columns={"Match Name": "Match"}, inplace=True)
+   df = rename_columns(df)
+   df = reorder_columns(df, ["match_id", "tournament_id", "stage_id", "match_type_id", "match", "year"])
    df.to_sql("matches", engine, index=False, if_exists="append")
 
 
@@ -82,8 +80,8 @@ def add_teams(df, engine):
    df = df.drop_duplicates()
    null_team_count, missing_team_id = get_missing_numbers(df, "Team ID")
    add_missing_ids(df, "Team ID", missing_team_id, null_team_count)
-   df = reorder_columns(df, {"Team ID", "Team"})
-   df = rename_columns(df, {"Team ID": "team_id", "Team": "team"})
+   df = rename_columns(df)
+   df = reorder_columns(df, {"team_id", "team"})
    df.to_sql("teams", engine, index=False, if_exists="append")
 
 def add_players(df, engine):
@@ -92,8 +90,9 @@ def add_players(df, engine):
    null_player_count, missing_player_id = get_missing_numbers(df, "Player ID")
    add_missing_ids(df, "Player ID", missing_player_id, null_player_count)
    df = add_missing_player(df, 2021)
-   df = reorder_columns(df, {"Player ID", "Player"})
-   df = rename_columns(df, {"Player ID": "player_id", "Player": "player"})
+   df = remove_leading_zeroes(df)
+   df = rename_columns(df)
+   df = reorder_columns(df, {"player_id", "player"})
    df.to_sql("players", engine, index=False, if_exists="append")
 
    
@@ -101,7 +100,6 @@ def add_players(df, engine):
 async def add_drafts(file, year, engine):
    drafts_df = csv_to_df(file)
    drafts_df = await change_reference_name_to_id(drafts_df, year)
-   drafts_df = convert_column_to_int(drafts_df, "Team ID")
    drafts_df["year"] = year
    drafts_df = create_ids(drafts_df)
    drafts_df = drop_columns(drafts_df, ["Tournament", "Stage", "Match Type", "Match Name", "Team", "Map"])
@@ -336,13 +334,32 @@ async def add_teams_picked_agents(file, year, engine):
 
 async def add_players_stats(file, year, engine):
    players_stats_df = csv_to_df(file)
-   print(players_stats_df[players_stats_df["Player"].isnull()])
-   # print(players_stats_df[players_stats_df["Player"] == "2"])
-   # players_stats_df = convert_column_to_str(players_stats_df, "Team")
+   players_stats_df = convert_to_category(players_stats_df)
+   print(players_stats_df[players_stats_df["Player"] == "1000010"])
    players_stats_df = await change_reference_name_to_id(players_stats_df, year)
    players_stats_df = create_ids(players_stats_df)
-   players_stats_df = drop_columns(players_stats_df, ["Tournament", "Stage", "Match Type", "Player", "Team"])
+   players_stats_df = convert_clutches(players_stats_df)
+   players_stats_df = drop_columns(players_stats_df)
+   players_stats_df = convert_percentages(players_stats_df)
+   players_stats_df = rename_columns(players_stats_df)
+   players_stats_df["year"] = year
+   players_stats_df = reorder_columns(players_stats_df, ["index", "tournament_id", "stage_id", "match_type_id", "player_id", "teams", "agents", "rounds_played",
+                                                         "rating", "acs", "kd", "kast", "adr", "kpr", "apr", "fkpr", "fdpr", "headshot",
+                                                         "clutch_success", "clutches_won", "clutches_played", "mksp", "kills", "deaths", "assists",
+                                                         "fk", "fd", "year"])
+   agents_df = players_stats_df[["index", "agents"]]
+   agents_df = splitting_agents(agents_df)
+   agents_df.rename(columns={"agents": "agent"}, inplace=True)
+   players_stats_df.drop(columns="agents", inplace=True)
+   teams_df = players_stats_df[["index", "teams"]]
+   teams_df = splitting_teams(teams_df)
+   teams_df.rename(columns={"teams": "team"}, inplace=True)
+   players_stats_df.drop(columns="teams", inplace=True)
+   teams_df = await change_reference_name_to_id(teams_df, year)
+   teams_df["year"] = year
    print(players_stats_df.sample(n=20))
+   print(agents_df.sample(n=20))
+   print(teams_df.sample(n=20))
 
 
 # def add_all_data(curr, unique_ids):

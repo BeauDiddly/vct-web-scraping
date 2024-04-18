@@ -36,8 +36,18 @@ def standardized_duration(df):
 
     return df
 
+def convert_clutches(df):
+    df["Clutches (won/played)"] = df["Clutches (won/played)"].fillna("0/0")
+    clutches_split = df['Clutches (won/played)'].str.split('/', expand=True)
+    df["Clutches Won"] = clutches_split[0]
+    df["Clutches Played"] = clutches_split[1]
+    mask = (df["Clutches (won/played)"] == '0/0')
+    df.loc[mask, ["Clutches Won", "Clutches Played"]] = pd.NA
+    return df
+
 def convert_percentages(df):
-    columns = [ "Kill, Assist, Trade, Survive %", "Headshot %", "Pick Rate", "Attacker Side Win Percentage", "Defender Side Win Percentage"]
+    columns = [ "Kill, Assist, Trade, Survive %", "Headshot %", "Pick Rate", "Attacker Side Win Percentage", "Defender Side Win Percentage",
+               "Clutch Success %"]
     for column in columns:
         if column in df:
             mask = df[column].str.contains("%", na=False)
@@ -88,7 +98,7 @@ def convert_to_category(df):
 
 def drop_columns(df):
     columns = ["Tournament", "Stage", "Match Type", "Match Name", "Team", "Map", "Player", "Player Team", "Enemy Team", "Enemy",
-               "Team A", "Team B", "Eliminator", "Eliminator Team", "Eliminated", "Eliminated Team", "Agent"]
+               "Team A", "Team B", "Eliminator", "Eliminator Team", "Eliminated", "Eliminated Team", "Agent", "Clutches (won/played)"]
     for column in columns:
         if column in df and "Time Expiry (Failed to Plant)" not in df:
             df.drop(columns=column, inplace=True)
@@ -100,9 +110,9 @@ def reorder_columns(df, column_names):
 def rename_columns(df):
     stats_columns = {"Average Combat Score": "acs", "Kills - Deaths (KD)": "kd", "Kill, Assist, Trade, Survive %": "kast",
                      "Average Damage Per Round": "adpr", "Headshot %": "headshot", "First Kills": "fk", "First Deaths": "fd",
-                     "Kills - Deaths (FKD)": "fkd", "Kills:Deaths": "fd", "Kills Per Round": "kpr", "Assists Per Round": "apr",
+                     "Kills - Deaths (FKD)": "fkd", "Kills:Deaths": "kd", "Kills Per Round": "kpr", "Assists Per Round": "apr",
                      "First Kills Per Round": "fkpr", "First Deaths Per Round": "fdpr", "Clutch Success %": "clutch_success",
-                     "Clutches (won/played)": "clutches", "Maximum Kills in a Single Map": "mksp"}
+                    "Maximum Kills in a Single Map": "mksp"}
     for column in df.columns:
         if column in stats_columns:
             new_column_name = stats_columns[column]
@@ -117,6 +127,11 @@ def csv_to_df(file):
 def create_tuples(df):
     tuples = [tuple(x) for x in df.values]
     return tuples
+
+def splitting_teams(df):
+    df.loc[:, "teams"] = df["teams"].str.split(", ")
+    df = df.explode("teams")
+    return df
 
 def splitting_agents(df):
     df.loc[:, "agents"] = df["agents"].str.split(", ")
@@ -134,6 +149,14 @@ def add_missing_player(df, year):
             df.loc[len(df.index)] = ["Wendigo", 26880]
         df.drop_duplicates(inplace=True, subset=["Player", "Player ID"])
         df.reset_index(drop=True, inplace=True)
+    return df
+
+def remove_leading_zeroes(df):
+    if "Player in df":
+        mask = df[df["Player"] == "002"].index
+        df.loc[mask, "Player"] = "2"
+        mask = df[df["Player"] == "01000010"].index
+        df.loc[mask, "Player"] = "1000010"
     return df
 
 def flatten_list_of_dicts(list_of_dicts):
