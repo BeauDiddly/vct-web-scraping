@@ -581,6 +581,7 @@ def extract_agent_pictures(agent_pictures, global_table_titles):
         global_table_titles.append(agent)
 
 def extract_pick_rates(table_stats_tr, maps_stats_dict, agents_pick_rates_dict, global_table_titles):
+    # all_maps_played = []
     for tr in table_stats_tr:
         all_tds = tr.find_all("td")
         filtered_tds = [td for td in all_tds if isinstance(td, Tag)]
@@ -593,6 +594,8 @@ def extract_pick_rates(table_stats_tr, maps_stats_dict, agents_pick_rates_dict, 
                     map = "All Maps"
                 else:
                     logo, map = map.split("\n")
+                # if map != "All Maps":
+                #     all_maps_played.append(map)
                 map_stats_dict = maps_stats_dict.setdefault(map, {})
                 agent_pick_rate_dict = agents_pick_rates_dict.setdefault(map, {})
             elif class_name == "mod-right":
@@ -603,6 +606,9 @@ def extract_pick_rates(table_stats_tr, maps_stats_dict, agents_pick_rates_dict, 
                 stat = td.text.strip()
                 agent = global_table_titles[index]
                 agent_pick_rate_dict[agent] = stat
+    # all_maps = ", ".join(sorted(all_maps_played))
+    # maps_stats_dict[all_maps] = maps_stats_dict.pop("All Maps")
+    # agents_pick_rates_dict[all_maps] = agents_pick_rates_dict.pop("All Maps")
 
 def extract_team_picked_agents(teams_tables, teams_pick_rates_dict, table_titles):
     for table in teams_tables:

@@ -26,7 +26,7 @@ async def main():
 
     urls = {}
 
-    tournament_cards = soup.find_all("a", class_="wf-card mod-flex event-item")
+    tournament_cards = soup.find("div", class_="events-container").find_all("div", class_="events-container-col")[-1].find_all("a", class_="wf-card mod-flex event-item")
     tournaments_ids = {}
     stages_ids = {}
     match_types_ids = {}
@@ -52,7 +52,7 @@ async def main():
         for stage_name, match_types in stages.items():
             for match_type_name, id in match_types.items():
                 tournament_id = tournaments_ids[tournament_name]
-                stage_id = stages_ids[stage_name]
+                stage_id = stages_ids[tournament_name][stage_name]
                 all_results["tournaments_stages_match_types_ids"].append([tournament_name, tournament_id, stage_name, stage_id, match_type_name, id])
     for result in results:
         for inner_list in result:
@@ -88,7 +88,7 @@ async def main():
     dataframes["agents_pick_rates"] = pd.DataFrame(all_results["agents_pick_rates"],
                                                    columns=["Tournament", "Stage", "Match Type", "Map", "Agent", "Pick Rate"])
     dataframes["teams_picked_agents"] = pd.DataFrame(all_results["teams_picked_agents"],
-                                                     columns=["Tournament", "Stage", "Match Type", "Map", "Team", "Agent Picked",
+                                                     columns=["Tournament", "Stage", "Match Type", "Map", "Team", "Agent",
                                                             "Total Wins By Map", "Total Loss By Map", "Total Maps Played"])
     dataframes["tournaments_stages_match_types_ids"] = pd.DataFrame(all_results["tournaments_stages_match_types_ids"],
                                                                     columns=["Tournament", "Tournament ID", "Stage", "Stage ID", "Match Type", "Match Type ID"])
@@ -105,7 +105,10 @@ async def main():
     print(f"Datascraping time: {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds")
 
     for file_name, dataframe in dataframes.items():
-        dataframe.to_csv(f"vct_{year}/agents/{file_name}.csv", encoding="utf-8", index=False)
+        if "ids" in file_name:
+            dataframe.to_csv(f"vct_{year}/ids/{file_name}.csv", encoding="utf-8", index=False)
+        else:
+            dataframe.to_csv(f"vct_{year}/agents/{file_name}.csv", encoding="utf-8", index=False)
 
     current_time = now.strftime("%H:%M:%S")
     print("End Time =", current_time)

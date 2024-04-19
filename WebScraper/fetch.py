@@ -79,8 +79,8 @@ async def generate_urls_combination(tournament_name, stages_ids, match_types_ids
         tournament_dict["All Stages"] = {}
         tournament_dict["All Stages"]["All Match Types"] = f"{url}?exclude={showmatch_id}"
         stages_to_match_types["All Stages"] = {}
-        stages_to_match_types["All Stages"]["All Match Types"] = "all"
-        stages_to_ids["All Stages"] = "all"
+        stages_to_match_types["All Stages"]["All Match Types"] = pd.NA
+        stages_to_ids["All Stages"] = pd.NA
 
 
 async def scraping_card_data(tournament_name, card, tournaments_ids, stages_ids, session, semaphore):
@@ -205,17 +205,23 @@ async def scraping_card_data(tournament_name, card, tournaments_ids, stages_ids,
                 try:
                     team_a_abbriev = overview_tables[0].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
                 except AttributeError: #abbrievated name for team a was not found which means the players name will be missing
-                    print(f"Couldn't find the abbrievated name for {team_a}")
-                    print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}")
-                    team_a_abbriev = team_a
+                    try:
+                        team_a_abbriev = overview_tables[0].find("tbody").find("tr").find("td").find("div").find("div").find_all("div")[-1].text.strip()
+                    except AttributeError:
+                        print(f"Couldn't find the abbrievated name for {team_a}")
+                        print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}")
+                        team_a_abbriev = team_a
 
                 
                 try:
                     team_b_abbriev = overview_tables[1].find("tbody").find("tr").find("td").find("a").find_all("div")[-1].text.strip()
                 except AttributeError: #abbrievated name for team b was not found which means the players name will be missing
-                    print(f"Couldn't find the abbrievated name for {team_b}")
-                    print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}")
-                    team_b_abbriev = team_b
+                    try:
+                        team_b_abbriev = overview_tables[1].find("tbody").find("tr").find("td").find("div").find("div").find_all("div")[-1].text.strip()
+                    except AttributeError:
+                        print(f"Couldn't find the abbrievated name for {team_b}")
+                        print(f"{tournament_name}, {stage_name}, {match_type_name}, {match_name}")
+                        team_b_abbriev = team_b
 
 
                 if team_a_abbriev not in team_mapping:
@@ -229,6 +235,8 @@ async def scraping_card_data(tournament_name, card, tournaments_ids, stages_ids,
                     extract_games_id(games_id_divs, games_id, results, [tournament_name, stage_name, match_type_name, match_name, tournament_id, stage_id, match_id])
                 except AttributeError: #only 1 map played
                     map_name = overview_stats[0].find("div", class_="map").text.strip().split("\t")[0]
+                    if not map_name or map_name == "TBD":
+                        map_name = pd.NA
                     id = overview_stats[0].get("data-game-id")
                     games_id[id] = map_name
                     results["maps_played"].append([tournament_name, stage_name, match_type_name, match_name, map_name])
@@ -323,8 +331,8 @@ async def scraping_agents_data_match_type_helper(tournament_name, stage_name, ma
         return result
 
 
-async def scraping_agents_data_stage_helper(tournament_name, stage_name, match_types, team_mapping, semaphore, session):
-    tasks = [scraping_agents_data_match_type_helper(tournament_name, stage_name, match_type_name, url, team_mapping, semaphore, session) for match_type_name, url in match_types.items()]
+async def scraping_agents_data_stage_helper(tournament_name, stage_name, match_types, semaphore, session):
+    tasks = [scraping_agents_data_match_type_helper(tournament_name, stage_name, match_type_name, url, semaphore, session) for match_type_name, url in match_types.items()]
     results = await asyncio.gather(*tasks)
     return results
 

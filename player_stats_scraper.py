@@ -10,9 +10,8 @@ from datetime import datetime
 
 
 async def main():
-    semaphore_count = 25
     url_semaphore = asyncio.Semaphore(10)
-    player_stats_semaphore = asyncio.Semaphore(semaphore_count) 
+    player_stats_semaphore = asyncio.Semaphore(5) 
     year = input(f"Input the VCT year: ")
     start_time = time.time()
 
@@ -22,24 +21,25 @@ async def main():
     print("Current Time =", current_time)
     team_df = pd.read_csv(f"vct_{year}/matches/team_mapping.csv")
     df = pd.read_csv(f"vct_{year}/matches/overview.csv")
+    tournament_ids = {}
     team_player_df = df[["Player", "Team", "Tournament", "Stage", "Match Type", "Match Name"]].drop_duplicates()
     team_player_df["Match Type"] = team_player_df["Match Type"].str.strip()
 
     url = f"https://www.vlr.gg/vct-{year}"
     page = requests.get(url)
     soup = BeautifulSoup(page.content, "html.parser")
-    tournament_cards = soup.find_all("a", class_="wf-card mod-flex event-item")
+    tournament_cards = soup.find("div", class_="events-container").find_all("div", class_="events-container-col")[-1].find_all("a", class_="wf-card mod-flex event-item")
     urls = {}
 
-    retrieve_urls(urls, tournament_cards, "/event/", "/event/stats/")
+    retrieve_urls(urls, tournament_ids, tournament_cards, "/event/", "/event/stats/")
     filtered_urls = {}
-
+    stages_ids = {}
+    match_types_ids = {}
 
     async with aiohttp.ClientSession() as session:
-        tasks = [generate_urls_combination(tournament_name, url, filtered_urls, url_semaphore, session) for tournament_name, url in urls.items()]
+        tasks = [generate_urls_combination(tournament_name, stages_ids, match_types_ids, url, filtered_urls, url_semaphore, session) for tournament_name, url in urls.items()]
         await asyncio.gather(*tasks)
 
-    print(filtered_urls)
 
     async with aiohttp.ClientSession() as session:
         tasks = [scraping_players_stats(tournament_name, stages, team_player_df, player_stats_semaphore, session) for tournament_name, stages in filtered_urls.items()]

@@ -30,7 +30,7 @@ async def main():
 
     tournaments_ids = {}
 
-    tournament_cards = soup.find_all("a", class_="wf-card mod-flex event-item")
+    tournament_cards = soup.find("div", class_="events-container").find_all("div", class_="events-container-col")[-1].find_all("a", class_="wf-card mod-flex event-item")
 
     retrieve_urls(urls, tournaments_ids, tournament_cards, "/event/", "/event/matches/")
 
@@ -74,7 +74,7 @@ async def main():
                    "players_ids": {},
                    "tournaments_stages_matches_games_ids": []}
      
-    # test = {"Champions Tour CIS Stage 3: Challengers 2": matches_cards["Champions Tour CIS Stage 3: Challengers 2"]}
+    # test = {"Champions Tour Turkey Stage 1: Challengers 3": matches_cards["Champions Tour Turkey Stage 1: Challengers 3"]}
 
     # async with aiohttp.ClientSession() as session:
     #     tasks = [scraping_matches_data(tournament_name, cards, tournaments_ids, stages_ids, matches_semaphore, session) for tournament_name, cards in test.items()]
@@ -121,7 +121,7 @@ async def main():
                                             columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Player", "Team",
                                                     "Agents", "Rating", "Average Combat Score", "Kills", "Deaths",
                                                     "Assists", "Kills - Deaths (KD)", "Kill, Assist, Trade, Survive %",
-                                                    "Average Damage per Round", "Headshot %", "First Kills", "First Deaths",
+                                                    "Average Damage Per Round", "Headshot %", "First Kills", "First Deaths",
                                                     "Kills - Deaths (FKD)", "Side"])
     dataframes["kills"] = pd.DataFrame(all_results["kills"],
                                         columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Player Team",
@@ -129,7 +129,7 @@ async def main():
                                                 "Difference", "Kill Type"])
     dataframes["kills_stats"] = pd.DataFrame(all_results["kills_stats"],
                                                 columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Team",
-                                                        "Player", "Agent", "2k", "3k", "4k", "5k", "1v1",
+                                                        "Player", "Agents", "2k", "3k", "4k", "5k", "1v1",
                                                         "1v2", "1v3", "1v4", "1v5", "Econ", "Spike Plants",
                                                         "Spike Defuses"])
     dataframes["rounds_kills"] = pd.DataFrame(all_results["rounds_kills"],
@@ -163,7 +163,10 @@ async def main():
     start_time = time.time()
 
     for file_name, dataframe in dataframes.items():
-        dataframe.to_csv(f"vct_{year}/matches/{file_name}.csv", encoding="utf-8", index=False)
+        if "ids" in file_name:
+            dataframe.to_csv(f"vct_{year}/ids/{file_name}.csv", encoding="utf-8", index=False)
+        else:
+            dataframe.to_csv(f"vct_{year}/matches/{file_name}.csv", encoding="utf-8", index=False)
         # dataframe.to_csv(f"test/{file_name}.csv", encoding="utf-8", index=False)
 
 
