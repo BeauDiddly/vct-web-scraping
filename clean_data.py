@@ -4,11 +4,11 @@ import pandas as pd
 from data_clean.data_clean import *
 
 def main():
-    years = [2021, 2022, 2023]
+    years = [2021, 2022, 2023, 2024]
 
     matches_csv_files = [find_csv_files(f"{os.getcwd()}/vct_{year}/matches", "matches", year) for year in years]
 
-    matches_result = {2021: {}, 2022: {}, 2023: {}}
+    matches_result = {year: {} for year in years}
     for i, file_list in enumerate(matches_csv_files):
         year = years[i]
         for file in file_list:
@@ -33,7 +33,7 @@ def main():
 
     agents_stats_csv_files = [find_csv_files(f"{os.getcwd()}/vct_{year}/agents", "agents", year) for year in years]
 
-    agents_result = {2021: {}, 2022: {}, 2023: {}}
+    agents_result = {year: {} for year in years}
     for i, file_list in enumerate(agents_stats_csv_files):
         year = years[i]
         for file in file_list:
@@ -51,7 +51,7 @@ def main():
             dataframe.to_csv(f"cleaned_data/vct_{year}/agents/{file_name}", encoding="utf-8", index=False)
 
     players_stats_csv_files = [find_csv_files(f"{os.getcwd()}/vct_{year}/players_stats", "players_stats", year) for year in years]
-    players_result = {2021: {}, 2022: {}, 2023: {}}
+    players_result = {year: {} for year in years}
     for i, file_list in enumerate(players_stats_csv_files):
         year = years[i]
         for file in file_list:
@@ -70,7 +70,7 @@ def main():
             dataframe.to_csv(f"cleaned_data/vct_{year}/players_stats/{file_name}", encoding="utf-8", index=False)
 
     ids_csv_files = [find_csv_files(f"{os.getcwd()}/vct_{year}/ids", "ids", year) for year in years]
-    ids_result = {2021: {}, 2022: {}, 2023: {}}
+    ids_result = {year: {} for year in years}
     for i, file_list in enumerate(ids_csv_files):
         year = years[i]
         for file in file_list:
@@ -80,6 +80,8 @@ def main():
             df = remove_white_spaces_in_between(df)
             df = remove_tabs_and_newlines(df)
             df = add_missing_player(df, year)
+            df = add_missing_matches_id(df, year)
+            df = fixed_match_names(df)
             df = convert_to_int(df)
             df = convert_to_str(df)
             ids_result[year][file_name] = df

@@ -80,7 +80,7 @@ def main():
                                             columns=["Tournament", "Stage", "Match Type", "Match Name", "Map", "Player", "Team",
                                                     "Agents", "Rating", "Average Combat Score", "Kills", "Deaths",
                                                     "Assists", "Kills - Deaths (KD)", "Kill, Assist, Trade, Survive %",
-                                                    "Average Damage per Round", "Headshot %", "First Kills", "First Deaths",
+                                                    "Average Damage Per Round", "Headshot %", "First Kills", "First Deaths",
                                                     "Kills - Deaths (FKD)", "Side"])
     dataframes["team_mapping"] = pd.DataFrame(list(results["team_mapping"].items()),
                                               columns=["Abbreviated", "Full Name"])

@@ -82,6 +82,11 @@ def remove_white_spaces_in_between(df):
         df["Match Name"] = df["Match Name"].str.split().apply(lambda x: " ".join(x))
     return df
 
+def fixed_match_names(df):
+    if "Match Name" in df:
+        df["Match Name"] = df["Match Name"].map(misnamed_match_names).fillna(df["Match Name"])
+    return df
+
 def fixed_team_names(df):
     for column in ["Team", "Team A", "Team B", "Eliminator Team", "Eliminated Team", "Player Team", "Enemy Team"]:
         if column in df:
@@ -149,7 +154,7 @@ def convert_nan_players_teams(df):
                                              (df["Player"].isna())
             filtered_rows = df[roocivarkaat_players_condition]
             for index, row in filtered_rows.iterrows():
-                agent = row["Agent"]
+                agent = row["Agents"]
                 player = ""
                 if agent == "skye" or agent == "breach":
                     player = "johkubb"
@@ -183,7 +188,7 @@ def convert_nan_players_teams(df):
             filtered_rows = df[missing_players_condition]
 
             for index, row in filtered_rows.iterrows():
-                agent = row["Agent"]
+                agent = row["Agents"]
                 player = ""
                 if agent == "kayo" or agent == "cypher":
                     player = "hatty"
@@ -236,11 +241,11 @@ def unique_sorted_agents(agents):
 
 def get_all_agents_played_for_kills_stats(df):
     filtered_df = df[df["Map"] != "All Maps"]
-    filtered_df = df[["Tournament", "Stage", "Match Type", "Match Name", "Team", "Player", "Agent"]]
-    agents_played_df = filtered_df.groupby(["Tournament", "Stage", "Match Type", "Match Name", "Team", "Player"])["Agent"].agg(unique_sorted_agents).reset_index()
+    filtered_df = df[["Tournament", "Stage", "Match Type", "Match Name", "Team", "Player", "Agents"]]
+    agents_played_df = filtered_df.groupby(["Tournament", "Stage", "Match Type", "Match Name", "Team", "Player"])["Agents"].agg(unique_sorted_agents).reset_index()
     merged_df = pd.merge(df, agents_played_df, on=["Tournament", "Stage", "Match Type", "Match Name", "Team", "Player"], how="left")
-    df.loc[df["Map"] == "All Maps", "Agent"] = merged_df["Agent_y"].fillna(merged_df["Agent_x"])
-    df = df.rename(columns={"Agent": "Agents"})
+    df.loc[df["Map"] == "All Maps", "Agents"] = merged_df["Agents_y"].fillna(merged_df["Agents_x"])
+    # df = df.rename(columns={"Agent": "Agents"})
     return df
 
 
@@ -263,6 +268,38 @@ def add_missing_player(df, year):
             df.loc[len(df.index)] = ["Wendigo", 26880]
         df.drop_duplicates(inplace=True, subset=["Player", "Player ID"])
         df.reset_index(drop=True, inplace=True)
+    return df
+
+def add_missing_matches_id(df, year):
+    if "Match Name" in df and year == 2021:
+        mask = (df['Tournament'] == 'Champions Tour Brazil Stage 1: Challengers 1') & \
+              (df['Stage'] == 'Open Qualifier') & \
+              (df['Match Type'] == 'Round of 32')
+        first_occurence_index = df[mask].index[0]
+        new_row = {'Tournament': ['Champions Tour Brazil Stage 1: Challengers 1'],
+                   "Tournament ID": [292],
+                   'Stage': ['Open Qualifier'],
+                   "Stage ID": ["594"],
+                   'Match Type': ['Round of 32'],
+                   'Match Name': ['ChesterNo vs FURIA'],
+                   'Match ID': [9082],
+                   "Map": [pd.NA],
+                   "Game ID": [15207]}
+        df = pd.concat([df.iloc[:first_occurence_index], pd.DataFrame(new_row), df.iloc[first_occurence_index:]]).reset_index(drop=True)
+        mask = (df['Tournament'] == 'Champions Tour North America Stage 1: Challengers 1') & \
+        (df['Stage'] == 'Qualifier') & \
+        (df['Match Type'] == 'Round of 128')
+        first_occurence_index = df[mask].index[0]
+        new_row = {'Tournament': ['Champions Tour North America Stage 1: Challengers 1'],
+                   "Tournament ID": [291],
+                   'Stage': ['Qualifier'],
+                   "Stage ID": [593],
+                   'Match Type': ['Round of 128'],
+                   'Match Name': ['XSET vs Primeval'],
+                   'Match ID': [9145],
+                   "Map": [pd.NA],
+                   "Game ID": [pd.NA]}
+        df = pd.concat([df.iloc[:first_occurence_index], pd.DataFrame(new_row), df.iloc[first_occurence_index:]]).reset_index(drop=True)
     return df
 
 def remove_forfeited_matches(df):
