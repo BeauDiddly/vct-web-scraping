@@ -15,7 +15,7 @@
 
 ## About <a name = "about"></a>
 
-An asynchronous web scraper scraping the 2021 - 2023 Valorant Champions Tour data. It scrapes tournaments, players and agents data from vlr.gg.
+An asynchronous web scraper scraping the 2021 - 2024 Valorant Champions Tour data. It scrapes tournaments, players and agents data from vlr.gg.
 
 ## Using the Data <a name ="using_the_data"></a>
 The data is publicly avaliable on [Kaggle](https://www.kaggle.com/datasets/ryanluong1/valorant-champion-tour-2021-2023-data).
@@ -71,14 +71,11 @@ $ mkdir agents ids matches players_stats
 
 
 ## Rate Limit <a name = "rate_limit"></a>
-Please do not increase the scraping rate on the code to prevent overloading the scraper. Although there is [no robots.txt on vlr.gg](https://www.vlr.gg/30777/is-data-scraping-allowed), please do not overload vlr.gg's server.
+Please do not increase the scraping rate on the code to prevent overloading the scraper. Although there is [no robots.txt on vlr.gg](https://www.vlr.gg/30777/is-data-scraping-allowed), please do not overload vlr.gg.
 
 The scraper is scraping 25 pages at a time for tournaments, players and agents.
 
 ## Usage <a name = "usage"></a>
-
-
-
 If you want to scrape tournament data
 ```
 $ python3 matches_scraper.py
@@ -94,13 +91,13 @@ If you want to scrape players data
 $ python3 player_stats_scraper.py
 ```
 
-If you want to clean the data
+If you want to clean the data and you ran the three commands above
 ```
 $ python3 clean_data.py
-$ python missing_data_scraper.py
+$ python3 missing_data_scraper.py
 ```
 
-If you want to retrieve all the ids,
+If you want to retrieve all the ids (it is best you perform the data clean steps)
 ```
 $ python3 combine_all_columns_value.py
 ```
