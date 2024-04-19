@@ -41,9 +41,21 @@ $ pip3 install -r requirements.txt
 ### File Creation
 
 ```
-$ mkdir cleaned_data all_vct
+$ mkdir cleaned_data all_vct vct_2021 vct_2022 vct_2023 vct_2024
+$ cd vct_2021
+$ mkdir agents ids matches players_stats
+$ cd ..
+$ cd vct_2022
+$ mkdir agents ids matches players_stats
+$ cd ..
+$ cd vct_2023
+$ mkdir agents ids matches players_stats
+$ cd ..
+$ cd vct_2024
+$ mkdir agents ids matches players_stats
+$ cd ..
 $ cd cleaned_data
-$ mkdir vct_2021 vct_2022 vct_2023
+$ mkdir vct_2021 vct_2022 vct_2023 vct_2024
 $ cd vct_2021 
 $ mkdir agents ids matches players_stats
 $ cd ..
@@ -51,6 +63,9 @@ $ cd vct_2022
 $ mkdir agents ids matches players_stats
 $ cd ..
 $ cd vct_2023 
+$ mkdir agents ids matches players_stats
+$ cd ..
+$ cd vct_2024 
 $ mkdir agents ids matches players_stats
 ```
 
@@ -99,5 +114,4 @@ $ python3 combine_all_columns_value.py
 
 ## To Do List <a name ="to_do_list"></a>
 
-1. Scrape 2024 data
-2. Clean the data as errors arise
+1. Clean the data as errors arise
