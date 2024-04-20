@@ -57,6 +57,10 @@ def remove_white_spaces(df):
                   "Eliminator", "Eliminated"]:
         if column in df:
             df[column] = df[column].apply(lambda x: x.strip() if isinstance(x, str) else x)
+            if "Match Name" in df and column == "Team":
+                mask = (df["Match Name"] == "Frederikssund Vikings vs The Goose House") & \
+                       (df[column] != "The Goose House")
+                df.loc[mask, "Team"] = "Frederikssund Vikings"
     return df
 
 def convert_to_str(df):
