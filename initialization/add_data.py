@@ -290,6 +290,7 @@ async def add_win_loss_methods_round_number(file, year, engine):
 
 async def add_agents_pick_rates(file, year, engine):
    agents_pick_rates_df = csv_to_df(file)
+   agents_pick_rates_df = convert_to_category(agents_pick_rates_df)
    agents_pick_rates_df = await change_reference_name_to_id(agents_pick_rates_df, year)
    agents_pick_rates_df = create_ids(agents_pick_rates_df)
    agents_pick_rates_df = drop_columns(agents_pick_rates_df)
@@ -303,6 +304,7 @@ async def add_agents_pick_rates(file, year, engine):
 
 async def add_maps_stats(file, year, engine):
    maps_stats_df = csv_to_df(file)
+   maps_stats_df = convert_to_category(maps_stats_df)
    maps_stats_df = await change_reference_name_to_id(maps_stats_df, year)
    maps_stats_df = create_ids(maps_stats_df)
    maps_stats_df = drop_columns(maps_stats_df)
@@ -315,6 +317,7 @@ async def add_maps_stats(file, year, engine):
 
 async def add_teams_picked_agents(file, year, engine):
    teams_picked_agents_df = csv_to_df(file)
+   teams_picked_agents_df = convert_to_category(teams_picked_agents_df)
    teams_picked_agents_df = await change_reference_name_to_id(teams_picked_agents_df, year)
    teams_picked_agents_df = create_ids(teams_picked_agents_df)
    teams_picked_agents_df = drop_columns(teams_picked_agents_df)
@@ -377,8 +380,8 @@ async def process_csv_files(csv_files, year, engine):
       #    await add_maps_played(csv_file, year, engine)
       # elif file_name == "maps_scores.csv":
       #    await add_maps_scores(csv_file, year, engine)
-      elif file_name == "overview.csv":
-         await add_overview(csv_file, year, engine)
+      # elif file_name == "overview.csv":
+      #    await add_overview(csv_file, year, engine)
       # elif file_name == "rounds_kills.csv":
       #    await add_rounds_kills(csv_file, year, engine)
       # elif file_name == "scores.csv":
@@ -387,6 +390,12 @@ async def process_csv_files(csv_files, year, engine):
       #    await add_win_loss_methods_count(csv_file, year, engine)
       # elif file_name == "win_loss_methods_round_number.csv":
       #    await add_win_loss_methods_round_number(csv_file, year, engine)
+      # elif file_name == "agents_pick_rates.csv":
+      #    await add_agents_pick_rates(csv_file, year, engine)
+      # elif file_name == "maps_stats.csv":
+      #    await add_maps_stats(csv_file, year, engine)
+      elif file_name == "teams_picked_agents.csv":
+         await add_teams_picked_agents(csv_file, year, engine)
 
 async def process_year(year, csv_files, engine):
    await process_csv_files(csv_files, year, engine)
