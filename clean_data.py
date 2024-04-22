@@ -25,6 +25,8 @@ def main():
             df = convert_nan_players_teams(df)
             if file_name == "kills_stats.csv":
                 df = get_all_agents_played_for_kills_stats(df)
+            elif file_name == "rounds_kills.csv":
+                df = extract_round_number(df)
             df = convert_to_str(df)    
             matches_result[year][file_name] = df
     for year, dataframes in matches_result.items():

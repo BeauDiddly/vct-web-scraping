@@ -318,6 +318,10 @@ def add_missing_abbriev(df, year):
     df.reset_index(drop=True, inplace=True)
     return df
 
+def extract_round_number(df):
+    df["Round Number"] = df["Round Number"].str.split(" ").str[1]
+    return df
+
 # def insert_missing_players(df):
 #     for column in ["Player", "Eliminator", "Eliminated"]:
 #         for another_column in ["Agent", "Agents"]:
