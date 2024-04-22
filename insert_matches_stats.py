@@ -9,7 +9,7 @@ from Connect.config import config
 async def main():
     start_time = time.time()
     now = datetime.now()
-    years = [2021, 2022, 2023]
+    years = [2021, 2022, 2023, 2024]
     conn, curr = connect()
     sql_alchemy_engine = engine()
     db_conn_info = config()
@@ -17,18 +17,22 @@ async def main():
     csv_files = [find_csv_files(f"{os.getcwd()}/vct_{year}/matches", "matches", year) for year in years]
     print(csv_files)
 
+    for i, year in enumerate(years):
+        await process_year(year, csv_files[i], sql_alchemy_engine)
+
+
     # await add_drafts(csv_files[2][8], years[2], sql_alchemy_engine)
     # await add_eco_rounds(csv_files[2][11], years[2], sql_alchemy_engine)
-    await add_eco_stats(csv_files[2][3], years[2], sql_alchemy_engine)
-    # await add_kills(csv_files[1][1], years[1], sql_alchemy_engine)
-    # await add_kills_stats(csv_files[1][5], years[1], sql_alchemy_engine)
-    # await add_maps_played(csv_files[1][0], years[1], sql_alchemy_engine)
-    # await add_maps_scores(csv_files[1][12], years[1], sql_alchemy_engine)
-    # await add_overview(csv_files[1][9], years[1], sql_alchemy_engine)
+    # await add_eco_stats(csv_files[2][3], years[2], sql_alchemy_engine)
+    # await add_kills(csv_files[2][1], years[2], sql_alchemy_engine)
+    # await add_kills_stats(csv_files[2][5], years[2], sql_alchemy_engine)
+    # await add_maps_played(csv_files[2][0], years[2], sql_alchemy_engine)
+    # await add_maps_scores(csv_files[2][12], years[2], sql_alchemy_engine)
+    # await add_overview(csv_files[2][9], years[2], sql_alchemy_engine)
     # await add_rounds_kills(csv_files[1][10], years[1], sql_alchemy_engine)
     # await add_scores(csv_files[1][4], years[1], sql_alchemy_engine)
-    # await add_win_loss_methods_count(csv_files[1][6], years[1], sql_alchemy_engine)
-    # await add_win_loss_methods_round_number(csv_files[0][2], years[0], sql_alchemy_engine)
+    # await add_win_loss_methods_count(csv_files[2][6], years[2], sql_alchemy_engine)
+    # await add_win_loss_methods_round_number(csv_files[2][2], years[2], sql_alchemy_engine)
 
     end_time = time.time()
     elasped_time = end_time - start_time

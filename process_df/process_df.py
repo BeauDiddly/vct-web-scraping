@@ -83,8 +83,8 @@ def k_to_numeric(df, column):
     df[column] = df[column].astype("float32")
     return df
 
-def get_eco_type(df, column):
-    df[column] = df[column].str.split(":").str[0]
+def get_eco_type(df):
+    df["Type"] = df["Type"].str.split(":").str[0]
     return df
 
 def convert_to_category(df):
@@ -151,12 +151,14 @@ def add_missing_player(df, year):
         df.reset_index(drop=True, inplace=True)
     return df
 
-def remove_leading_zeroes(df):
-    if "Player in df":
-        mask = df[df["Player"] == "002"].index
-        df.loc[mask, "Player"] = "2"
-        mask = df[df["Player"] == "01000010"].index
-        df.loc[mask, "Player"] = "1000010"
+def remove_leading_zeroes_from_players(df):
+    columns = ["Player", "Eliminated", "Eliminator", "Enemy"]
+    for column in columns:
+        if column in df and "Time Expiry (Failed to Plant)" not in df:
+            mask = df[df[column] == "002"].index
+            df.loc[mask, column] = "2"
+            mask = df[df[column] == "01000010"].index
+            df.loc[mask, column] = "1000010"
     return df
 
 def flatten_list_of_dicts(list_of_dicts):
