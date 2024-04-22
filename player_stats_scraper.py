@@ -59,7 +59,7 @@ async def main():
                                         all_result.append([tournament_name, stage_name, match_type, player_name, team_name, agents_played] + list(stats.values()))
     
     players_stats_df = pd.DataFrame(all_result,
-                                    columns=["Tournament", "Stage", "Match Type", "Player", "Team", "Agents", "Rounds Played",
+                                    columns=["Tournament", "Stage", "Match Type", "Player", "Teams", "Agents", "Rounds Played",
                                             "Rating", "Average Combat Score", "Kills:Deaths", "Kill, Assist, Trade, Survive %",
                                             "Average Damage Per Round", "Kills Per Round", "Assists Per Round", "First Kills Per Round",
                                             "First Deaths Per Round", "Headshot %", "Clutch Success %", "Clutches (won/played)",
