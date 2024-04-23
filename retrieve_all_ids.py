@@ -100,12 +100,12 @@ def main():
     nan_player = players[players["Player ID"] == 10207].index
     players.loc[nan_player, "Player"] = "nan"
 
-    players.to_csv(f"all_vct/all_players_ids.csv", index=False)
-    teams.to_csv(f"all_vct/all_teams_ids.csv", index=False)
-    # agents.to_csv(f"all_vct/all_agents.csv", index=False)
-    matches_ids.to_csv(f"all_vct/all_matches_games_ids.csv", index = False)
-    tournaments_stages_match_types_ids.to_csv("all_vct/all_tournaments_stages_match_types_ids.csv", index = False)
-    teams_mapping.to_csv("all_vct/all_teams_mapping.csv", index=False)
+    players.to_csv(f"all_ids/all_players_ids.csv", index=False)
+    teams.to_csv(f"all_ids/all_teams_ids.csv", index=False)
+    # agents.to_csv(f"all_ids/all_agents.csv", index=False)
+    matches_ids.to_csv(f"all_ids/all_matches_games_ids.csv", index = False)
+    tournaments_stages_match_types_ids.to_csv("all_ids/all_tournaments_stages_match_types_ids.csv", index = False)
+    teams_mapping.to_csv("all_ids/all_teams_mapping.csv", index=False)
 
 if __name__ == "__main__":
     main()
