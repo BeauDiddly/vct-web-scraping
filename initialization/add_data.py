@@ -332,8 +332,8 @@ async def add_teams_picked_agents(file, year, engine):
 
 async def add_players_stats(file, year, engine):
    players_stats_df = csv_to_df(file)
+   players_stats_df = remove_leading_zeroes_from_players(players_stats_df)
    players_stats_df = convert_to_category(players_stats_df)
-   print(players_stats_df[players_stats_df["Player"] == "1000010"])
    players_stats_df = await change_reference_name_to_id(players_stats_df, year)
    players_stats_df = create_ids(players_stats_df)
    players_stats_df = convert_clutches(players_stats_df)
@@ -394,8 +394,10 @@ async def process_csv_files(csv_files, year, engine):
       #    await add_agents_pick_rates(csv_file, year, engine)
       # elif file_name == "maps_stats.csv":
       #    await add_maps_stats(csv_file, year, engine)
-      elif file_name == "teams_picked_agents.csv":
-         await add_teams_picked_agents(csv_file, year, engine)
+      # elif file_name == "teams_picked_agents.csv":
+      #    await add_teams_picked_agents(csv_file, year, engine)
+      elif file_name == "players_stats.csv":
+         await add_players_stats(csv_file, year, engine)
 
 async def process_year(year, csv_files, engine):
    await process_csv_files(csv_files, year, engine)

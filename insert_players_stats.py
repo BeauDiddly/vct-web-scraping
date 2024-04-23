@@ -9,7 +9,7 @@ from Connect.config import config
 async def main():
     start_time = time.time()
     now = datetime.now()
-    years = [2021, 2022, 2023]
+    years = [2021, 2022, 2023, 2024]
     conn, curr = connect()
     sql_alchemy_engine = engine()
     db_conn_info = config()
@@ -17,7 +17,10 @@ async def main():
     csv_files = [find_csv_files(f"{os.getcwd()}/vct_{year}/players_stats", "players_stats", year) for year in years]
     print(csv_files)
 
-    await add_players_stats(csv_files[0][0], years[0], sql_alchemy_engine)
+    for i, year in enumerate(years):
+        await process_year(year, csv_files[i], sql_alchemy_engine)
+
+    # await add_players_stats(csv_files[2][0], years[2], sql_alchemy_engine)
 
 
     end_time = time.time()
