@@ -17,8 +17,17 @@ async def main():
     csv_files = [find_csv_files(f"{os.getcwd()}/vct_{year}/matches", "matches", year) for year in years]
     print(csv_files)
 
+    dfs = {}
+
+    for path_list in csv_files:
+        for file_path in path_list:
+            file_name = file_path.split("/")[-1]
+            dfs[file_name] = pd.DataFrame()
+
     for i, year in enumerate(years):
-        await process_year(year, csv_files[i], sql_alchemy_engine)
+        await process_year(year, csv_files[i], dfs)
+
+    print(dfs["draft_phase.csv"].sample(n=20))
 
 
     # await add_drafts(csv_files[2][8], years[2], sql_alchemy_engine)
