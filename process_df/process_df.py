@@ -12,6 +12,8 @@ import sys
 #             '1.#QNAN', 'N/A', 'NULL', 'NaN',
 #             'n/a', 'null']
 
+semaphore_count = 2
+
 def strip_white_space(df, column_name):
     df.loc[:, column_name] = df[column_name].str.strip()
 
@@ -168,7 +170,7 @@ def flatten_list_of_dicts(list_of_dicts):
     return conditional_mapping
 
 
-def create_conditions_values_1d(df, ids, column):
+def create_conditions(df, ids, column):
     conditions, values = [], []
     for key, value in ids.items():
         conditions.append(df[column] == key)
@@ -176,7 +178,7 @@ def create_conditions_values_1d(df, ids, column):
     return conditions, values
 
 
-def create_stages_conditions_values(df, ids):
+def create_stages_conditions(df, ids):
     conditions = []
     values = []
     for key, value in ids.items():
@@ -184,7 +186,7 @@ def create_stages_conditions_values(df, ids):
         values.append(value)
     return conditions, values
 
-def create_match_types_conditions_values(df, ids):
+def create_match_types_conditions(df, ids):
     conditions = []
     values = []
     for key, value in ids.items():
@@ -192,7 +194,7 @@ def create_match_types_conditions_values(df, ids):
         values.append(value)
     return conditions, values
 
-def create_matches_conditions_values(df, ids):
+def create_matches_conditions(df, ids):
     conditions = []
     values = []
     for key, value in ids.items():
@@ -200,11 +202,13 @@ def create_matches_conditions_values(df, ids):
         values.append(value)
     return conditions, values
 
-async def process_column(conn, df, column, id_name, table_name, value_name):
+async def process_column(pool, df, column, id_name, table_name, value_name):
     values = df[column].unique().tolist()
-    ids = [await retrieve_primary_key(conn, id_name, table_name, value_name, value) for value in values if pd.notna(value)]
+    ids = await asyncio.gather(
+        *(retrieve_primary_key(pool, id_name, table_name, value_name, value) for value in values if pd.notna(value))
+    )
     ids = flatten_list_of_dicts(ids)
-    conditions, result_values = create_conditions_values_1d(df, ids, column)
+    conditions, result_values = create_conditions(df, ids, column)
     df[f"{column} ID"] = np.select(conditions, result_values)
     if table_name == "players":
         df[f"{column} ID"] = df[f"{column} ID"].astype("UInt32")
@@ -212,60 +216,67 @@ async def process_column(conn, df, column, id_name, table_name, value_name):
         df[f"{column} ID"] = df[f"{column} ID"].astype("UInt16")
 
 async def process_tournaments_stages_match_types_matches(pool, df, year):
-    async with pool.acquire() as conn:
-        if "Tournament" in df:
-            tournaments = df["Tournament"].unique().tolist()
-            tournament_ids = [await retrieve_primary_key(pool, "tournament_id", "tournaments", "tournament", tournament, year) for tournament in tournaments]
-            tournament_ids = flatten_list_of_dicts(tournament_ids)
-            conditions, values = create_conditions_values_1d(df, tournament_ids, "Tournament")
-            df["Tournament ID"] = np.select(conditions, values)
-            if "Stage" in df:
-                stages = df[["Tournament ID", "Stage"]].drop_duplicates()
-                tuples = create_tuples(stages)
-                stage_ids = [await retrieve_primary_key(conn, "stage_id", "stages", "stage", (tournament_id, stage), year) 
-                            for tournament_id, stage in tuples]
-                stage_ids = flatten_list_of_dicts(stage_ids)
-                conditions, values = create_stages_conditions_values(df, stage_ids)
-                df["Stage ID"] = np.select(conditions, values)
-                if "Match Type" in df:
-                    match_types = df[["Tournament ID", "Stage ID", "Match Type"]].drop_duplicates()
-                    tuples = create_tuples(match_types)
-                    match_types_ids = [await retrieve_primary_key(conn, "match_type_id", "match_types", "match_type", (tournament_id, stage_id, match_type), year) 
-                                        for tournament_id, stage_id, match_type in tuples]
-                    match_types_ids = flatten_list_of_dicts(match_types_ids)
-                    conditions, values = create_match_types_conditions_values(df, match_types_ids)
-                    df["Match Type ID"] = np.select(conditions, values)
-                if "Match Name" in df:
-                    matches = df[["Tournament ID", "Stage ID", "Match Type ID", "Match Name"]].drop_duplicates()
-                    tuples = create_tuples(matches)
-                    matches_id = [await retrieve_primary_key(conn, "match_id", "matches", "match", (tournament_id, stage_id, match_type_id, match_name), year)
-                                    for tournament_id, stage_id, match_type_id, match_name in tuples]
-                    matches_id = flatten_list_of_dicts(matches_id)
-                    conditions, values = create_matches_conditions_values(df, matches_id)
-                    df["Match ID"] = np.select(conditions, values)
-
+    if "Tournament" in df:
+        tournaments = df["Tournament"].unique().tolist()
+        tournament_ids = await asyncio.gather(
+            *(retrieve_primary_key(pool, "tournament_id", "tournaments", "tournament", tournament, year)
+                for tournament in tournaments)
+            )
+        tournament_ids = flatten_list_of_dicts(tournament_ids)
+        conditions, values = create_conditions(df, tournament_ids, "Tournament")
+        df["Tournament ID"] = np.select(conditions, values)
+        if "Stage" in df:
+            stages = df[["Tournament ID", "Stage"]].drop_duplicates()
+            tuples = create_tuples(stages)
+            stage_ids = await asyncio.gather(
+                *(retrieve_primary_key(pool, "stage_id", "stages", "stage", (tournament_id, stage), year) 
+                    for tournament_id, stage in tuples)
+                    )
+            stage_ids = flatten_list_of_dicts(stage_ids)
+            conditions, values = create_stages_conditions(df, stage_ids)
+            df["Stage ID"] = np.select(conditions, values)
+            if "Match Type" in df:
+                match_types = df[["Tournament ID", "Stage ID", "Match Type"]].drop_duplicates()
+                tuples = create_tuples(match_types)
+                match_types_ids = await asyncio.gather(
+                    *(retrieve_primary_key(pool, "match_type_id", "match_types", "match_type", (tournament_id, stage_id, match_type), year) 
+                        for tournament_id, stage_id, match_type in tuples)
+                        )
+                match_types_ids = flatten_list_of_dicts(match_types_ids)
+                conditions, values = create_match_types_conditions(df, match_types_ids)
+                df["Match Type ID"] = np.select(conditions, values)
+            if "Match Name" in df:
+                matches = df[["Tournament ID", "Stage ID", "Match Type ID", "Match Name"]].drop_duplicates()
+                tuples = create_tuples(matches)
+                matches_id = await asyncio.gather(
+                    *(retrieve_primary_key(pool, "match_id", "matches", "match", (tournament_id, stage_id, match_type_id, match_name), year)
+                        for tournament_id, stage_id, match_type_id, match_name in tuples)
+                        )
+                matches_id = flatten_list_of_dicts(matches_id)
+                conditions, values = create_matches_conditions(df, matches_id)
+                df["Match ID"] = np.select(conditions, values)
 
 async def process_teams(pool, df):
-    async with pool.acquire() as conn:
-        team_columns = ["Team", "Player Team", "Enemy Team", "Eliminator Team", "Eliminated Team", "Team A", "Team B"]
-        tasks = [await process_column(conn, df, column, "team_id", "teams", "team") for column in team_columns if column in df]
-        # await asyncio.gather(*tasks)
+    team_columns = ["Team", "Player Team", "Enemy Team", "Eliminator Team", "Eliminated Team", "Team A", "Team B"]
+    await asyncio.gather(
+        *(process_column(pool, df, column, "team_id", "teams", "team") for column in team_columns if column in df)
+    )
 
 async def process_players(pool, df):
-    async with pool.acquire() as conn:
-        player_columns = ["Player", "Enemy", "Eliminator", "Eliminated"]
-        tasks = [await process_column(conn, df, column, "player_id", "players", "player") for column in player_columns if column in df and "Time Expiry (Failed to Plant)" not in df]
-        # await asyncio.gather(*tasks)
+    player_columns = ["Player", "Enemy", "Eliminator", "Eliminated"]
+    await asyncio.gather(
+        *(process_column(pool, df, column, "player_id", "players", "player") for column in player_columns if column in df and "Time Expiry (Failed to Plant)" not in df)
+        )
 
 async def process_agents(pool, df):
-    async with pool.acquire() as conn:
-        agent_columns = ["agent", "Eliminator Agent", "Eliminated Agent", "Agent"]
-        tasks = [await process_column(conn, df, column, "agent_id", "agents", "agent") for column in agent_columns if column in df]
+    agent_columns = ["agent", "Eliminator Agent", "Eliminated Agent", "Agent"]
+    await asyncio.gather(
+        *(process_column(pool, df, column, "agent_id", "agents", "agent") for column in agent_columns if column in df)
+    )
 
 async def process_maps(pool, df):
-    async with pool.acquire() as conn:
-        map_columns = ["Map"]
-        tasks = [await process_column(conn, df, column, "map_id", "maps", "map") for column in map_columns if column in df]
+    if "Map" in df:
+        await process_column(pool, df, "Map", "map_id", "maps", "map")
 
 async def change_reference_name_to_id(df, year):
     db_url = create_db_url()
@@ -281,7 +292,7 @@ async def change_reference_name_to_id(df, year):
     return df
 
 
-async def combine_drafts(file, file_name, year, dfs):
+async def process_drafts(file, file_name, year, dfs):
    drafts_df = csv_to_df(file)
    drafts_df = convert_to_category(drafts_df)
    drafts_df = await change_reference_name_to_id(drafts_df, year)
@@ -290,11 +301,9 @@ async def combine_drafts(file, file_name, year, dfs):
    drafts_df = drop_columns(drafts_df)
    drafts_df = rename_columns(drafts_df)
    drafts_df = reorder_columns(drafts_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "map_id", "action", "year"])
-   dfs[file_name] = pd.concat([drafts_df, dfs[file_name]], ignore_index=True)
-   # print(drafts_df.sample(n=20))
-   # drafts_df.to_sql("drafts", dfs, index=False, if_exists="append")
+   dfs[file_name]["main"].append(drafts_df) 
 
-async def combine_eco_rounds(file, file_name, year, dfs):
+async def process_eco_rounds(file, file_name, year, dfs):
    eco_rounds_df = csv_to_df(file)
    eco_rounds_df = convert_to_category(eco_rounds_df)
    eco_rounds_df = await change_reference_name_to_id(eco_rounds_df, year)
@@ -307,11 +316,9 @@ async def combine_eco_rounds(file, file_name, year, dfs):
    eco_rounds_df = rename_columns(eco_rounds_df)
    eco_rounds_df = reorder_columns(eco_rounds_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id",
                                              "map_id", "round_number", "loadout_value", "remaining_credits", "type", "outcome", "year"])
-   dfs[file_name] = pd.concat([eco_rounds_df, dfs[file_name]], ignore_index=True)
-#    print(eco_rounds_df.sample(n=20))
-   # eco_rounds_df.to_sql("eco_rounds", dfs, index=False, if_exists="append", chunksize = 10000)
+   dfs[file_name]["main"].append(eco_rounds_df)
       
-async def combine_eco_stats(file, file_name, year, dfs):
+async def process_eco_stats(file, file_name, year, dfs):
    eco_stats_df = csv_to_df(file)
    eco_stats_df = convert_to_category(eco_stats_df)
    eco_stats_df = await change_reference_name_to_id(eco_stats_df, year)
@@ -322,13 +329,11 @@ async def combine_eco_stats(file, file_name, year, dfs):
    eco_stats_df = rename_columns(eco_stats_df)
    eco_stats_df = reorder_columns(eco_stats_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "map_id", "type", "initiated", "won",
                                                  "year"])
-   dfs[file_name] = pd.concat([eco_stats_df, dfs[file_name]], ignore_index=True)
-#    print(eco_stats_df.sample(n=20))
-   # eco_stats_df.to_sql("eco_stats", dfs, index=False, if_exists="append", chunksize = 10000)
+   dfs[file_name]["main"].append(eco_stats_df)
    
       
 
-async def combine_kills(file, file_name, year, dfs):
+async def process_kills(file, file_name, year, dfs):
    kills_df = csv_to_df(file)
    kills_df = remove_leading_zeroes_from_players(kills_df)
    kills_df = convert_to_category(kills_df)
@@ -340,12 +345,9 @@ async def combine_kills(file, file_name, year, dfs):
    kills_df = rename_columns(kills_df)
    kills_df = reorder_columns(kills_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "player_team_id", "player_id", "enemy_team_id", "enemy_id",
                                          "map_id", "player_kills", "enemy_kills", "difference", "kill_type", "year"])
-   dfs[file_name] = pd.concat([kills_df, dfs[file_name]], ignore_index=True)
-#    print(kills_df.sample(n=20))
-   
-   # print(f"combineing kills")
+   dfs[file_name]["main"].append(kills_df)
 
-async def combine_kills_stats(file, file_name, year, dfs):
+async def process_kills_stats(file, file_name, year, dfs):
    kills_stats_df = csv_to_df(file)
    kills_stats_df = remove_leading_zeroes_from_players(kills_stats_df)
    kills_stats_df = convert_to_category(kills_stats_df)
@@ -357,18 +359,18 @@ async def combine_kills_stats(file, file_name, year, dfs):
    kills_stats_df = rename_columns(kills_stats_df)
    kills_stats_df = reorder_columns(kills_stats_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "player_id", "map_id", "agents",
                                                      "2k", "3k", "4k", "5k", "1v1", "1v2", "1v3", "1v4", "1v5", "econ", "spike_plants", "spike_defuses"])
-#    agents_df = kills_stats_df[["index", "agents"]]
-#    agents_df = splitting_agents(agents_df)
-#    agents_df.rename(columns={"agents": "agent"}, inplace=True)
-#    kills_stats_df.drop(columns="agents", inplace=True)
-#    agents_df = await change_reference_name_to_id(agents_df, year)
-#    agents_df["year"] = year
-   dfs[file_name] = pd.concat([kills_stats_df, dfs[file_name]], ignore_index=True)
-#    print(kills_stats_df.sample(n=20))
-#    print(agents_df.sample(n=20))
+   agents_df = kills_stats_df[["index", "agents"]]
+   agents_df = splitting_agents(agents_df)
+   agents_df.rename(columns={"agents": "agent"}, inplace=True)
+   kills_stats_df.drop(columns="agents", inplace=True)
+   agents_df = await change_reference_name_to_id(agents_df, year)
+   agents_df["year"] = year
+   dfs[file_name]["main"].append(kills_stats_df)
+   dfs[file_name]["agents"].append(agents_df)
 
 
-async def combine_maps_played(file, file_name, year, dfs):
+
+async def process_maps_played(file, file_name, year, dfs):
    maps_played_df = csv_to_df(file)
    maps_played_df = convert_to_category(maps_played_df)
    maps_played_df = await change_reference_name_to_id(maps_played_df, year)
@@ -376,10 +378,9 @@ async def combine_maps_played(file, file_name, year, dfs):
    maps_played_df = drop_columns(maps_played_df)
    maps_played_df = rename_columns(maps_played_df)
    maps_played_df = reorder_columns(maps_played_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "map_id"])
-   dfs[file_name] = pd.concat([maps_played_df, dfs[file_name]], ignore_index=True)
-#    print(maps_played_df.sample(n=20))
+   dfs[file_name]["main"].append(maps_played_df)
 
-async def combine_maps_scores(file, file_name, year, dfs):
+async def process_maps_scores(file, file_name, year, dfs):
    maps_scores_df = csv_to_df(file)
    maps_scores_df = convert_to_category(maps_scores_df)
    maps_scores_df = await change_reference_name_to_id(maps_scores_df, year)
@@ -393,11 +394,10 @@ async def combine_maps_scores(file, file_name, year, dfs):
                                                      "team_a_overtime_score", "team_b_score", "team_b_attacker_score",
                                                      "team_b_defender_score", "team_b_overtime_score", "duration"])
    maps_scores_df["year"]= year
-   dfs[file_name] = pd.concat([maps_scores_df, dfs[file_name]], ignore_index=True)
-#    print(maps_scores_df.sample(n=20))
+   dfs[file_name]["main"].append(maps_scores_df)
 
 
-async def combine_overview(file, file_name, year, dfs):
+async def process_overview(file, file_name, year, dfs):
    overview_df = csv_to_df(file)
    overview_df = remove_leading_zeroes_from_players(overview_df)
    overview_df = convert_to_category(overview_df)
@@ -418,13 +418,12 @@ async def combine_overview(file, file_name, year, dfs):
    agents_df = await change_reference_name_to_id(agents_df, year)
    agents_df.drop(columns="agent", inplace=True)
    agents_df["year"] = year
-   dfs[file_name] = pd.concat([overview_df, dfs[file_name]], ignore_index=True)
-#    print(overview_df.sample(n=20))
-#    print(agents_df.sample(n=20))
+   dfs[file_name]["main"].append(overview_df)
+   dfs[file_name]["agents"].append(agents_df) 
 
 
 
-async def combine_rounds_kills(file, file_name, year, dfs):
+async def process_rounds_kills(file, file_name, year, dfs):
    rounds_kills_df = csv_to_df(file)
    rounds_kills_df = remove_leading_zeroes_from_players(rounds_kills_df)
    rounds_kills_df = convert_to_category(rounds_kills_df)
@@ -437,11 +436,10 @@ async def combine_rounds_kills(file, file_name, year, dfs):
                                                        "eliminator_id", "eliminated_id", "eliminator_agent_id", "eliminated_agent_id",
                                                        "round_number", "kill_type"])
    rounds_kills_df["year"] = year
-   dfs[file_name] = pd.concat([rounds_kills_df, dfs[file_name]], ignore_index=True)
-#    print(rounds_kills_df.sample(n=20))
+   dfs[file_name]["main"].append(rounds_kills_df)
 
 
-async def combine_scores(file, file_name, year, dfs):
+async def process_scores(file, file_name, year, dfs):
    scores_df = csv_to_df(file)
    scores_df = convert_to_category(scores_df)
    scores_df = await change_reference_name_to_id(scores_df, year)
@@ -451,11 +449,10 @@ async def combine_scores(file, file_name, year, dfs):
    scores_df["year"] = year
    scores_df = reorder_columns(scores_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "team_a_id", "team_b_id",
                                             "team_a_score", "team_b_score", "match_result", "year"])
-   dfs[file_name] = pd.concat([scores_df, dfs[file_name]], ignore_index=True)
-#    print(scores_df.sample(n=20))
+   dfs[file_name]["main"].append(scores_df)
 
 
-async def combine_win_loss_methods_count(file, file_name, year, dfs):
+async def process_win_loss_methods_count(file, file_name, year, dfs):
    win_loss_methods_count_df = csv_to_df(file)
    win_loss_methods_count_df = convert_to_category(win_loss_methods_count_df)
    win_loss_methods_count_df = await change_reference_name_to_id(win_loss_methods_count_df, year)
@@ -466,11 +463,10 @@ async def combine_win_loss_methods_count(file, file_name, year, dfs):
    win_loss_methods_count_df = reorder_columns(win_loss_methods_count_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id",
                                                                            "map_id", 'elimination', 'detonated', 'defused', 'time_expiry_no_plant', "eliminated",
                                                                            'defused_failed', 'detonation_denied', 'time_expiry_failed_to_plant', "year"])
-   dfs[file_name] = pd.concat([win_loss_methods_count_df, dfs[file_name]], ignore_index=True)
-#    print(win_loss_methods_count_df.sample(n=20))
+   dfs[file_name]["main"].append(win_loss_methods_count_df)
    
 
-async def combine_win_loss_methods_round_number(file, file_name, year, dfs):
+async def process_win_loss_methods_round_number(file, file_name, year, dfs):
    win_loss_methods_round_number_df = csv_to_df(file)
    win_loss_methods_round_number_df = convert_to_category(win_loss_methods_round_number_df)
    win_loss_methods_round_number_df = await change_reference_name_to_id(win_loss_methods_round_number_df, year)
@@ -480,10 +476,9 @@ async def combine_win_loss_methods_round_number(file, file_name, year, dfs):
    win_loss_methods_round_number_df["year"] = year
    win_loss_methods_round_number_df = reorder_columns(win_loss_methods_round_number_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id",
                                                                                          "map_id", "round_number", "method", "outcome", "year"])
-   dfs[file_name] = pd.concat([win_loss_methods_round_number_df, dfs[file_name]], ignore_index=True)
-#    print(win_loss_methods_round_number_df.sample(n=20))
+   dfs[file_name]["main"].append(win_loss_methods_round_number_df)
 
-async def combine_agents_pick_rates(file, file_name, year, dfs):
+async def process_agents_pick_rates(file, file_name, year, dfs):
    agents_pick_rates_df = csv_to_df(file)
    agents_pick_rates_df = convert_to_category(agents_pick_rates_df)
    agents_pick_rates_df = await change_reference_name_to_id(agents_pick_rates_df, year)
@@ -494,11 +489,10 @@ async def combine_agents_pick_rates(file, file_name, year, dfs):
    agents_pick_rates_df["year"] = year
    agents_pick_rates_df = reorder_columns(agents_pick_rates_df, ["index", "tournament_id", "stage_id", "match_type_id", "map_id", "agent_id",
                                                                  "pick_rate", "year"])
-   dfs[file_name] = pd.concat([agents_pick_rates_df, dfs[file_name]], ignore_index=True)
-#    print(agents_pick_rates_df.sample(n=20))
+   dfs[file_name]["main"].append(agents_pick_rates_df)
 
 
-async def combine_maps_stats(file, file_name, year, dfs):
+async def process_maps_stats(file, file_name, year, dfs):
    maps_stats_df = csv_to_df(file)
    maps_stats_df = convert_to_category(maps_stats_df)
    maps_stats_df = await change_reference_name_to_id(maps_stats_df, year)
@@ -509,10 +503,9 @@ async def combine_maps_stats(file, file_name, year, dfs):
    maps_stats_df['year'] = year
    maps_stats_df = reorder_columns(maps_stats_df, ["index", "tournament_id", "stage_id", "match_type_id", "map_id", "total_maps_played",
                                                    "attacker_side_win_percentage", "defender_side_win_percentage", "year"])
-   dfs[file_name] = pd.concat([maps_stats_df, dfs[file_name]], ignore_index=True)
-#    print(maps_stats_df.sample(n=20))
+   dfs[file_name]["main"].append(maps_stats_df)
 
-async def combine_teams_picked_agents(file, file_name, year, dfs):
+async def process_teams_picked_agents(file, file_name, year, dfs):
    teams_picked_agents_df = csv_to_df(file)
    teams_picked_agents_df = convert_to_category(teams_picked_agents_df)
    teams_picked_agents_df = await change_reference_name_to_id(teams_picked_agents_df, year)
@@ -523,12 +516,11 @@ async def combine_teams_picked_agents(file, file_name, year, dfs):
    teams_picked_agents_df = reorder_columns(teams_picked_agents_df, ["index", "tournament_id", "stage_id", "match_type_id", "map_id",
                                                                      "agent_id", "total_wins_by_map", "total_loss_by_map", "total_maps_played",
                                                                      "year"])
-   dfs[file_name] = pd.concat([teams_picked_agents_df, dfs[file_name]], ignore_index=True)
-#    print(teams_picked_agents_df.sample(n=20))
+   dfs[file_name]["main"].append(teams_picked_agents_df)
 
 
 
-async def combine_players_stats(file, file_name, year, dfs):
+async def process_players_stats(file, file_name, year, dfs):
    players_stats_df = csv_to_df(file)
    players_stats_df = remove_leading_zeroes_from_players(players_stats_df)
    players_stats_df = convert_to_category(players_stats_df)
@@ -543,62 +535,65 @@ async def combine_players_stats(file, file_name, year, dfs):
                                                          "rating", "acs", "kd", "kast", "adr", "kpr", "apr", "fkpr", "fdpr", "headshot",
                                                          "clutch_success", "clutches_won", "clutches_played", "mksp", "kills", "deaths", "assists",
                                                          "fk", "fd", "year"])
-#    agents_df = players_stats_df[["index", "agents"]]
-#    agents_df = splitting_agents(agents_df)
-#    agents_df.rename(columns={"agents": "agent"}, inplace=True)
-#    players_stats_df.drop(columns="agents", inplace=True)
-#    teams_df = players_stats_df[["index", "teams"]]
-#    teams_df = splitting_teams(teams_df)
-#    teams_df.rename(columns={"teams": "team"}, inplace=True)
-#    players_stats_df.drop(columns="teams", inplace=True)
-#    teams_df = await change_reference_name_to_id(teams_df, year)
-#    teams_df["year"] = year
-   dfs[file_name] = pd.concat([players_stats_df, dfs[file_name]], ignore_index=True)
-#    print(players_stats_df.sample(n=20))
-#    print(agents_df.sample(n=20))
-#    print(teams_df.sample(n=20))
+   agents_df = players_stats_df[["index", "agents"]]
+   agents_df = splitting_agents(agents_df)
+   agents_df.rename(columns={"agents": "agent"}, inplace=True)
+   players_stats_df.drop(columns="agents", inplace=True)
+   teams_df = players_stats_df[["index", "teams"]]
+   teams_df = splitting_teams(teams_df)
+   teams_df.rename(columns={"teams": "team"}, inplace=True)
+   players_stats_df.drop(columns="teams", inplace=True)
+   teams_df = await change_reference_name_to_id(teams_df, year)
+   teams_df["year"] = year
+   dfs[file_name]["main"].append(players_stats_df)
+   dfs[file_name]["agents"].append(agents_df)
+   dfs[file_name]["teams"].append(teams_df)
 
+async def process_csv_file(csv_file, year, dfs):
+    file_name = csv_file.split("/")[-1]
+    print(file_name, year)
+    match file_name:
+        case "draft_phase.csv":
+            await process_drafts(csv_file, file_name, year, dfs)
+        case "eco_rounds.csv":
+            await process_eco_rounds(csv_file, file_name, year, dfs)
+        case "eco_stats.csv": 
+            await process_eco_stats(csv_file, file_name, year, dfs)
+        case "kills.csv":
+            await process_kills(csv_file, file_name, year, dfs)
+        case "kills_stats.csv":
+            await process_kills_stats(csv_file, file_name, year, dfs)
+        case "maps_played.csv":
+            await process_maps_played(csv_file, file_name, year, dfs)
+        case "maps_scores.csv":
+            await process_maps_scores(csv_file, file_name, year, dfs)
+        case "overview.csv":
+            await process_overview(csv_file, file_name, year, dfs)
+        case "rounds_kills.csv":
+            await process_rounds_kills(csv_file, file_name, year, dfs)
+        case "scores.csv":
+            await process_scores(csv_file, file_name, year, dfs)
+        case "win_loss_methods_count.csv":
+            await process_win_loss_methods_count(csv_file, file_name, year, dfs)
+        case "win_loss_methods_round_number.csv":
+            await process_win_loss_methods_round_number(csv_file, file_name, year, dfs)
+        case "agents_pick_rates.csv":
+            await process_agents_pick_rates(csv_file, file_name, year, dfs)
+        case "maps_stats.csv":
+            await process_maps_stats(csv_file, file_name, year, dfs)
+        case "teams_picked_agents.csv":
+            await process_teams_picked_agents(csv_file, file_name, year, dfs)
+        case "players_stats.csv":
+            await process_players_stats(csv_file, file_name, year, dfs)
+    
 
 async def process_csv_files(csv_files, year, dfs):
     for csv_file in csv_files:
-        file_name = csv_file.split("/")[2]
-        print(file_name, year)
-        if year == 0:
-            print("Yes")
-        elif file_name == "draft_phase.csv":
-            await combine_drafts(csv_file, file_name, year, dfs)
-        # elif file_name == "eco_rounds.csv":
-        #    await combine_eco_rounds(csv_file, file_name, year, dfs)
-        # elif file_name == "eco_stats.csv": 
-        #    await combine_eco_stats(csv_file, file_name, year, dfs)
-        # elif file_name == "kills.csv":
-        #    await combine_kills(csv_file, file_name, year, dfs)
-        # elif file_name == "kills_stats.csv":
-        #    await combine_kills_stats(csv_file, file_name, year, dfs)
-        # elif file_name == "maps_played.csv":
-        #    await add_maps_played(csv_file, file_name, year, dfs)
-        # elif file_name == "maps_scores.csv":
-        #    await add_maps_scores(csv_file, file_name, year, dfs)
-        # elif file_name == "overview.csv":
-        #    await add_overview(csv_file, file_name, year, dfs)
-        # elif file_name == "rounds_kills.csv":
-        #    await add_rounds_kills(csv_file, file_name, year, dfs)
-        # elif file_name == "scores.csv":
-        #    await add_scores(csv_file, file_name, year, dfs)
-        # elif file_name == "win_loss_methods_count.csv":
-        #    await add_win_loss_methods_count(csv_file, file_name, year, dfs)
-        # elif file_name == "win_loss_methods_round_number.csv":
-        #    await add_win_loss_methods_round_number(csv_file, file_name, year, dfs)
-        # elif file_name == "agents_pick_rates.csv":
-        #    await add_agents_pick_rates(csv_file, file_name, year, dfs)
-        # elif file_name == "maps_stats.csv":
-        #    await add_maps_stats(csv_file, file_name, year, dfs)
-        # elif file_name == "teams_picked_agents.csv":
-        #    await add_teams_picked_agents(csv_file, file_name, year, dfs)
-        # elif file_name == "players_stats.csv":
-        #    await add_players_stats(csv_file, file_name, year, dfs)
+        await process_csv_file(csv_file, year, dfs)
 
-async def process_year(year, csv_files, dfs):
-   await process_csv_files(csv_files, year, dfs)
+async def process_years(csv_files_w_years, dfs):
+    await asyncio.gather(
+        *(process_csv_files(csv_files, year, dfs) for year, csv_files in csv_files_w_years.items())
+    )
 
    

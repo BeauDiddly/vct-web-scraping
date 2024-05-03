@@ -9,7 +9,7 @@ from Connect.config import config
 async def main():
     start_time = time.time()
     now = datetime.now()
-    years = [2021, 2022, 2023, 2024]
+    years = {2021, 2022, 2023, 2024}
     conn, curr = connect()
     sql_alchemy_engine = engine()
     db_conn_info = config()
@@ -18,16 +18,18 @@ async def main():
     print(csv_files)
 
     dfs = {}
-
+    csv_files_w_years = {year: csv_files[i] for i, year in enumerate(years)}
     for path_list in csv_files:
         for file_path in path_list:
             file_name = file_path.split("/")[-1]
-            dfs[file_name] = pd.DataFrame()
+            dfs[file_name] = {"agents": [], "teams": [], "main": []}
 
-    for i, year in enumerate(years):
-        await process_year(year, csv_files[i], dfs)
 
-    print(dfs["draft_phase.csv"].sample(n=20))
+    # for i, year in enumerate(years):
+    #     await process_csv_files(csv_files[i], year, dfs)
+    await process_years(csv_files_w_years, dfs)
+
+    # print(dfs["draft_phase.csv"].sample(n=20))
 
 
     # await add_drafts(csv_files[2][8], years[2], sql_alchemy_engine)
