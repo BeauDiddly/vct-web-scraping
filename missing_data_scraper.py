@@ -10,16 +10,6 @@ def main():
 
     team_mapping = {"TP": "Typhone", "BJK": "Beşiktaş Esports"}
 
-    team_ids = {"Typhone": 3464, "Beşiktaş Esports": 2036}
-
-    tournament = {"Champions Tour Turkey Stage 1: Challengers 3": 339}
-
-    stage = {"Open Qualifier": 698}
-
-    match_type = {"Round of 32": 3227}
-
-    match = {"Typhone vs Beşiktaş Esports": 12398}
-
     results = {"scores": [["Champions Tour Turkey Stage 1: Challengers 3", "Open Qualifier", "Round of 32",
                           "Typhone vs Beşiktaş Esports", "Typhone", "Beşiktaş Esports", 0, 2, "Beşiktaş Esports won"]],
                 "maps_played": [],
@@ -93,13 +83,13 @@ def main():
                                                                       "Match Type", "Match Name", "Match ID", "Map", "Game ID"])
 
     for file_name, dataframe in dataframes.items():
-        # dataframe.to_csv(f"vct_{year}/matches/{file_name}.csv", encoding="utf-8", index=False)
-        # dataframe.to_csv(f"test/{file_name}.csv", encoding="utf-8", index=False)
         dataframes[file_name] = remove_white_spaces(dataframe)
         dataframes[file_name] = remove_white_spaces_in_between(dataframe)
         dataframes[file_name] = remove_tabs_and_newlines(dataframe)
         dataframes[file_name] = fixed_team_names(dataframe)
         dataframes[file_name] = fixed_player_names(dataframe)
+        dataframes[file_name] = convert_to_float(dataframe)
+        dataframes[file_name] = convert_to_int(dataframe)
         dataframes[file_name] = convert_to_str(dataframe)
 
         
@@ -116,7 +106,6 @@ def main():
                 original_df.drop_duplicates(inplace=True, subset=["Team", "Team ID"])
             original_df = convert_to_int(original_df)
             original_df.reset_index(drop=True, inplace=True)
-                    # dataframe.to_csv(f"test/{file_name}.csv", encoding="utf-8", index=False)
             original_df.to_csv(f"cleaned_data/vct_2021/ids/{file_name}.csv", index=False)
         elif file_name == "tournaments_stages_matches_games_ids":
             original_df = csv_to_df(f"cleaned_data/vct_2021/ids/{file_name}.csv")
@@ -145,8 +134,9 @@ def main():
             ][0]
             original_df = pd.concat([original_df.iloc[:first_occurence_index], dataframe, original_df.iloc[first_occurence_index:]]).reset_index(drop=True)
             original_df = convert_nan_players_teams(original_df)
+            original_df = convert_to_float(original_df)
+            original_df = convert_to_int(original_df)
             original_df.to_csv(f"cleaned_data/vct_2021/matches/{file_name}.csv", index=False)
-        # original_df.to_csv(f"test/{file_name}.csv", encoding="utf-8", index=False)
 
 
 

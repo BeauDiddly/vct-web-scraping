@@ -1,6 +1,6 @@
 import pandas as pd
 import math 
-from data_clean.data_clean import csv_to_df
+from data_clean.data_clean import csv_to_df, convert_to_int
 
 def main():
     years = [2021, 2022, 2023, 2024]
@@ -93,9 +93,14 @@ def main():
     tournaments_stages_match_types_ids["Stage ID"] = pd.to_numeric(tournaments_stages_match_types_ids["Stage ID"], errors="coerce").astype("Int32")
     tournaments_stages_match_types_ids["Match Type ID"] = pd.to_numeric(tournaments_stages_match_types_ids["Match Type ID"], errors="coerce").astype("Int32")
 
-    matches_ids["Stage ID"] = pd.to_numeric(matches_ids["Stage ID"], errors="coerce").astype("Int32")
-    matches_ids["Match Type ID"] = pd.to_numeric(matches_ids["Match Type ID"], errors="coerce").astype("Int32")
-    players["Player ID"] = pd.to_numeric(players["Player ID"], errors="coerce").astype("Int32")
+    # matches_ids["Stage ID"] = pd.to_numeric(matches_ids["Stage ID"], errors="coerce").astype("Int32")
+    # matches_ids["Match Type ID"] = pd.to_numeric(matches_ids["Match Type ID"], errors="coerce").astype("Int32")
+    # players["Player ID"] = pd.to_numeric(players["Player ID"], errors="coerce").astype("Int32")
+    matches_ids = convert_to_int(matches_ids)
+    players = convert_to_int(players)
+    # matches_ids["Stage ID"] = convert_to_int(matches_ids["Stage ID"])
+    # matches_ids["Match Type ID"] = convert_to_int(matches_ids["Match Type ID"])
+    # players["Player ID"] = convert_to_int(players["Player ID"])
 
     nan_player = players[players["Player ID"] == 10207].index
     players.loc[nan_player, "Player"] = "nan"

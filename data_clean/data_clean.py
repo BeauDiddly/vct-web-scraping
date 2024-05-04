@@ -1,5 +1,5 @@
 import pandas as pd
-
+import numpy as np
 
 def csv_to_df(file):
     return pd.read_csv(file, keep_default_na=True)
@@ -73,9 +73,26 @@ def convert_to_str(df):
     return df
 
 def convert_to_int(df):
-    for column in ["Player ID", "Team ID", "Tournament ID", "Stage ID", "Match Type ID", "Match ID", "Game ID"]:
+    for column in ["Player ID", "Team ID", "Tournament ID", "Stage ID", "Match Type ID", "Match ID", "Game ID", "Initiated", "Player Kills",
+                   "Enemy Kills", "Difference", "2k", "3k", "4k", "5k", "1v1", "1v2", "1v3", "1v4", "Econ", "Spike Plants", "Spike Defuses",
+                   "Team A Attacker Score", "Team A Defender Score", "Team A Overtime Score", "Team B Attacker Score", "Team B Defender Score",
+                   "Team B Overtime Score", "Average Combat Score", "Kills", "Deaths", "Assists", "Kills - Deaths (KD)","Average Damage Per Round",
+                    "First Kills", "First Deaths", "Kills - Deaths (FKD)"]:
         if column in df:
-            df[column] = pd.to_numeric(df[column], errors="coerce").astype("Int32")
+            try:
+                df[column] = df[column].replace("", np.nan)
+                df[column] = pd.to_numeric(df[column].round(), errors="coerce").astype("Int64")
+            except:
+                print(column, df[column].dtype)
+                print(df[column])
+                # decimal_values = df[df[column] % 1 != 0]
+                # print(decimal_values[column])
+    return df
+
+def convert_to_float(df):
+    for column in ["Rating", "Kills:Deaths", "First Kills Per Round", "First Deaths Per Round", "Average Combat Score", "Average Damage Per Round"]:
+        if column in df:
+            df[column] = pd.to_numeric(df[column], errors="coerce").astype("Float64")
     return df
 
 def remove_empty_agent_rows(df):
