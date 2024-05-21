@@ -1,6 +1,6 @@
 import os
 from Connect.connect import connect, engine
-from initialization.create_tables import create_all_tables
+from datetime import datetime
 import asyncio
 from initialization.add_data import *
 from find_csv_files.find_csv_files import find_csv_files
@@ -16,18 +16,23 @@ async def main():
 
     csv_files = [find_csv_files(f"{os.getcwd()}/vct_{year}/matches", "matches", year) for year in years]
     print(csv_files)
-
+    combined_dfs = {}
     dfs = {}
     csv_files_w_years = {year: csv_files[i] for i, year in enumerate(years)}
     for path_list in csv_files:
         for file_path in path_list:
             file_name = file_path.split("/")[-1]
             dfs[file_name] = {"agents": [], "teams": [], "main": []}
+            combined_dfs[file_name] = {"agents": pd.DataFrame(), "teams": pd.DataFrame(), "main": pd.DataFrame()}
 
 
     # for i, year in enumerate(years):
     #     await process_csv_files(csv_files[i], year, dfs)
     await process_years(csv_files_w_years, dfs)
+
+    combine_df(combined_dfs, dfs)
+
+    await add_data(combined_dfs, sql_alchemy_engine)
 
     # print(dfs["draft_phase.csv"].sample(n=20))
 
