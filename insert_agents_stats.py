@@ -1,6 +1,7 @@
 import os
 from Connect.connect import connect, engine
 from initialization.create_tables import create_all_tables
+from datetime import datetime
 import asyncio
 from initialization.add_data import *
 from find_csv_files.find_csv_files import find_csv_files
@@ -16,9 +17,20 @@ async def main():
 
     csv_files = [find_csv_files(f"{os.getcwd()}/vct_{year}/agents", "agents", year) for year in years]
     print(csv_files)
+    combined_dfs = {}
+    dfs = {}
+    csv_files_w_years = {year: csv_files[i] for i, year in enumerate(years)}
+    for path_list in csv_files:
+        for file_path in path_list:
+            file_name = file_path.split("/")[-1]
+            dfs[file_name] = {"agents": [], "teams": [], "main": []}
+            combined_dfs[file_name] = {"agents": pd.DataFrame(), "teams": pd.DataFrame(), "main": pd.DataFrame()}
+    await process_years(csv_files_w_years, dfs)
 
-    for i, year in enumerate(years):
-        await process_year(year, csv_files[i], sql_alchemy_engine)
+    combine_dfs(combined_dfs, dfs)
+    combined_dfs["maps_stats.csv"]["main"].to_csv("test.csv")
+
+    await add_data(combined_dfs, sql_alchemy_engine)
 
     # await add_agents_pick_rates(csv_files[2][2], years[2], sql_alchemy_engine)
     # await add_maps_stats(csv_files[2][0], years[2], sql_alchemy_engine)
