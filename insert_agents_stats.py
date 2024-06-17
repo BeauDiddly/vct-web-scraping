@@ -28,7 +28,7 @@ async def main():
     await process_years(csv_files_w_years, dfs)
 
     combine_dfs(combined_dfs, dfs)
-    combined_dfs["maps_stats.csv"]["main"].to_csv("test.csv")
+
 
     await add_data(combined_dfs, sql_alchemy_engine)
 
