@@ -4,7 +4,7 @@ import asyncio
 import time
 
 def add_agents(engine):
-   all_agents = ["astra", "breach", "brimstone", "chamber", "cypher", "deadlock", "fade", "gekko", "harbor", "iso", "jett", "kayo",
+   all_agents = ["astra", "breach", "brimstone", "chamber", "clove", "cypher", "deadlock", "fade", "gekko", "harbor", "iso", "jett", "kayo",
               "killjoy", "neon", "omen", "phoenix", "raze", "reyna", "sage", "skye", "sova", "viper", "yoru"]
    agent_ids = {agent: sum(ord(char) for char in agent) for agent in all_agents}
    df = pd.DataFrame(list(agent_ids.items()), columns=["agent", "agent_id"])
