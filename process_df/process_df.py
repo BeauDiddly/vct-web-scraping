@@ -384,7 +384,7 @@ async def process_eco_rounds(file, file_name, year, dfs):
    eco_rounds_df = k_to_numeric(eco_rounds_df, "Loadout Value")
    eco_rounds_df = k_to_numeric(eco_rounds_df, "Remaining Credits")
    eco_rounds_df = get_eco_type(eco_rounds_df)
-   eco_rounds_df = create_ids(eco_rounds_df)
+   eco_rounds_df = create_index_column(eco_rounds_df)
    eco_rounds_df = drop_columns(eco_rounds_df)
    eco_rounds_df = rename_columns(eco_rounds_df)
    eco_rounds_df = reorder_columns(eco_rounds_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id",
@@ -397,7 +397,7 @@ async def process_eco_stats(file, file_name, year, dfs):
    eco_stats_df = await change_reference_name_to_id(eco_stats_df, year)
    eco_stats_df["year"] = year
    eco_stats_df = convert_missing_numbers(eco_stats_df)
-   eco_stats_df = create_ids(eco_stats_df)
+   eco_stats_df = create_index_column(eco_stats_df)
    eco_stats_df = drop_columns(eco_stats_df)
    eco_stats_df = rename_columns(eco_stats_df)
    eco_stats_df = reorder_columns(eco_stats_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "map_id", "type", "initiated", "won",
@@ -412,7 +412,7 @@ async def process_kills(file, file_name, year, dfs):
    kills_df = convert_to_category(kills_df)
    kills_df = await change_reference_name_to_id(kills_df, year)
    kills_df = convert_missing_numbers(kills_df)
-   kills_df = create_ids(kills_df)
+   kills_df = create_index_column(kills_df)
    kills_df["year"] = year
    kills_df = drop_columns(kills_df)
    kills_df = rename_columns(kills_df)
@@ -427,7 +427,7 @@ async def process_kills_stats(file, file_name, year, dfs):
    kills_stats_df["year"] = year
    kills_stats_df = await change_reference_name_to_id(kills_stats_df, year)
    kills_stats_df = convert_missing_numbers(kills_stats_df)
-   kills_stats_df = create_ids(kills_stats_df)
+   kills_stats_df = create_index_column(kills_stats_df)
    kills_stats_df = drop_columns(kills_stats_df)
    kills_stats_df = rename_columns(kills_stats_df)
    kills_stats_df = reorder_columns(kills_stats_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "player_id", "map_id", "agents",
@@ -447,7 +447,7 @@ async def process_maps_played(file, file_name, year, dfs):
    maps_played_df = csv_to_df(file)
    maps_played_df = convert_to_category(maps_played_df)
    maps_played_df = await change_reference_name_to_id(maps_played_df, year)
-   maps_played_df = create_ids(maps_played_df)
+   maps_played_df = create_index_column(maps_played_df)
    maps_played_df = drop_columns(maps_played_df)
    maps_played_df = rename_columns(maps_played_df)
    maps_played_df = reorder_columns(maps_played_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "map_id"])
@@ -457,7 +457,7 @@ async def process_maps_scores(file, file_name, year, dfs):
    maps_scores_df = csv_to_df(file)
    maps_scores_df = convert_to_category(maps_scores_df)
    maps_scores_df = await change_reference_name_to_id(maps_scores_df, year)
-   maps_scores_df = create_ids(maps_scores_df)
+   maps_scores_df = create_index_column(maps_scores_df)
    maps_scores_df = drop_columns(maps_scores_df)
    maps_scores_df = standardized_duration(maps_scores_df)
    maps_scores_df = convert_missing_numbers(maps_scores_df)
@@ -478,7 +478,7 @@ async def process_overview(file, file_name, year, dfs):
    overview_df = drop_columns(overview_df)
    overview_df = convert_percentages(overview_df)
    overview_df = convert_missing_numbers(overview_df)
-   overview_df = create_ids(overview_df)
+   overview_df = create_index_column(overview_df)
    overview_df = rename_columns(overview_df)
    overview_df = reorder_columns(overview_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id", "map_id", "player_id",  "team_id",
                                                "agents", "rating", "acs", "kills", "deaths", "assists", "kd", "kast", "adpr", "headshot", "fk",
@@ -502,7 +502,7 @@ async def process_rounds_kills(file, file_name, year, dfs):
    rounds_kills_df = convert_to_category(rounds_kills_df)
    rounds_kills_df = await change_reference_name_to_id(rounds_kills_df, year)
    rounds_kills_df = drop_columns(rounds_kills_df)
-   rounds_kills_df = create_ids(rounds_kills_df)
+   rounds_kills_df = create_index_column(rounds_kills_df)
    rounds_kills_df = rename_columns(rounds_kills_df)
    rounds_kills_df = reorder_columns(rounds_kills_df, ["index", "tournament_id", "stage_id", "match_type_id", "match_id",
                                                        "map_id", "eliminator_team_id", "eliminated_team_id",
@@ -516,7 +516,7 @@ async def process_scores(file, file_name, year, dfs):
    scores_df = csv_to_df(file)
    scores_df = convert_to_category(scores_df)
    scores_df = await change_reference_name_to_id(scores_df, year)
-   scores_df = create_ids(scores_df)
+   scores_df = create_index_column(scores_df)
    scores_df = drop_columns(scores_df)
    scores_df = rename_columns(scores_df)
    scores_df["year"] = year
@@ -529,7 +529,7 @@ async def process_win_loss_methods_count(file, file_name, year, dfs):
    win_loss_methods_count_df = csv_to_df(file)
    win_loss_methods_count_df = convert_to_category(win_loss_methods_count_df)
    win_loss_methods_count_df = await change_reference_name_to_id(win_loss_methods_count_df, year)
-   win_loss_methods_count_df = create_ids(win_loss_methods_count_df)
+   win_loss_methods_count_df = create_index_column(win_loss_methods_count_df)
    win_loss_methods_count_df = drop_columns(win_loss_methods_count_df)
    win_loss_methods_count_df = rename_columns(win_loss_methods_count_df)
    win_loss_methods_count_df["year"] = year
@@ -543,7 +543,7 @@ async def process_win_loss_methods_round_number(file, file_name, year, dfs):
    win_loss_methods_round_number_df = csv_to_df(file)
    win_loss_methods_round_number_df = convert_to_category(win_loss_methods_round_number_df)
    win_loss_methods_round_number_df = await change_reference_name_to_id(win_loss_methods_round_number_df, year)
-   win_loss_methods_round_number_df = create_ids(win_loss_methods_round_number_df)
+   win_loss_methods_round_number_df = create_index_column(win_loss_methods_round_number_df)
    win_loss_methods_round_number_df = drop_columns(win_loss_methods_round_number_df)
    win_loss_methods_round_number_df = rename_columns(win_loss_methods_round_number_df)
    win_loss_methods_round_number_df["year"] = year
@@ -555,7 +555,7 @@ async def process_agents_pick_rates(file, file_name, year, dfs):
    agents_pick_rates_df = csv_to_df(file)
    agents_pick_rates_df = convert_to_category(agents_pick_rates_df)
    agents_pick_rates_df = await change_reference_name_to_id(agents_pick_rates_df, year)
-   agents_pick_rates_df = create_ids(agents_pick_rates_df)
+   agents_pick_rates_df = create_index_column(agents_pick_rates_df)
    agents_pick_rates_df = drop_columns(agents_pick_rates_df)
    agents_pick_rates_df = convert_percentages(agents_pick_rates_df)
    agents_pick_rates_df = rename_columns(agents_pick_rates_df)
@@ -569,7 +569,7 @@ async def process_maps_stats(file, file_name, year, dfs):
    maps_stats_df = csv_to_df(file)
    maps_stats_df = convert_to_category(maps_stats_df)
    maps_stats_df = await change_reference_name_to_id(maps_stats_df, year)
-   maps_stats_df = create_ids(maps_stats_df)
+   maps_stats_df = create_index_column(maps_stats_df)
    maps_stats_df = drop_columns(maps_stats_df)
    maps_stats_df = convert_percentages(maps_stats_df)
    maps_stats_df = rename_columns(maps_stats_df)
@@ -582,7 +582,7 @@ async def process_teams_picked_agents(file, file_name, year, dfs):
    teams_picked_agents_df = csv_to_df(file)
    teams_picked_agents_df = convert_to_category(teams_picked_agents_df)
    teams_picked_agents_df = await change_reference_name_to_id(teams_picked_agents_df, year)
-   teams_picked_agents_df = create_ids(teams_picked_agents_df)
+   teams_picked_agents_df = create_index_column(teams_picked_agents_df)
    teams_picked_agents_df = drop_columns(teams_picked_agents_df)
    teams_picked_agents_df = rename_columns(teams_picked_agents_df)
    teams_picked_agents_df["year"] = year
@@ -598,7 +598,7 @@ async def process_players_stats(file, file_name, year, dfs):
    players_stats_df = remove_leading_zeroes_from_players(players_stats_df)
    players_stats_df = convert_to_category(players_stats_df)
    players_stats_df = await change_reference_name_to_id(players_stats_df, year)
-   players_stats_df = create_ids(players_stats_df)
+   players_stats_df = create_index_column(players_stats_df)
    players_stats_df = convert_clutches(players_stats_df)
    players_stats_df = drop_columns(players_stats_df)
    players_stats_df = convert_percentages(players_stats_df)
