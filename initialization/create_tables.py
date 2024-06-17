@@ -408,8 +408,8 @@ def create_maps_stats_table(curr):
       match_type_id INT REFERENCES match_types(match_type_id),
       map_id INT REFERENCES maps(map_id),
       total_maps_played INT,
-      attacker_win_percentage DECIMAL,
-      defender_win_percentage DECIMAL,
+      attacker_side_win_percentage DECIMAL,
+      defender_side_win_percentage DECIMAL,
       year INT NOT NULL
       );
    """
