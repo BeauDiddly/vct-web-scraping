@@ -30,7 +30,7 @@ async def main():
     #     await process_csv_files(csv_files[i], year, dfs)
     await process_years(csv_files_w_years, dfs)
 
-    combine_df(combined_dfs, dfs)
+    combine_dfs(combined_dfs, dfs)
 
     await add_data(combined_dfs, sql_alchemy_engine)
 

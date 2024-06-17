@@ -12,7 +12,7 @@ import sys
 #             '1.#QNAN', 'N/A', 'NULL', 'NaN',
 #             'n/a', 'null']
 
-def combine_df(combined_dfs, dfs):
+def combine_dfs(combined_dfs, dfs):
     for file_name, dfs_dict in dfs.items():
         for category, df_list in dfs_dict.items():
             for df in df_list:
@@ -629,36 +629,36 @@ async def process_csv_file(csv_file, year, dfs):
     match file_name:
         case "draft_phase.csv":
             await process_drafts(csv_file, file_name, year, dfs)
-        # case "eco_rounds.csv":
-        #     await process_eco_rounds(csv_file, file_name, year, dfs)
-        # case "eco_stats.csv": 
-        #     await process_eco_stats(csv_file, file_name, year, dfs)
-        # case "kills.csv":
-        #     await process_kills(csv_file, file_name, year, dfs)
-        # case "kills_stats.csv":
-        #     await process_kills_stats(csv_file, file_name, year, dfs)
-        # case "maps_played.csv":
-        #     await process_maps_played(csv_file, file_name, year, dfs)
-        # case "maps_scores.csv":
-        #     await process_maps_scores(csv_file, file_name, year, dfs)
-        # case "overview.csv":
-        #     await process_overview(csv_file, file_name, year, dfs)
-        # case "rounds_kills.csv":
-        #     await process_rounds_kills(csv_file, file_name, year, dfs)
-        # case "scores.csv":
-        #     await process_scores(csv_file, file_name, year, dfs)
-        # case "win_loss_methods_count.csv":
-        #     await process_win_loss_methods_count(csv_file, file_name, year, dfs)
-        # case "win_loss_methods_round_number.csv":
-        #     await process_win_loss_methods_round_number(csv_file, file_name, year, dfs)
-        # case "agents_pick_rates.csv":
-        #     await process_agents_pick_rates(csv_file, file_name, year, dfs)
-        # case "maps_stats.csv":
-        #     await process_maps_stats(csv_file, file_name, year, dfs)
-        # case "teams_picked_agents.csv":
-        #     await process_teams_picked_agents(csv_file, file_name, year, dfs)
-        # case "players_stats.csv":
-        #     await process_players_stats(csv_file, file_name, year, dfs)
+        case "eco_rounds.csv":
+            await process_eco_rounds(csv_file, file_name, year, dfs)
+        case "eco_stats.csv": 
+            await process_eco_stats(csv_file, file_name, year, dfs)
+        case "kills.csv":
+            await process_kills(csv_file, file_name, year, dfs)
+        case "kills_stats.csv":
+            await process_kills_stats(csv_file, file_name, year, dfs)
+        case "maps_played.csv":
+            await process_maps_played(csv_file, file_name, year, dfs)
+        case "maps_scores.csv":
+            await process_maps_scores(csv_file, file_name, year, dfs)
+        case "overview.csv":
+            await process_overview(csv_file, file_name, year, dfs)
+        case "rounds_kills.csv":
+            await process_rounds_kills(csv_file, file_name, year, dfs)
+        case "scores.csv":
+            await process_scores(csv_file, file_name, year, dfs)
+        case "win_loss_methods_count.csv":
+            await process_win_loss_methods_count(csv_file, file_name, year, dfs)
+        case "win_loss_methods_round_number.csv":
+            await process_win_loss_methods_round_number(csv_file, file_name, year, dfs)
+        case "agents_pick_rates.csv":
+            await process_agents_pick_rates(csv_file, file_name, year, dfs)
+        case "maps_stats.csv":
+            await process_maps_stats(csv_file, file_name, year, dfs)
+        case "teams_picked_agents.csv":
+            await process_teams_picked_agents(csv_file, file_name, year, dfs)
+        case "players_stats.csv":
+            await process_players_stats(csv_file, file_name, year, dfs)
     
 
 async def process_csv_files(csv_files, year, dfs):
