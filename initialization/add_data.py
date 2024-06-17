@@ -18,6 +18,7 @@ def add_maps(engine):
    df = reorder_columns(df, {"map_id", "map"})
    df.to_sql("maps", engine, index=False, if_exists="append")
 
+
 def add_tournaments(df, engine):
    df.to_sql("tournaments", engine, index=False, if_exists = "append")
     
@@ -36,10 +37,10 @@ def add_teams(df, engine):
 def add_players(df, engine):
    df.to_sql("players", engine, index=False, if_exists="append")
 
-async def add_drafts(dfs_dict, engine):
-   df = dfs_dict["main"]
-   print(df)
-   df.to_sql("drafts", engine, index=False, if_exists="append")
+# async def add_drafts(dfs_dict, engine):
+#    df = dfs_dict["main"]
+#    print(df)
+#    df.to_sql("drafts", engine, index=False, if_exists="append")
 # async def add_eco_rounds(dfs_dict, engine):
 #    df.to_sql("drafts", engine, index=False, if_exists="append")
 # async def add_eco_stats(dfs_dict, engine):
@@ -72,9 +73,19 @@ async def add_drafts(dfs_dict, engine):
 #    df.to_sql("drafts", engine, index=False, if_exists="append")
 
 async def add_data_helper(dfs_dict, file_name, engine):
-   match file_name:
-      case "draft_phase.csv":
-         await add_drafts(dfs_dict, engine)
+   table_name = file_name.split(".")[0]
+   main_df = dfs_dict["main"]
+   agents_df = dfs_dict["agents"]
+   teams_df = dfs_dict["teams"]
+   main_df.to_sql(table_name, engine, index=False, if_exists="append")
+   if len(agents_df.index) != 0:
+      agents_df.to_sql(f"{table_name}_agents", engine, index=False, if_exists="append")
+   if len(teams_df.index) != 0:
+      teams_df.to_sql(f"{table_name}_teams", engine, index=False, if_exists="append")
+
+   # match file_name:
+   #    case "draft_phase.csv":
+   #       await add_drafts(dfs_dict, engine)
       # case "eco_rounds.csv":
       #    await add_eco_rounds(dfs_dict, engine)
       # case "eco_stats.csv": 
