@@ -105,7 +105,7 @@ def create_players_table(curr):
 
 def create_draft_phase_table(curr):
    query = """
-      CREATE TABLE IF NOT EXISTS drafts (
+      CREATE TABLE IF NOT EXISTS draft_phase (
          index INT PRIMARY KEY,
          tournament_id INT REFERENCES tournaments(tournament_id),
          stage_id INT REFERENCES stages(stage_id),
@@ -496,8 +496,8 @@ def create_all_tables(curr):
    create_match_types_table(curr)
    create_matches_table(curr)
    # create_games_table(curr)
-   # create_agents_table(curr)
-   # create_maps_table(curr)
+   create_agents_table(curr)
+   create_maps_table(curr)
    create_teams_table(curr)
    create_players_table(curr)
    create_draft_phase_table(curr)
