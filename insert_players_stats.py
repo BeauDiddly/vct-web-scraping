@@ -32,7 +32,6 @@ async def main():
 
     await process_players_stats_agents(combined_dfs, combined_dfs["players_stats.csv"]["main"])
     await process_players_stats_teams(combined_dfs, combined_dfs["players_stats.csv"]["main"])
-    combined_dfs["players_stats.csv"]["teams"].to_csv("test.csv")
 
 
     await add_data(combined_dfs, sql_alchemy_engine)
