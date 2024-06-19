@@ -1,5 +1,6 @@
 import os
 from Connect.connect import connect, engine
+from datetime import datetime
 from initialization.create_tables import create_all_tables
 import asyncio
 from initialization.add_data import *
@@ -16,12 +17,25 @@ async def main():
 
     csv_files = [find_csv_files(f"{os.getcwd()}/vct_{year}/players_stats", "players_stats", year) for year in years]
     print(csv_files)
-
-    for i, year in enumerate(years):
-        await process_year(year, csv_files[i], sql_alchemy_engine)
+    combined_dfs = {}
+    dfs = {}
+    csv_files_w_years = {year: csv_files[i] for i, year in enumerate(years)}
+    for path_list in csv_files:
+        for file_path in path_list:
+            file_name = file_path.split("/")[-1]
+            dfs[file_name] = {"agents": [], "teams": [], "main": []}
+            combined_dfs[file_name] = {"agents": pd.DataFrame(), "teams": pd.DataFrame(), "main": pd.DataFrame()}
 
     # await add_players_stats(csv_files[2][0], years[2], sql_alchemy_engine)
+    await process_years(csv_files_w_years, dfs)
+    combine_dfs(combined_dfs, dfs)
 
+    await process_players_stats_agents(combined_dfs, combined_dfs["players_stats.csv"]["main"])
+    await process_players_stats_teams(combined_dfs, combined_dfs["players_stats.csv"]["main"])
+    combined_dfs["players_stats.csv"]["teams"].to_csv("test.csv")
+
+
+    await add_data(combined_dfs, sql_alchemy_engine)
 
     end_time = time.time()
     elasped_time = end_time - start_time
