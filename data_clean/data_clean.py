@@ -126,47 +126,48 @@ def fixed_match_names(df):
     return df
 
 def convert_nan_players_teams(df):
-    if "Tournament" in df and "Stage" in df and "Match Type" in df and "Player" in df and "Team" in df:
+    if "Tournament" in df and "Stage" in df and "Match Type" in df and "Player" in df and "Team" in df or "Teams" in df:
+        team_col = "Team" if "Team" in df else "Teams"
         player_nan_condition = (df['Tournament'] == 'Champions Tour Philippines Stage 1: Challengers 2') & \
                                (df['Stage'].isin(['All Stages', 'Qualifier 1'])) & \
                                (df['Match Type'].isin(['Round of 16', 'All Match Types'])) & \
                                (df['Player'].isna()) & \
-                               (df["Team"].isna())
+                               (df[team_col].isna())
         missing_bjk_condition = (df["Tournament"] == "Champions Tour Turkey Stage 1: Challengers 3") & \
                                 (df["Stage"] == "Open Qualifier") & \
                                 (df["Match Type"] == "Round of 32") & \
                                 (df["Player"].isin(["Noffe", "m4rco", "vlt", "daNN", "MrFaliN"])) & \
-                                (df["Team"].isna())
+                                (df[team_col].isna())
         pATE_condition = (df['Tournament'].isin(["Champions Tour Europe Stage 3: Challengers 2",
                                                 "Champions Tour Europe Stage 3: Challengers 1", "Champions Tour Europe Stage 1: Challengers 1"])) & \
                          (df['Stage'].isin(['Open Qualifier', "Qualifier", 'All Stages'])) & \
                          (df['Match Type'].isin(['Round of 256', "Round of 128", 'All Match Types'])) & \
                          (df['Player'] == 'pATE') & \
-                         (df["Team"].isna())
+                         (df[team_col].isna())
         wendigo_2021_condition = (df['Tournament'] == "Champions Tour North America Stage 2: Challengers 2") & \
                          (df['Stage'].isin(['Open Qualifier', 'All Stages'])) & \
                          (df['Match Type'].isin(["Round of 128", 'All Match Types'])) & \
                          (df['Player'] == 'Wendigo') & \
-                         (df["Team"].isna())
+                         (df[team_col].isna())
         
         wendigo_2022_condition = (df['Tournament'] == "Champions Tour North America Stage 2: Challengers") & \
                          (df['Stage'].isin(["Open Qualifier #1", "Open Qualifier #2", 'All Stages'])) & \
                          (df['Match Type'].isin(["Round of 128", "Round of 64", 'All Match Types'])) & \
                          (df['Player'] == 'Wendigo') & \
-                         (df["Team"].isna())
+                         (df[team_col].isna())
 
         howie_1_condition = (df['Tournament'] == "Oceania Tour: Stage 1") & \
                          (df['Stage'].isin(['Open Qualifier', 'All Stages'])) & \
                          (df['Match Type'].isin(["Round of 16", "Quarterfinals", "Lower Bracket Semifinals", "Lower Bracket Consolation Finals",
                                                  'All Match Types'])) & \
                          (df['Player'] == 'Howie') & \
-                         (df["Team"].isna())
+                         (df[team_col].isna())
 
         howie_2_condition = (df['Tournament'] == "Oceania Tour: Stage 2") & \
                          (df['Stage'].isin(['Open Qualifier', 'All Stages'])) & \
                          (df['Match Type'].isin(["Round of 16", 'All Match Types'])) & \
                          (df['Player'] == 'Howie') & \
-                         (df["Team"].isna())
+                         (df[team_col].isna())
         if "Match Name" in df:
             roocivarkaat_players_condition = (df["Tournament"] == "Champions Tour Europe Stage 3: Challengers 1") & \
                                              (df["Stage"] == "Open Qualifier") & \
@@ -234,26 +235,26 @@ def convert_nan_players_teams(df):
 
 
         filtered_indices = df.index[player_nan_condition]
-        df.loc[filtered_indices, "Team"] = "MGS Spades"
+        df.loc[filtered_indices, team_col] = "MGS Spades"
         df.loc[filtered_indices, "Player"] = "nan"
 
         filtered_indices = df.index[missing_bjk_condition]
-        df.loc[filtered_indices, "Team"] = "Beşiktaş Esports"
+        df.loc[filtered_indices, team_col] = "Beşiktaş Esports"
 
         filtered_indices = df.index[pATE_condition]
-        df.loc[filtered_indices, "Team"] = "EXEN Esports"
+        df.loc[filtered_indices, team_col] = "EXEN Esports"
 
         filtered_indices = df.index[wendigo_2021_condition]
-        df.loc[filtered_indices, "Team"] = "Chilling in Space"
+        df.loc[filtered_indices, team_col] = "Chilling in Space"
 
         filtered_indices = df.index[wendigo_2022_condition]
-        df.loc[filtered_indices, "Team"] = "Team MystiC"
+        df.loc[filtered_indices, team_col] = "Team MystiC"
 
         filtered_indices = df.index[howie_1_condition]
-        df.loc[filtered_indices, "Team"] = "HEHE"
+        df.loc[filtered_indices, team_col] = "HEHE"
 
         filtered_indices = df.index[howie_2_condition]
-        df.loc[filtered_indices, "Team"] = "Trident Esports"
+        df.loc[filtered_indices, team_col] = "Trident Esports"
 
     return df
 
