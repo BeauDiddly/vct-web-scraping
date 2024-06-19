@@ -3,17 +3,6 @@ import asyncpg
 
 async def retrieve_primary_key(pool, primary_key, table, column_name, values, year = None):
     async with pool.acquire() as conn:
-    
-    # if table == "stages":
-    #     tournament_id, stage = values
-
-
-    # if table == "tournaments":
-    #     tournament = values[0]
-    #     query = "SELECT {} FROM {} WHERE {} = $1 AND year = $2;".format(primary_key, table, column_name)
-    #     data = (tournament, year)
-        # result = await conn.fetchval(query, column_value, year)
-    #     return result if result else None
         if table == "matches":
             tournament_id, stage_id, match_type_id, match = values
             query = """
