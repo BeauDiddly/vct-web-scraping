@@ -28,8 +28,8 @@ misnamed_teams = {"BLISS": "Team Bliss", "WaVii": "Team WaVii", "Arrow": "Team A
                     "Wind": "Windstorm", "Swag": "Swagoi", "Pira": "Pirate Nation", "Puls": "Pulsar", "Jumb": "Jumba", "Scru": "Scrub Garden", "Arli": "Arlington E.C.",
                     "Dial, Dialed In": "Dialed In", "Pira, Pireate Nation": "Pirate Nation", "YKS": "Yankees", "FIA": "FREAKSINACTION", "Clan, Clan Infamous": "Clan Infamous",
                     "GMG, GOMA": "GOMA", "GMG": "GOMA", "EPA, Euphoria": "Euphoria", "GHS": "Gehenna Sweepers", "GHS, Gehenna Sweepers": "Gehenna Sweepers", "Gwan, GwangDae": "GwangDae",
-                    "OLDG": "OLDGUYZ", "v0rt, v0rteX 5": "v0rteX 5", "MM": "Mob Mentality eSports", "Enig": "Enigma", "Doub": "DoubleCross eSports", "RESE": "Reservoir dogs",
-                    "just": "justtry", "Les": "Les Babouches", "Anth": "Anthrax", "74, Nanashi no Gonbee": "Nanashi no Gonbee", "Endavant": "Team Endavant", "Rese": "Reservoir dogs",
+                    "OLDG": "OLDGUYZ", "v0rt, v0rteX 5": "v0rteX 5", "v0rt": "v0rtex", "MM": "Mob Mentality eSports", "Enig": "Enigma", "Doub": "DoubleCross eSports", "RESE": "Reservoir dogs",
+                    "just": "justtry", "Les": "Les Babouches", "Anth": "Anthrax", "74, Nanashi no Gonbee": "Nanashi no Gonbee", "74": "Nanashi no Gonbee", "Endavant": "Team Endavant", "Rese": "Reservoir dogs",
                     "CK": "Cock Esports", "VT": "VITEAZ", "RR": "Rage's Rangos", "M5": "Morioh Cho", "Orbi": "VOIN DRIP", "XcN": "VOIN DRIP", "Play": "GRN Esports",
                     "OVA": "Secret Esports", "MCK": "Mastery", "owna": "Ziomki Poziomki", "Devi": "ValorEitis", "1VR": "Karasuno", "SE": "VITEAZ",
                     "illm": "Galaxie Punk Esport", "BRK": "Hide In Smoke", "Mega": "OfficialFragBoys", "SUPR": "Laia Nation", "SEN": "The Noah Aiello",
@@ -109,7 +109,7 @@ def fixed_match_names(df):
     return df
 
 def fixed_team_names(df):
-    for column in ["Team", "Team A", "Team B", "Eliminator Team", "Eliminated Team", "Player Team", "Enemy Team"]:
+    for column in ["Team", "Teams", "Team A", "Team B", "Eliminator Team", "Eliminated Team", "Player Team", "Enemy Team"]:
         if column in df:
             df[column] = df[column].map(misnamed_teams).fillna(df[column])
     return df
