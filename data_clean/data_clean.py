@@ -329,6 +329,18 @@ def remove_forfeited_matches(df):
         df = df[df["Match Name"] != "Ksenox vs Savage"]
     return df
 
+def remove_nan_players_agents(df):
+    overview_col = ["Agents", "Average Combat Score", "Kills", "Deaths",	"Assists", "Kills - Deaths (KD)",
+                    "Kill, Assist, Trade, Survive %", "Average Damage Per Round", "Headshot %", "First Kills",
+                    "First Deaths",	"Kills - Deaths (FKD)"]
+    if "Player" in df and "Agents" in df:
+        df = df.dropna(subset=["Player", "Agents"], how="all")
+    if all(col in df.columns for col in overview_col):
+        df = df.dropna(subset=["Agents", "Average Combat Score", "Kills", "Deaths",	"Assists", "Kills - Deaths (KD)",
+                               "Kill, Assist, Trade, Survive %", "Average Damage Per Round", "Headshot %", "First Kills",
+                                "First Deaths",	"Kills - Deaths (FKD)"], how="all")
+    return df
+
 def add_missing_abbriev(df, year):
     if "Abbreviated" in df:
         if year == 2022:
@@ -339,19 +351,3 @@ def add_missing_abbriev(df, year):
 def extract_round_number(df):
     df["Round Number"] = df["Round Number"].str.split(" ").str[1]
     return df
-
-# def insert_missing_players(df):
-#     for column in ["Player", "Eliminator", "Eliminated"]:
-#         for another_column in ["Agent", "Agents"]:
-#             if column in df and another_column in df:
-#                 missing_player_rows = df[df[column].isna()]
-
-#                 for i, row in missing_player_rows.iterrows():
-#                     agent = row[another_column]
-#                     if agent in agent_to_player:
-#                         player = agent_to_player[agent]
-#                         df.at[i, column] = player
-#                     # else:
-#                     #     print(row)
-#     return df
-

@@ -1,7 +1,6 @@
 from find_csv_files.find_csv_files import find_csv_files
-import os
-import pandas as pd
 from data_clean.data_clean import *
+import os
 
 def main():
     years = [2021, 2022, 2023, 2024]
@@ -18,6 +17,7 @@ def main():
             df = remove_white_spaces_in_between(df)
             df = remove_tabs_and_newlines(df)
             df = remove_forfeited_matches(df)
+            df = remove_nan_players_agents(df)
             df = add_missing_abbriev(df, year)
             df = fixed_team_names(df)
             df = fixed_player_names(df)
