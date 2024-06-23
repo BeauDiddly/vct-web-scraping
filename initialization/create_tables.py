@@ -54,7 +54,7 @@ def create_agents_table(curr):
    query = """
    CREATE TABLE IF NOT EXISTS agents (
       agent_id INT PRIMARY KEY,
-      agent VARCHAR(255) NOT NULL
+      agent VARCHAR(255)
    );
    """
    execute_query(curr, query)
@@ -63,7 +63,7 @@ def create_maps_table(curr):
    query = """
    CREATE TABLE IF NOT EXISTS maps (
       map_id INT PRIMARY KEY,
-      map VARCHAR(255) NOT NULL
+      map VARCHAR(255)
    );
    """
    execute_query(curr, query)
@@ -97,7 +97,7 @@ def create_players_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS players (
          player_id INT PRIMARY KEY,
-         player VARCHAR(255) NOT NULL
+         player VARCHAR(255)
       );
       """
    execute_query(curr, query)
@@ -215,7 +215,7 @@ def create_kills_stats_table(curr):
          one_vs_five INT NULL,
          econ INT,
          spike_plants INT,
-         spike_defuse INT,
+         spike_defuses INT,
          year INT NOT NULL
 
       );
@@ -362,7 +362,8 @@ def create_win_loss_methods_count_table(curr):
          eliminated INT,
          defused_failed INT,
          detonation_denied INT,
-         time_expiry_failed_to_plant INT
+         time_expiry_failed_to_plant INT,
+         year INT NOT NULL
       );
    """
    execute_query(curr, query)
@@ -379,7 +380,8 @@ def create_win_loss_methods_round_number_table(curr):
          map_id INT REFERENCES maps(map_id),
          round_number INT,
          method VARCHAR(255),
-         outcome VARCHAR(255)
+         outcome VARCHAR(255),
+         year INT NOT NULL
       );
    """
    execute_query(curr, query)
