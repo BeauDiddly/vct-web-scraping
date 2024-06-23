@@ -1,11 +1,10 @@
-import pandas as pd
-from checking.check_values import check_na
 from retrieve.retrieve import retrieve_primary_key
-from Connect.connect import create_pool, create_db_url
+from Connect.connect import create_db_url
+import numpy as np
+import pandas as pd
 import asyncpg
 import asyncio
-import numpy as np
-import sys
+
 
 # na_values = ['', '#N/A', '#N/A N/A', '#NA', '-1.#IND',
 #             '-1.#QNAN', '-NaN', '-nan', '1.#IND',
@@ -75,6 +74,9 @@ def convert_missing_numbers(df):
 
 def add_missing_ids(df, column, missing_numbers, null_count):
     df.loc[df[column].isnull(), column] = missing_numbers[:null_count]
+    if column == "Player ID":
+        df.loc[len(df.index)] = [pd.NA, 0]
+
 
 def add_player_nan(df):
     condition = (
@@ -84,6 +86,16 @@ def add_player_nan(df):
         (df['Player'].isnull()) &
         (df['Agents'] == "reyna")
     )
+    if "Match Name" in df:
+        player_nan_overview_condition = (df['Tournament'] == 'Champions Tour Philippines Stage 1: Challengers 2') & \
+                                        (df['Stage'] == 'Qualifier 1') & \
+                                        (df['Match Type'] == 'Round of 16') & \
+                                        (df['Player'].isnull()) & \
+                                        (df["Match Name"] == "KADILIMAN vs MGS Spades")
+        filtered_indices = df.index[player_nan_overview_condition]
+        df.loc[filtered_indices, "Player"] = "nan"
+    # missing = df[df["Player"].isnull()]
+    # missing.to_csv("test.csv")
     filtered_indices = df.index[condition]
     df.loc[filtered_indices, "Player"] = "nan"
     return df
@@ -140,7 +152,8 @@ def rename_columns(df):
                      "Average Damage Per Round": "adpr", "Headshot %": "headshot", "First Kills": "fk", "First Deaths": "fd",
                      "Kills - Deaths (FKD)": "fkd", "Kills:Deaths": "kd", "Kills Per Round": "kpr", "Assists Per Round": "apr",
                      "First Kills Per Round": "fkpr", "First Deaths Per Round": "fdpr", "Clutch Success %": "clutch_success",
-                    "Maximum Kills in a Single Map": "mksp"}
+                     "Maximum Kills in a Single Map": "mksp", "2k": "two_kills", "3k": "three_kills", "4k": "four_kills", "5k": "five_kills",
+                     "1v1": "one_vs_one", "1v2": "one_vs_two", "1v3": "one_vs_three", "1v4": "one_vs_four", "1v5": "one_vs_five"}
     for column in df.columns:
         if column in stats_columns:
             new_column_name = stats_columns[column]
@@ -435,23 +448,26 @@ async def process_kills(file, file_name, year, dfs):
 async def process_kills_stats(file, file_name, year, dfs):
    kills_stats_df = csv_to_df(file)
    kills_stats_df = remove_leading_zeroes_from_players(kills_stats_df)
+   kills_stats_df = add_player_nan(kills_stats_df)
    kills_stats_df = convert_to_category(kills_stats_df)
    kills_stats_df = await change_reference_name_to_id(kills_stats_df, year)
    kills_stats_df = convert_missing_numbers(kills_stats_df)
    kills_stats_df = drop_columns(kills_stats_df)
    kills_stats_df = rename_columns(kills_stats_df)
    kills_stats_df = reorder_columns(kills_stats_df, ["tournament_id", "stage_id", "match_type_id", "match_id", "team_id", "player_id", "map_id", "agents",
-                                                     "2k", "3k", "4k", "5k", "1v1", "1v2", "1v3", "1v4", "1v5", "econ", "spike_plants", "spike_defuses"])
+                                                     "two_kills", "three_kills", "four_kills", "five_kills", "one_vs_one", "one_vs_two", "one_vs_three",
+                                                     "one_vs_four", "one_vs_five", "econ", "spike_plants", "spike_defuses"])
    kills_stats_df["year"] = year
    dfs[file_name]["main"].append(kills_stats_df)
 
 async def process_kills_stats_agents(combined_dfs, combined_df):
    agents_df = combined_df[["index", "agents", "year"]]
    agents_df = splitting_agents(agents_df)
-   agents_df.rename(columns={"agents": "agent"}, inplace=True)
+   agents_df.rename(columns={"agents": "Agent"}, inplace=True)
    agents_df = await change_reference_name_to_id(agents_df, 0)
    combined_df.drop(columns="agents", inplace=True)
-   agents_df.drop(columns="agent", inplace=True)
+   agents_df.drop(columns="Agent", inplace=True)
+   agents_df = rename_columns(agents_df)
    agents_df = reorder_columns(agents_df, ["index", "agent_id", "year"])
    combined_dfs["kills_stats.csv"]["agents"] = pd.concat([combined_dfs["kills_stats.csv"]["agents"], agents_df], ignore_index=True)
 
@@ -463,6 +479,7 @@ async def process_maps_played(file, file_name, year, dfs):
    maps_played_df = drop_columns(maps_played_df)
    maps_played_df = rename_columns(maps_played_df)
    maps_played_df = reorder_columns(maps_played_df, ["tournament_id", "stage_id", "match_type_id", "match_id", "map_id"])
+   maps_played_df["year"] = year
    dfs[file_name]["main"].append(maps_played_df)
 
 async def process_maps_scores(file, file_name, year, dfs):
@@ -484,6 +501,7 @@ async def process_maps_scores(file, file_name, year, dfs):
 async def process_overview(file, file_name, year, dfs):
    overview_df = csv_to_df(file)
    overview_df = remove_leading_zeroes_from_players(overview_df)
+   overview_df = add_player_nan(overview_df)
    overview_df = convert_to_category(overview_df)
    overview_df = await change_reference_name_to_id(overview_df, year)
    overview_df = drop_columns(overview_df)
@@ -497,12 +515,13 @@ async def process_overview(file, file_name, year, dfs):
    dfs[file_name]["main"].append(overview_df)
 
 async def process_overview_agents(combined_dfs, combined_df):
-   agents_df = combined_df[["index", "agents"]]
+   agents_df = combined_df[["index", "agents", "year"]]
    agents_df = splitting_agents(agents_df)
-   agents_df.rename(columns={"agents": "agent"}, inplace=True)
+   agents_df.rename(columns={"agents": "Agent"}, inplace=True)
    combined_df.drop(columns="agents", inplace=True)
-   agents_df = await change_reference_name_to_id(agents_df)
-   agents_df.drop(columns="agent", inplace=True)
+   agents_df = await change_reference_name_to_id(agents_df, 0)
+   agents_df.drop(columns="Agent", inplace=True)
+   agents_df = rename_columns(agents_df)
    agents_df = reorder_columns(agents_df, ["index", "agent_id", "year"])
    combined_dfs["overview.csv"]["agents"] = pd.concat([combined_dfs["overview.csv"]["agents"], agents_df], ignore_index=True)
 
@@ -643,38 +662,38 @@ async def process_csv_file(csv_file, year, dfs):
     file_name = csv_file.split("/")[-1]
     print(file_name, year)
     match file_name:
-        case "draft_phase.csv":
-            await process_drafts(csv_file, file_name, year, dfs)
+        # case "draft_phase.csv":
+        #     await process_drafts(csv_file, file_name, year, dfs) #good
         case "eco_rounds.csv":
             await process_eco_rounds(csv_file, file_name, year, dfs)
-        case "eco_stats.csv": 
-            await process_eco_stats(csv_file, file_name, year, dfs)
-        case "kills.csv":
-            await process_kills(csv_file, file_name, year, dfs)
-        case "kills_stats.csv":
-            await process_kills_stats(csv_file, file_name, year, dfs)
-        case "maps_played.csv":
-            await process_maps_played(csv_file, file_name, year, dfs)
-        case "maps_scores.csv":
-            await process_maps_scores(csv_file, file_name, year, dfs)
-        case "overview.csv":
-            await process_overview(csv_file, file_name, year, dfs)
-        case "rounds_kills.csv":
-            await process_rounds_kills(csv_file, file_name, year, dfs)
-        case "scores.csv":
-            await process_scores(csv_file, file_name, year, dfs)
-        case "win_loss_methods_count.csv":
-            await process_win_loss_methods_count(csv_file, file_name, year, dfs)
-        case "win_loss_methods_round_number.csv":
-            await process_win_loss_methods_round_number(csv_file, file_name, year, dfs)
-        case "agents_pick_rates.csv":
-            await process_agents_pick_rates(csv_file, file_name, year, dfs)
-        case "maps_stats.csv":
-            await process_maps_stats(csv_file, file_name, year, dfs)
-        case "teams_picked_agents.csv":
-            await process_teams_picked_agents(csv_file, file_name, year, dfs)
-        case "players_stats.csv":
-            await process_players_stats(csv_file, file_name, year, dfs)
+        # case "eco_stats.csv": 
+        #     await process_eco_stats(csv_file, file_name, year, dfs)
+        # case "kills.csv":
+        #     await process_kills(csv_file, file_name, year, dfs)
+        # case "kills_stats.csv":
+        #     await process_kills_stats(csv_file, file_name, year, dfs)
+        # case "maps_played.csv":
+        #     await process_maps_played(csv_file, file_name, year, dfs)
+        # case "maps_scores.csv":
+        #     await process_maps_scores(csv_file, file_name, year, dfs)
+        # case "overview.csv":
+        #     await process_overview(csv_file, file_name, year, dfs)
+        # case "rounds_kills.csv":
+        #     await process_rounds_kills(csv_file, file_name, year, dfs)
+        # case "scores.csv":
+        #     await process_scores(csv_file, file_name, year, dfs)
+        # case "win_loss_methods_count.csv":
+        #     await process_win_loss_methods_count(csv_file, file_name, year, dfs)
+        # case "win_loss_methods_round_number.csv":
+        #     await process_win_loss_methods_round_number(csv_file, file_name, year, dfs)
+        # case "agents_pick_rates.csv":
+        #     await process_agents_pick_rates(csv_file, file_name, year, dfs)
+        # case "maps_stats.csv":
+        #     await process_maps_stats(csv_file, file_name, year, dfs)
+        # case "teams_picked_agents.csv":
+        #     await process_teams_picked_agents(csv_file, file_name, year, dfs)
+        # case "players_stats.csv":
+        #     await process_players_stats(csv_file, file_name, year, dfs)
     
 
 async def process_csv_files(csv_files, year, dfs):
@@ -685,8 +704,3 @@ async def process_years(csv_files_w_years, dfs):
     await asyncio.gather(
         *(process_csv_files(csv_files, year, dfs) for year, csv_files in csv_files_w_years.items())
     )
-
-# async def process_processed_dfs(dfs_dict, engine):
-#     asyncio.gather(
-#         *(add_data(dfs, file_name, engine) for file_name, dfs in dfs_dict.items())
-#     )
