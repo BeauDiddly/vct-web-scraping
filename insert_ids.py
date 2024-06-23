@@ -1,8 +1,7 @@
 from initialization.add_data import *
-import pandas as pd
 from Connect.connect import connect, engine
 from initialization.create_tables import create_all_tables
-from process_df.process_df import csv_to_df
+from process_df.process_df import csv_to_df, process_tournaments_stages_match_types, get_upper_round_id, process_tournaments, process_stages, process_match_types, process_matches, process_teams_ids, process_players_ids
 
 def main():
     conn, curr = connect()
