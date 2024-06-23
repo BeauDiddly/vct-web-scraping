@@ -1,18 +1,15 @@
-import os
-from Connect.connect import connect, engine
-from datetime import datetime
-import asyncio
+from Connect.connect import engine
 from initialization.add_data import *
 from find_csv_files.find_csv_files import find_csv_files
-from Connect.config import config
+from process_df.process_df import process_years, combine_dfs, process_overview_agents, process_kills_stats_agents
+import time
+import os
+import asyncio
 
 async def main():
     start_time = time.time()
-    now = datetime.now()
     years = {2021, 2022, 2023, 2024}
-    conn, curr = connect()
     sql_alchemy_engine = engine()
-    db_conn_info = config()
 
     csv_files = [find_csv_files(f"{os.getcwd()}/vct_{year}/matches", "matches", year) for year in years]
     print(csv_files)
@@ -25,41 +22,19 @@ async def main():
             dfs[file_name] = {"agents": [], "teams": [], "main": []}
             combined_dfs[file_name] = {"agents": pd.DataFrame(), "teams": pd.DataFrame(), "main": pd.DataFrame()}
 
-
-    # for i, year in enumerate(years):
-    #     await process_csv_files(csv_files[i], year, dfs)
     await process_years(csv_files_w_years, dfs)
 
     combine_dfs(combined_dfs, dfs)
-
+    # await process_overview_agents(combined_dfs, combined_dfs["overview.csv"]["main"])
+    # await process_kills_stats_agents(combined_dfs, combined_dfs["kills_stats.csv"]["main"])
     await add_data(combined_dfs, sql_alchemy_engine)
 
-    # print(dfs["draft_phase.csv"].sample(n=20))
-
-
-    # await add_drafts(csv_files[2][8], years[2], sql_alchemy_engine)
-    # await add_eco_rounds(csv_files[2][11], years[2], sql_alchemy_engine)
-    # await add_eco_stats(csv_files[2][3], years[2], sql_alchemy_engine)
-    # await add_kills(csv_files[2][1], years[2], sql_alchemy_engine)
-    # await add_kills_stats(csv_files[2][5], years[2], sql_alchemy_engine)
-    # await add_maps_played(csv_files[2][0], years[2], sql_alchemy_engine)
-    # await add_maps_scores(csv_files[2][12], years[2], sql_alchemy_engine)
-    # await add_overview(csv_files[2][9], years[2], sql_alchemy_engine)
-    # await add_rounds_kills(csv_files[1][10], years[1], sql_alchemy_engine)
-    # await add_scores(csv_files[1][4], years[1], sql_alchemy_engine)
-    # await add_win_loss_methods_count(csv_files[2][6], years[2], sql_alchemy_engine)
-    # await add_win_loss_methods_round_number(csv_files[2][2], years[2], sql_alchemy_engine)
 
     end_time = time.time()
     elasped_time = end_time - start_time
     hours, remainder = divmod(elasped_time, 3600)
     minutes, seconds = divmod(remainder, 60)
     print(f"Time: {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds")
-    # rounds_kills = pd.read_csv("matches/rounds_kills.csv")
-
-    # conn.commit()
-    # curr.close()
-    # conn.close()
 
 if __name__ == '__main__':
     asyncio.run(main())
