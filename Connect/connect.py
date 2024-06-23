@@ -1,6 +1,6 @@
-import psycopg2
 from Connect.config import config
 from sqlalchemy import create_engine
+import psycopg2
 import asyncpg
 
 def connect():
@@ -36,13 +36,8 @@ def connect():
     #         print('Database connection closed.')
         
 def engine():
-    engine = None
-    params = config()
-    host = params["host"]
-    db = params["database"]
-    user = params["user"]
-    password = params["password"]
-    engine = create_engine(f"postgresql://{user}:{password}@{host}:5432/{db}")
+    db_url = create_db_url()
+    engine = create_engine(db_url)
     return engine
 
 def create_db_url():
