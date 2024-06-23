@@ -1,12 +1,12 @@
-from process_df.process_df import *
+from process_df.process_df import reorder_columns
 import pandas as pd
 import asyncio
-import time
 
 def add_agents(engine):
    all_agents = ["astra", "breach", "brimstone", "chamber", "clove", "cypher", "deadlock", "fade", "gekko", "harbor", "iso", "jett", "kayo",
               "killjoy", "neon", "omen", "phoenix", "raze", "reyna", "sage", "skye", "sova", "viper", "yoru"]
    agent_ids = {agent: sum(ord(char) for char in agent) for agent in all_agents}
+   agent_ids[pd.NA] = 0
    df = pd.DataFrame(list(agent_ids.items()), columns=["agent", "agent_id"])
    df = reorder_columns(df, {"agent_id", "agent"})
    df.to_sql("agents", engine, index=False, if_exists="append")
@@ -14,6 +14,7 @@ def add_agents(engine):
 def add_maps(engine):
    all_maps = ["Bind", "Haven", "Split", "Ascent", "Icebox", "Breeze", "Fracture", "Pearl", "Lotus", "Sunset", "All Maps"]
    map_ids = {map: sum(ord(char) for char in map) for map in all_maps}
+   map_ids[pd.NA] = 0
    df = pd.DataFrame(list(map_ids.items()), columns=["map", "map_id"])
    df = reorder_columns(df, {"map_id", "map"})
    df.to_sql("maps", engine, index=False, if_exists="append")
@@ -37,85 +38,17 @@ def add_teams(df, engine):
 def add_players(df, engine):
    df.to_sql("players", engine, index=False, if_exists="append")
 
-# async def add_drafts(dfs_dict, engine):
-#    df = dfs_dict["main"]
-#    print(df)
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
-# async def add_eco_rounds(dfs_dict, engine):
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
-# async def add_eco_stats(dfs_dict, engine):
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
-# async def add_kills(dfs_dict, engine):
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
-# async def add_kills_stats(dfs_dict, engine):
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
-# async def add_maps_played(dfs_dict, engine):
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
-# async def add_maps_scores(dfs_dict, engine):
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
-# async def add_overview(dfs_dict, engine):
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
-# async def add_rounds_kills(dfs_dict, engine):
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
-# async def add_scores(dfs_dict, engine):
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
-# async def add_win_loss_methods_count(dfs_dict, engine):
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
-# async def add_win_loss_methods_round_number(dfs_dict, engine): 
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
-# async def add_agents_pick_rates(dfs_dict, engine):
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
-# async def add_maps_stats(dfs_dict, engine):
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
-# async def add_teams_picked_agents(dfs_dict, engine):
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
-# async def add_players_stats(dfs_dict, engine):
-#    df.to_sql("drafts", engine, index=False, if_exists="append")
 
 async def add_data_helper(dfs_dict, file_name, engine):
    table_name = file_name.split(".")[0]
    main_df = dfs_dict["main"]
    agents_df = dfs_dict["agents"]
    teams_df = dfs_dict["teams"]
-   main_df.to_sql(table_name, engine, index=False, if_exists="append")
+   main_df.to_sql(table_name, engine, index=False, if_exists="append", chunksize=10000)
    if len(agents_df.index) != 0:
-      agents_df.to_sql(f"{table_name}_agents", engine, index=False, if_exists="append")
+      agents_df.to_sql(f"{table_name}_agents", engine, index=False, if_exists="append", chunksize=10000)
    if len(teams_df.index) != 0:
-      teams_df.to_sql(f"{table_name}_teams", engine, index=False, if_exists="append")
-
-   # match file_name:
-   #    case "draft_phase.csv":
-   #       await add_drafts(dfs_dict, engine)
-      # case "eco_rounds.csv":
-      #    await add_eco_rounds(dfs_dict, engine)
-      # case "eco_stats.csv": 
-      #    await add_eco_stats(dfs_dict, engine)
-      # case "kills.csv":
-      #    await add_kills(dfs_dict, engine)
-      # case "kills_stats.csv":
-      #    await add_kills_stats(dfs_dict, engine)
-      # case "maps_played.csv":
-      #    await add_maps_played(dfs_dict, engine)
-      # case "maps_scores.csv":
-      #    await add_maps_scores(dfs_dict, engine)
-      # case "overview.csv":
-      #    await add_overview(dfs_dict, engine)
-      # case "rounds_kills.csv":
-      #    await add_rounds_kills(dfs_dict, engine)
-      # case "scores.csv":
-      #    await add_scores(dfs_dict, engine)
-      # case "win_loss_methods_count.csv":
-      #    await add_win_loss_methods_count(dfs_dict, engine)
-      # case "win_loss_methods_round_number.csv":
-      #    await add_win_loss_methods_round_number(dfs_dict, engine)
-      # case "agents_pick_rates.csv":
-      #    await add_agents_pick_rates(dfs_dict, engine)
-      # case "maps_stats.csv":
-      #    await add_maps_stats(dfs_dict, engine)
-      # case "teams_picked_agents.csv":
-      #    await add_teams_picked_agents(dfs_dict, engine)
-      # case "players_stats.csv":
-      #    await add_players_stats(dfs_dict, engine)
+      teams_df.to_sql(f"{table_name}_teams", engine, index=False, if_exists="append", chunksize=10000)
 
 
 async def add_data(combined_dfs, engine):
