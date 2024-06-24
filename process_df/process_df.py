@@ -94,8 +94,6 @@ def add_player_nan(df):
                                         (df["Match Name"] == "KADILIMAN vs MGS Spades")
         filtered_indices = df.index[player_nan_overview_condition]
         df.loc[filtered_indices, "Player"] = "nan"
-    # missing = df[df["Player"].isnull()]
-    # missing.to_csv("test.csv")
     filtered_indices = df.index[condition]
     df.loc[filtered_indices, "Player"] = "nan"
     return df
@@ -211,91 +209,75 @@ def flatten_list_of_dicts(list_of_dicts):
         conditional_mapping.update(dictionary)
     return conditional_mapping
 
-
-def create_conditions(df, ids, column):
-    conditions, values = [], []
-    for key, value in ids.items():
-        conditions.append(df[column] == key)
-        values.append(value)
-    return conditions, values
-
-
-def create_stages_conditions(df, ids):
+def create_conditions(df, ids, columns):
     conditions = []
     values = []
     for key, value in ids.items():
-        conditions.append((df["Tournament ID"] == key[0]) & (df["Stage"] == key[1]))
+        if len(columns) > 1:
+            compound_condition = [df[columns[i]] == key[i] for i in range(len(key))]
+            conditions.append(np.logical_and.reduce(compound_condition))
+        else:
+            conditions.append(df[columns[0]] == key)
         values.append(value)
     return conditions, values
 
-def create_match_types_conditions(df, ids):
-    conditions = []
-    values = []
-    for key, value in ids.items():
-        conditions.append((df["Tournament ID"] == key[0]) & (df["Stage ID"] == key[1]) & (df["Match Type"] == key[2]))
-        values.append(value)
-    return conditions, values
 
-def create_matches_conditions(df, ids):
-    conditions = []
-    values = []
-    for key, value in ids.items():
-        conditions.append((df["Tournament ID"] == key[0]) & (df["Stage ID"] == key[1]) & (df["Match Type ID"] == key[2]) & (df["Match Name"] == key[3]))
-        values.append(value)
-    return conditions, values
-
-async def process_column(pool, df, column, id_name, table_name, value_name):
-    values = df[column].unique().tolist()
+async def process_column(pool, df, df_column, id_name, table_name, table_column_name):
+    values = df[df_column].unique().tolist()
     ids = await asyncio.gather(
-        *(retrieve_primary_key(pool, id_name, table_name, value_name, value) for value in values if pd.notna(value))
+        *(retrieve_primary_key(pool, id_name, table_name, table_column_name, [value]) for value in values if pd.notna(value))
     )
     ids = flatten_list_of_dicts(ids)
-    conditions, result_values = create_conditions(df, ids, column)
-    df[f"{column} ID"] = np.select(conditions, result_values)
+    conditions, result_values = create_conditions(df, ids, [df_column])
+    df[f"{df_column} ID"] = np.select(conditions, result_values)
     if table_name == "players":
-        df[f"{column} ID"] = df[f"{column} ID"].astype("UInt32")
+        df[f"{df_column} ID"] = df[f"{df_column} ID"].astype("UInt32")
     else:
-        df[f"{column} ID"] = df[f"{column} ID"].astype("UInt16")
+        df[f"{df_column} ID"] = df[f"{df_column} ID"].astype("UInt16")
 
 async def process_tournaments_stages_match_types_matches(pool, df, year):
     if "Tournament" in df:
         tournaments = df["Tournament"].unique().tolist()
         tournament_ids = await asyncio.gather(
-            *(retrieve_primary_key(pool, "tournament_id", "tournaments", "tournament", tournament, year)
+            *(retrieve_primary_key(pool, "tournament_id", "tournaments", "tournament", [tournament], year)
                 for tournament in tournaments)
             )
         tournament_ids = flatten_list_of_dicts(tournament_ids)
-        conditions, values = create_conditions(df, tournament_ids, "Tournament")
+        columns = ["Tournament"]
+        conditions, values = create_conditions(df, tournament_ids, columns)
         df["Tournament ID"] = np.select(conditions, values)
         if "Stage" in df:
             stages = df[["Tournament ID", "Stage"]].drop_duplicates()
             tuples = create_tuples(stages)
             stage_ids = await asyncio.gather(
-                *(retrieve_primary_key(pool, "stage_id", "stages", "stage", (tournament_id, stage), year) 
+                *(retrieve_primary_key(pool, "stage_id", "stages", "stage", [stage, tournament_id], year) 
                     for tournament_id, stage in tuples)
                     )
             stage_ids = flatten_list_of_dicts(stage_ids)
-            conditions, values = create_stages_conditions(df, stage_ids)
+            columns = ["Stage", "Tournament ID"]
+            conditions, values = create_conditions(df, stage_ids, columns)
             df["Stage ID"] = np.select(conditions, values)
             if "Match Type" in df:
                 match_types = df[["Tournament ID", "Stage ID", "Match Type"]].drop_duplicates()
                 tuples = create_tuples(match_types)
                 match_types_ids = await asyncio.gather(
-                    *(retrieve_primary_key(pool, "match_type_id", "match_types", "match_type", (tournament_id, stage_id, match_type), year) 
+                    *(retrieve_primary_key(pool, "match_type_id", "match_types", "match_type", [match_type, tournament_id, stage_id], year) 
                         for tournament_id, stage_id, match_type in tuples)
                         )
+                columns = ["Match Type", "Tournament ID", "Stage ID"]
                 match_types_ids = flatten_list_of_dicts(match_types_ids)
-                conditions, values = create_match_types_conditions(df, match_types_ids)
+                conditions, values = create_conditions(df, match_types_ids, columns)
                 df["Match Type ID"] = np.select(conditions, values)
             if "Match Name" in df:
                 matches = df[["Tournament ID", "Stage ID", "Match Type ID", "Match Name"]].drop_duplicates()
                 tuples = create_tuples(matches)
                 matches_id = await asyncio.gather(
-                    *(retrieve_primary_key(pool, "match_id", "matches", "match", (tournament_id, stage_id, match_type_id, match_name), year)
+                    *(retrieve_primary_key(pool, "match_id", "matches", "match", [match_name, tournament_id, stage_id, match_type_id], year)
                         for tournament_id, stage_id, match_type_id, match_name in tuples)
                         )
-                matches_id = flatten_list_of_dicts(matches_id)
-                conditions, values = create_matches_conditions(df, matches_id)
+                columns = ["Match Name", "Tournament ID", "Stage ID", "Match Type ID"]
+                matches_ids = flatten_list_of_dicts(matches_id)
+                conditions, values = create_conditions(df, matches_ids, columns)
                 df["Match ID"] = np.select(conditions, values)
 
 async def process_teams(pool, df):
@@ -662,38 +644,38 @@ async def process_csv_file(csv_file, year, dfs):
     file_name = csv_file.split("/")[-1]
     print(file_name, year)
     match file_name:
-        # case "draft_phase.csv":
-        #     await process_drafts(csv_file, file_name, year, dfs) #good
+        case "draft_phase.csv":
+            await process_drafts(csv_file, file_name, year, dfs)
         case "eco_rounds.csv":
             await process_eco_rounds(csv_file, file_name, year, dfs)
-        # case "eco_stats.csv": 
-        #     await process_eco_stats(csv_file, file_name, year, dfs)
-        # case "kills.csv":
-        #     await process_kills(csv_file, file_name, year, dfs)
-        # case "kills_stats.csv":
-        #     await process_kills_stats(csv_file, file_name, year, dfs)
-        # case "maps_played.csv":
-        #     await process_maps_played(csv_file, file_name, year, dfs)
-        # case "maps_scores.csv":
-        #     await process_maps_scores(csv_file, file_name, year, dfs)
-        # case "overview.csv":
-        #     await process_overview(csv_file, file_name, year, dfs)
-        # case "rounds_kills.csv":
-        #     await process_rounds_kills(csv_file, file_name, year, dfs)
-        # case "scores.csv":
-        #     await process_scores(csv_file, file_name, year, dfs)
-        # case "win_loss_methods_count.csv":
-        #     await process_win_loss_methods_count(csv_file, file_name, year, dfs)
-        # case "win_loss_methods_round_number.csv":
-        #     await process_win_loss_methods_round_number(csv_file, file_name, year, dfs)
-        # case "agents_pick_rates.csv":
-        #     await process_agents_pick_rates(csv_file, file_name, year, dfs)
-        # case "maps_stats.csv":
-        #     await process_maps_stats(csv_file, file_name, year, dfs)
-        # case "teams_picked_agents.csv":
-        #     await process_teams_picked_agents(csv_file, file_name, year, dfs)
-        # case "players_stats.csv":
-        #     await process_players_stats(csv_file, file_name, year, dfs)
+        case "eco_stats.csv": 
+            await process_eco_stats(csv_file, file_name, year, dfs)
+        case "kills.csv":
+            await process_kills(csv_file, file_name, year, dfs)
+        case "kills_stats.csv":
+            await process_kills_stats(csv_file, file_name, year, dfs)
+        case "maps_played.csv":
+            await process_maps_played(csv_file, file_name, year, dfs)
+        case "maps_scores.csv":
+            await process_maps_scores(csv_file, file_name, year, dfs)
+        case "overview.csv":
+            await process_overview(csv_file, file_name, year, dfs)
+        case "rounds_kills.csv":
+            await process_rounds_kills(csv_file, file_name, year, dfs)
+        case "scores.csv":
+            await process_scores(csv_file, file_name, year, dfs)
+        case "win_loss_methods_count.csv":
+            await process_win_loss_methods_count(csv_file, file_name, year, dfs)
+        case "win_loss_methods_round_number.csv":
+            await process_win_loss_methods_round_number(csv_file, file_name, year, dfs)
+        case "agents_pick_rates.csv":
+            await process_agents_pick_rates(csv_file, file_name, year, dfs)
+        case "maps_stats.csv":
+            await process_maps_stats(csv_file, file_name, year, dfs)
+        case "teams_picked_agents.csv":
+            await process_teams_picked_agents(csv_file, file_name, year, dfs)
+        case "players_stats.csv":
+            await process_players_stats(csv_file, file_name, year, dfs)
     
 
 async def process_csv_files(csv_files, year, dfs):
