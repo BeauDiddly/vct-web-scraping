@@ -1,70 +1,50 @@
 from Connect.execute_query import execute_query
-import asyncpg
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 async def retrieve_primary_key(pool, primary_key, table, column_name, values, year = None):
+    if table not in ['matches', 'match_types', 'stages', 'tournaments', 'players', 'teams', 'maps', 'agents']:
+        raise ValueError("Invalid table name")
+    
+    if column_name not in ["tournament", "stage", "match_type", "match", "team", "player", "agent", "map"]:
+        raise ValueError("Invalid column name")
+    
     async with pool.acquire() as conn:
+        parameter_index = 2
+        query = f"SELECT {primary_key} FROM {table} WHERE {column_name} = $1"
+        data = [values[0]]
+        if table in ["matches", "match_types", "stages"]:
+            query += f" AND tournament_id = ${parameter_index}"
+            data.append(values[1])  # Assumes values is a tuple/list
+            parameter_index += 1
+
+        if table in ["matches", "match_types"]:
+            query += f" AND stage_id = ${parameter_index}"
+            data.append(values[2])
+            parameter_index += 1
+
         if table == "matches":
-            tournament_id, stage_id, match_type_id, match = values
-            query = """
-                    SELECT {} FROM {} WHERE {} = $1 AND tournament_id = $2 AND stage_id = $3 AND match_type_id = $4 AND year = $5;
-                    """.format(primary_key, table, column_name)
-            data = (match, tournament_id, stage_id, match_type_id, year)
-        elif table == "match_types":
-            tournament_id, stage_id, match_type = values
-            query = """
-                    SELECT {} FROM {} WHERE {} = $1 AND tournament_id = $2 AND stage_id = $3 and year = $4;
-                    """.format(primary_key, table, column_name)
-            data = (match_type, tournament_id, stage_id, year)
-        elif table == "stages":
-            tournament_id, stage = values
-            query = """
-                    SELECT {} FROM {} WHERE {} = $1 AND tournament_id = $2 AND year = $3;
-                    """.format(primary_key, table, column_name)
-            data = (stage, tournament_id, year)
+            query += f" AND match_type_id = ${parameter_index}"
+            data.append(values[3])
+            parameter_index += 1
+
+        if table in ["matches", "match_types", "stages", "tournaments"]:
+            query += f" AND year = ${parameter_index}"
+            data.append(int(year))
+        if table not in ["teams", "players", "maps", "agents"]:
+            data = tuple(data)
+        query += ";"
+        data = tuple(data)
+        if len(values) > 1:
+            values = tuple(values)
         else:
-            if table == "tournaments":
-                tournament = values
-                query = """
-                        SELECT {} FROM {} WHERE {} = $1 AND year = $2;
-                        """.format(primary_key, table, column_name)
-                data = (tournament, year)
-            elif table == "players":
-                value = values
-                query = """
-                        SELECT {} FROM {} WHERE {} = $1;
-                        """.format(primary_key, table, column_name)
-                data = (value, )
-            elif table == "teams":
-                value = values
-                data = (value, )
-                query = """
-                        SELECT {} FROM {} WHERE {} = $1;
-                        """.format(primary_key, table, column_name)
-            elif table == "maps":
-                value = values
-                query = """
-                        SELECT {} FROM {} WHERE {} = $1;
-                        """.format(primary_key, table, column_name)
-                data = (value,)
-            elif table == "agents":
-                value = values
-                query = """
-                        SELECT {} FROM {} WHERE {} = $1;
-                        """.format(primary_key, table, column_name)
-                data = (value,)
+            values = values[0]
         try:
             result = await conn.fetchval(query, *data)
-        except:
-            print(table)
-            print(data)
-        if result:
-            return {values: result} 
-        else:
-            print(table)
-            print(data)
+            return {values: result} if result else None
+        except Exception as e:
+            print(query)
+            logger.error(f"Error querying {table} with data {data} from value: {values}: {str(e)}")
             return None
-    # if result:
-    #     return result[0]
-    # else:
-    #     print(column_value, primary_key, table, column_name, tournament_id, stage_id, match_type_id)
-    #     return ""
