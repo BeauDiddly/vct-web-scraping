@@ -1,4 +1,5 @@
 from process_df.process_df import reorder_columns
+from io import StringIO
 import pandas as pd
 import asyncio
 
@@ -39,19 +40,27 @@ def add_players(df, engine):
    df.to_sql("players", engine, index=False, if_exists="append")
 
 
-async def add_data_helper(dfs_dict, file_name, engine):
+async def add_data_helper(dfs_dict, file_name, curr):
    table_name = file_name.split(".")[0]
    main_df = dfs_dict["main"]
    agents_df = dfs_dict["agents"]
    teams_df = dfs_dict["teams"]
-   main_df.to_sql(table_name, engine, index=False, if_exists="append", chunksize=10000)
+   if "match_id" in main_df:
+      print(main_df[main_df["match_id"] == 0])
+   buffer = StringIO()
+   main_df.to_csv(buffer, header=False, index=False)
+   buffer.seek(0)
+   curr.copy_from(buffer, table_name, sep=",")
+   # main_df.to_sql(table_name, engine, index=False, if_exists="append", chunksize=10000)
    if len(agents_df.index) != 0:
-      agents_df.to_sql(f"{table_name}_agents", engine, index=False, if_exists="append", chunksize=10000)
+      curr.copy_from(buffer, f"{table_name}_agents", sep=",")
+      # agents_df.to_sql(f"{table_name}_agents", engine, index=False, if_exists="append", chunksize=10000)
    if len(teams_df.index) != 0:
-      teams_df.to_sql(f"{table_name}_teams", engine, index=False, if_exists="append", chunksize=10000)
+      curr.copy_from(buffer, f"{table_name}_teams", sep=",")
+      # teams_df.to_sql(f"{table_name}_teams", engine, index=False, if_exists="append", chunksize=10000)
 
 
-async def add_data(combined_dfs, engine):
-   asyncio.gather(
-      *(add_data_helper(dfs_dict, file_name, engine) for file_name, dfs_dict in combined_dfs.items())
+async def add_data(combined_dfs, curr):
+   await asyncio.gather(
+      *(add_data_helper(dfs_dict, file_name, curr) for file_name, dfs_dict in combined_dfs.items())
    )
