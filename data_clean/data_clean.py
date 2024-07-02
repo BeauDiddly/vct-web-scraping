@@ -125,6 +125,12 @@ def fixed_match_names(df):
         df["Match Name"] = df["Match Name"].map(misnamed_match_names).fillna(df["Match Name"])
     return df
 
+def get_missing_team(row, col):
+    teams = row['Match Name'].split(' vs ')
+    team = row[col]
+    missing_team = teams[1] if teams[0] == team else teams[0]
+    return missing_team
+
 def convert_nan_players_teams(df):
     if "Tournament" in df and "Stage" in df and "Match Type" in df and "Player" in df and "Team" in df or "Teams" in df:
         team_col = "Team" if "Team" in df else "Teams"
@@ -255,6 +261,15 @@ def convert_nan_players_teams(df):
 
         filtered_indices = df.index[howie_2_condition]
         df.loc[filtered_indices, team_col] = "Trident Esports"
+
+    if "Eliminated Team" and "Eliminator Team" in df:
+        null_rows = df[df["Eliminated Team"].isna()]
+        eliminated_teams = null_rows.apply(lambda row: get_missing_team(row, "Eliminator Team"), axis=1)
+        df.loc[null_rows.index, "Eliminated Team"] = eliminated_teams
+
+        null_rows = df[df["Eliminator Team"].isna()]
+        eliminator_teams = null_rows.apply(lambda row: get_missing_team(row, "Eliminated Team"), axis=1)
+        df.loc[null_rows.index, "Eliminator Team"] = eliminator_teams
 
     return df
 
