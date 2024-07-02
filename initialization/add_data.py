@@ -39,25 +39,22 @@ def add_teams(df, engine):
 def add_players(df, engine):
    df.to_sql("players", engine, index=False, if_exists="append")
 
+async def copy_df_to_db(df, curr, table):
+   if len(df.index) != 0:
+      buffer = StringIO()
+      df.to_csv(buffer, header=False, index=False)
+      buffer.seek(0)  # Move to the start of the buffer
+      curr.copy_from(buffer, table, null="", sep=",")
+      buffer.close()  # Close the buffer when done
 
 async def add_data_helper(dfs_dict, file_name, curr):
    table_name = file_name.split(".")[0]
    main_df = dfs_dict["main"]
    agents_df = dfs_dict["agents"]
    teams_df = dfs_dict["teams"]
-   if "match_id" in main_df:
-      print(main_df[main_df["match_id"] == 0])
-   buffer = StringIO()
-   main_df.to_csv(buffer, header=False, index=False)
-   buffer.seek(0)
-   curr.copy_from(buffer, table_name, sep=",")
-   # main_df.to_sql(table_name, engine, index=False, if_exists="append", chunksize=10000)
-   if len(agents_df.index) != 0:
-      curr.copy_from(buffer, f"{table_name}_agents", sep=",")
-      # agents_df.to_sql(f"{table_name}_agents", engine, index=False, if_exists="append", chunksize=10000)
-   if len(teams_df.index) != 0:
-      curr.copy_from(buffer, f"{table_name}_teams", sep=",")
-      # teams_df.to_sql(f"{table_name}_teams", engine, index=False, if_exists="append", chunksize=10000)
+   await copy_df_to_db(main_df, curr, table_name)
+   await copy_df_to_db(agents_df, curr, f"{table_name}_agents")
+   await copy_df_to_db(teams_df, curr, f"{table_name}_teams")
 
 
 async def add_data(combined_dfs, curr):
