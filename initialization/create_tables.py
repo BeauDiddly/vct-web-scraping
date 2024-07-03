@@ -444,7 +444,7 @@ def create_players_stats_table(curr):
          player_id INT REFERENCES players(player_id),
          rounds_played INT,
          rating DECIMAL,
-         acs INT,
+         acs DECIMAL,
          kd DECIMAL,
          kast DECIMAL,
          adr DECIMAL,
