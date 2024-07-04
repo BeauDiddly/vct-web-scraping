@@ -25,7 +25,6 @@ async def main():
 
     await process_years(csv_files_w_years, dfs)
     combine_dfs(combined_dfs, dfs)
-    # combined_dfs["players_stats.csv"]["main"][combined_dfs["players_stats.csv"]["main"]["year"].isna()].to_csv("test.csv")
     await process_players_stats_agents(combined_dfs, combined_dfs["players_stats.csv"]["main"])
     await process_players_stats_teams(combined_dfs, combined_dfs["players_stats.csv"]["main"])
 
