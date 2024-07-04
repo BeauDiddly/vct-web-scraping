@@ -1,4 +1,4 @@
-from Connect.connect import engine
+from Connect.connect import connect
 from initialization.add_data import *
 from find_csv_files.find_csv_files import find_csv_files
 from process_df.process_df import process_years, combine_dfs, process_players_stats_agents, process_players_stats_teams
@@ -9,7 +9,7 @@ import os
 async def main():
     start_time = time.time()
     years = [2021, 2022, 2023, 2024]
-    sql_alchemy_engine = engine()
+    conn, curr = connect()
 
     csv_files = [find_csv_files(f"{os.getcwd()}/vct_{year}/players_stats", "players_stats", year) for year in years]
     print(csv_files)
@@ -25,12 +25,12 @@ async def main():
 
     await process_years(csv_files_w_years, dfs)
     combine_dfs(combined_dfs, dfs)
-
+    # combined_dfs["players_stats.csv"]["main"][combined_dfs["players_stats.csv"]["main"]["year"].isna()].to_csv("test.csv")
     await process_players_stats_agents(combined_dfs, combined_dfs["players_stats.csv"]["main"])
     await process_players_stats_teams(combined_dfs, combined_dfs["players_stats.csv"]["main"])
 
 
-    await add_data(combined_dfs, sql_alchemy_engine)
+    await add_data(combined_dfs, curr)
 
     end_time = time.time()
     elasped_time = end_time - start_time

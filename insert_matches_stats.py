@@ -1,4 +1,4 @@
-from Connect.connect import engine
+from Connect.connect import connect
 from initialization.add_data import *
 from find_csv_files.find_csv_files import find_csv_files
 from process_df.process_df import process_years, combine_dfs, process_overview_agents, process_kills_stats_agents
@@ -9,7 +9,7 @@ import asyncio
 async def main():
     start_time = time.time()
     years = {2021, 2022, 2023, 2024}
-    sql_alchemy_engine = engine()
+    conn, curr = connect()
 
     csv_files = [find_csv_files(f"{os.getcwd()}/vct_{year}/matches", "matches", year) for year in years]
     print(csv_files)
@@ -19,22 +19,23 @@ async def main():
     for path_list in csv_files:
         for file_path in path_list:
             file_name = file_path.split("/")[-1]
-            dfs[file_name] = {"agents": [], "teams": [], "main": []}
-            combined_dfs[file_name] = {"agents": pd.DataFrame(), "teams": pd.DataFrame(), "main": pd.DataFrame()}
+            if file_name != "team_mapping.csv":
+                dfs[file_name] = {"agents": [], "teams": [], "main": []}
+                combined_dfs[file_name] = {"agents": pd.DataFrame(), "teams": pd.DataFrame(), "main": pd.DataFrame()}
 
     await process_years(csv_files_w_years, dfs)
-
     combine_dfs(combined_dfs, dfs)
-    # await process_overview_agents(combined_dfs, combined_dfs["overview.csv"]["main"])
-    # await process_kills_stats_agents(combined_dfs, combined_dfs["kills_stats.csv"]["main"])
-    await add_data(combined_dfs, sql_alchemy_engine)
-
+    await process_overview_agents(combined_dfs, combined_dfs["overview.csv"]["main"])
+    await process_kills_stats_agents(combined_dfs, combined_dfs["kills_stats.csv"]["main"])
+    await add_data(combined_dfs, curr)
 
     end_time = time.time()
     elasped_time = end_time - start_time
     hours, remainder = divmod(elasped_time, 3600)
     minutes, seconds = divmod(remainder, 60)
     print(f"Time: {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds")
+    conn.commit()
+    curr.close()
 
 if __name__ == '__main__':
     asyncio.run(main())
