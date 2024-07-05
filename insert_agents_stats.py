@@ -1,4 +1,3 @@
-from Connect.connect import connect
 from initialization.add_data import *
 from find_csv_files.find_csv_files import find_csv_files
 from process_df.process_df import process_years, combine_dfs
@@ -9,7 +8,6 @@ import time
 async def main():
     start_time = time.time()
     years = [2021, 2022, 2023, 2024]
-    conn, curr = connect()
     csv_files = [find_csv_files(f"{os.getcwd()}/vct_{year}/agents", "agents", year) for year in years]
     print(csv_files)
     combined_dfs = {}
@@ -25,7 +23,7 @@ async def main():
     combine_dfs(combined_dfs, dfs)
 
 
-    await add_data(combined_dfs, curr)
+    await add_data(combined_dfs)
 
     end_time = time.time()
     elasped_time = end_time - start_time

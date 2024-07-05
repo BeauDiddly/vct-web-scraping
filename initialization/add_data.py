@@ -1,6 +1,8 @@
 from process_df.process_df import reorder_columns
 from io import StringIO
+from Connect.connect import create_db_url
 import pandas as pd
+import asyncpg
 import asyncio
 
 def add_agents(engine):
@@ -39,25 +41,39 @@ def add_teams(df, engine):
 def add_players(df, engine):
    df.to_sql("players", engine, index=False, if_exists="append")
 
-async def copy_df_to_db(df, curr, table):
+async def copy_df_to_db(df, pool, table):
    if len(df.index) != 0:
-      buffer = StringIO()
-      df.to_csv(buffer, header=False, index=False)
-      buffer.seek(0)  # Move to the start of the buffer
-      curr.copy_from(buffer, table, null="", sep=",")
-      buffer.close()  # Close the buffer when done
+      async with pool.acquire() as conn:
+         buffer = StringIO()
+         df.to_csv(buffer, header=False, index=False)
+         # buffer.seek(0)
+         csv_data = buffer.getvalue().encode('utf-8')
+         async def byte_generator():
+            yield csv_data
+         buffer.close() 
+         # curr.copy_from(buffer, table, null="", sep=",")
+         await conn.copy_to_table(
+                table,
+                source=byte_generator(),
+                columns=list(df.columns),
+                delimiter=',',
+                null='',  # This is how empty values are represented in your DataFrame to CSV conversion
+                encoding='utf-8'
+            )
 
-async def add_data_helper(dfs_dict, file_name, curr):
+async def add_data_helper(dfs_dict, file_name, pool):
    table_name = file_name.split(".")[0]
    main_df = dfs_dict["main"]
    agents_df = dfs_dict["agents"]
    teams_df = dfs_dict["teams"]
-   await copy_df_to_db(main_df, curr, table_name)
-   await copy_df_to_db(agents_df, curr, f"{table_name}_agents")
-   await copy_df_to_db(teams_df, curr, f"{table_name}_teams")
+   await copy_df_to_db(main_df, pool, table_name)
+   await copy_df_to_db(agents_df, pool, f"{table_name}_agents")
+   await copy_df_to_db(teams_df, pool, f"{table_name}_teams")
 
 
-async def add_data(combined_dfs, curr):
-   await asyncio.gather(
-      *(add_data_helper(dfs_dict, file_name, curr) for file_name, dfs_dict in combined_dfs.items())
-   )
+async def add_data(combined_dfs):
+   db_url = create_db_url()
+   async with asyncpg.create_pool(db_url) as pool:
+      await asyncio.gather(
+         *(add_data_helper(dfs_dict, file_name, pool) for file_name, dfs_dict in combined_dfs.items())
+      )
