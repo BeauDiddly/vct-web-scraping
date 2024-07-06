@@ -1,8 +1,5 @@
-from retrieve.retrieve import retrieve_primary_key
-from Connect.connect import create_db_url
 import numpy as np
 import pandas as pd
-import asyncpg
 import asyncio
 
 
