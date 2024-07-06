@@ -1,7 +1,7 @@
-from initialization.add_data import *
+from initialization.add_data import add_reference_data, add_agents, add_maps
 from Connect.connect import connect, engine
 from initialization.create_tables import create_all_tables
-from process_df.process_df import csv_to_df, process_tournaments_stages_match_types, get_upper_round_id, process_tournaments, process_stages, process_match_types, process_matches, process_teams_ids, process_players_ids
+from process.process_df import csv_to_df, process_tournaments_stages_match_types, get_upper_round_id, process_tournaments, process_stages, process_match_types, process_matches, process_teams_ids, process_players_ids
 
 def main():
     conn, curr = connect()
@@ -22,12 +22,12 @@ def main():
     matches_df = process_matches(all_matches, upper_round_id)
     teams_df = process_teams_ids(all_teams_id)
     players_df = process_players_ids(all_players_id)
-    add_tournaments(tournaments_df, sql_alchemy_engine)
-    add_stages(stages_df, sql_alchemy_engine)
-    add_match_types(match_types_df, sql_alchemy_engine)
-    add_matches(matches_df, sql_alchemy_engine)
-    add_teams(teams_df, sql_alchemy_engine)
-    add_players(players_df, sql_alchemy_engine)
+    add_reference_data(tournaments_df, "tournaments", sql_alchemy_engine)
+    add_reference_data(stages_df, "stages", sql_alchemy_engine)
+    add_reference_data(match_types_df, "match_types", sql_alchemy_engine)
+    add_reference_data(matches_df, "matches", sql_alchemy_engine)
+    add_reference_data(teams_df, "teams", sql_alchemy_engine)
+    add_reference_data(players_df, "players", sql_alchemy_engine)
     curr.close()
     conn.close()
 

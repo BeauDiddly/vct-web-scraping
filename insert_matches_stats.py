@@ -1,9 +1,12 @@
 from initialization.add_data import *
 from find_csv_files.find_csv_files import find_csv_files
-from process_df.process_df import process_years, combine_dfs, process_overview_agents, process_kills_stats_agents
+from process.process_df import process_years, combine_dfs, process_overview_agents, process_kills_stats_agents
+from process.process_records import create_reference_ids_dict
+from retrieve.retrieve import get_all_reference_ids
 import time
 import os
 import asyncio
+import asyncpg
 
 async def main():
     start_time = time.time()
@@ -20,11 +23,23 @@ async def main():
             if file_name != "team_mapping.csv":
                 dfs[file_name] = {"agents": [], "teams": [], "main": []}
                 combined_dfs[file_name] = {"agents": pd.DataFrame(), "teams": pd.DataFrame(), "main": pd.DataFrame()}
-
-    await process_years(csv_files_w_years, dfs)
+    reference_ids = {
+        "tournaments": {2021: {}, 2022: {}, 2023: {}, 2024: {}},
+        "stages": {2021: {}, 2022: {}, 2023: {}, 2024: {}},
+        "match_types": {2021: {}, 2022: {}, 2023: {}, 2024: {}},
+        "matches": {2021: {}, 2022: {}, 2023: {}, 2024: {}},
+        "players": {},
+        "teams": {},
+        "maps": {},
+        "agents": {}}
+    
+    await asyncio.gather(
+        *(create_reference_ids_dict(reference_ids, year) for year in years)
+    )
+    await process_years(csv_files_w_years, dfs, reference_ids)
     combine_dfs(combined_dfs, dfs)
-    await process_overview_agents(combined_dfs, combined_dfs["overview.csv"]["main"])
-    await process_kills_stats_agents(combined_dfs, combined_dfs["kills_stats.csv"]["main"])
+    await process_overview_agents(combined_dfs, combined_dfs["overview.csv"]["main"], reference_ids)
+    await process_kills_stats_agents(combined_dfs, combined_dfs["kills_stats.csv"]["main"], reference_ids)
     await add_data(combined_dfs)
 
     end_time = time.time()
