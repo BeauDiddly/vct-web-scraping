@@ -1,4 +1,4 @@
-from process_df.process_df import reorder_columns
+from process.process_df import reorder_columns
 from io import StringIO
 from Connect.connect import create_db_url
 import pandas as pd
@@ -23,41 +23,24 @@ def add_maps(engine):
    df.to_sql("maps", engine, index=False, if_exists="append")
 
 
-def add_tournaments(df, engine):
-   df.to_sql("tournaments", engine, index=False, if_exists = "append")
-    
-def add_stages(df, engine):
-   df.to_sql("stages", engine, index=False, if_exists="append")
-
-def add_match_types(df, engine):
-   df.to_sql("match_types", engine, index=False, if_exists="append")
-
-def add_matches(df, engine):
-   df.to_sql("matches", engine, index=False, if_exists="append")
-
-def add_teams(df, engine):
-   df.to_sql("teams", engine, index=False, if_exists="append")
-
-def add_players(df, engine):
-   df.to_sql("players", engine, index=False, if_exists="append")
+def add_reference_data(df, table_name, engine):
+   df.to_sql(table_name, engine, index=False, if_exists = "append")
 
 async def copy_df_to_db(df, pool, table):
    if len(df.index) != 0:
       async with pool.acquire() as conn:
          buffer = StringIO()
          df.to_csv(buffer, header=False, index=False)
-         # buffer.seek(0)
          csv_data = buffer.getvalue().encode('utf-8')
          async def byte_generator():
             yield csv_data
          buffer.close() 
-         # curr.copy_from(buffer, table, null="", sep=",")
          await conn.copy_to_table(
                 table,
                 source=byte_generator(),
                 columns=list(df.columns),
                 delimiter=',',
-                null='',  # This is how empty values are represented in your DataFrame to CSV conversion
+                null='',
                 encoding='utf-8'
             )
 
