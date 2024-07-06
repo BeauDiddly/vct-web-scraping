@@ -48,6 +48,7 @@ def main():
             df = remove_tabs_and_newlines(df)
             df = fixed_team_names(df)
             df = fixed_player_names(df)
+            df = convert_nan_players_teams(df)
             df = convert_to_str(df)
             agents_result[year][file_name] = df
     for year, dataframes in agents_result.items():

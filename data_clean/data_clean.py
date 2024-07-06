@@ -262,6 +262,15 @@ def convert_nan_players_teams(df):
         filtered_indices = df.index[howie_2_condition]
         df.loc[filtered_indices, team_col] = "Trident Esports"
 
+    if "Total Wins By Map" in df:
+        tbd_condition = (df["Tournament"] == "Champions Tour Europe Stage 1: Challengers 2") & \
+                        (df["Stage"].isin(["Open Qualifier", "All Stages"])) & \
+                        (df["Match Type"].isin(["Round of 256", "All Match Types"])) & \
+                        (df["Map"] == "Ascent") & \
+                        (df["Team"].isna())
+        filtered_indices = df.index[tbd_condition]
+        df.loc[filtered_indices, "Team"] = "TBD"
+
     if "Eliminated Team" and "Eliminator Team" in df:
         null_rows = df[df["Eliminated Team"].isna()]
         eliminated_teams = null_rows.apply(lambda row: get_missing_team(row, "Eliminator Team"), axis=1)
