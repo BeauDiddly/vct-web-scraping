@@ -47,7 +47,66 @@ logger = logging.getLogger(__name__)
 #             print(query)
 #             logger.error(f"Error querying {table} with data {data} from value: {values}: {str(e)}")
 #             return None
-        
+
+async def get_all_reference_names(pool, table, id_column, name_column, ids):
+    if table not in ['matches', 'match_types', 'stages', 'tournaments', 'players', 'teams', 'maps', 'agents']:
+        raise ValueError("Invalid table name")
+
+    async with pool.acquire() as conn:
+        ids = tuple(ids)
+        query = f"SELECT {name_column} FROM {table} WHERE {id_column} IN {ids};"
+        try:
+            result = await conn.fetch(query)
+            return result
+        except Exception as e:
+            print(query)
+            logger.error(f"Error querying {table}: {str(e)}")
+            return None
+            
+async def get_distinct_reference_ids(pool, table, id_column, year):
+    if table not in ["agents_pick_rates", "draft_phase", "eco_rounds", "eco_stats", "kills", "kills_stats", "kills_stats_agents",
+                     "maps_played", "maps_scores", "maps_stats", "overview", "overview_agents", "players_stats", "players_stats_agents",
+                     "players_stats_teams", "rounds_kills", "scores", "teams_picked_agents", "win_loss_methods_count", "win_loss_methods_round_number"]:
+        print(table)
+        raise ValueError("Invalid table name") 
+    if id_column not in ["tournament_id", "stage_id", "match_type_id", "match_id", "player_id", "team_id"]:
+        print(id_column)
+        raise ValueError("Invalid ID column name") 
+    
+    async with pool.acquire() as conn:
+        query = f"SELECT DISTINCT {id_column} FROM {table} WHERE year = {year};"
+        try:
+            result = await conn.fetch(query)
+            return result
+        except Exception as e:
+            print(query)
+            logger.error(f"Error querying {table}: {str(e)}")
+            return None
+    
+
+async def get_reference_ids(pool, table, id_column, name_column, names, year):
+    if table not in ['matches', 'match_types', 'stages', 'tournaments', 'players', 'teams', 'maps', 'agents']:
+        raise ValueError("Invalid table name")
+
+    if id_column not in ["tournament_id", "stage_id", "match_type_id", "match_id", "player_id", "team_id"]:
+        print(id_column)
+        raise ValueError("Invalid ID column name") 
+    
+    if name_column not in ["tournament", "stage", "match_type", "match", "player", "team"]:
+        print(name_column)
+        raise ValueError("Invalid column name") 
+
+    async with pool.acquire() as conn:
+        query = f"SELECT {id_column} FROM {table} WHERE {name_column} = ANY($1) AND year = {year};"
+        try:
+            result = await conn.fetch(query, names)
+            return result
+        except Exception as e:
+            print(query)
+            logger.error(f"Error querying {table}: {str(e)}")
+            return None
+    
+
 async def get_all_reference_ids(pool, table, year):
     if table not in ['matches', 'match_types', 'stages', 'tournaments', 'players', 'teams', 'maps', 'agents']:
         raise ValueError("Invalid table name")
