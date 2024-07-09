@@ -3,6 +3,7 @@ from find_csv_files.find_csv_files import find_csv_files
 from process.process_df import process_years, combine_dfs
 from process.process_records import create_reference_ids_dict
 import os
+import asyncpg
 import asyncio
 import time
 
@@ -29,15 +30,16 @@ async def main():
         "maps": {},
         "agents": {}}
     
-    await asyncio.gather(
-        *(create_reference_ids_dict(reference_ids, year) for year in years)
+    db_url = create_db_url()
+    async with asyncpg.create_pool(db_url) as pool:
+        await asyncio.gather(
+        *(create_reference_ids_dict(pool, reference_ids, year) for year in years)
     )
-    await process_years(csv_files_w_years, dfs, reference_ids)
+        await process_years(csv_files_w_years, dfs, reference_ids, pool)
 
-    combine_dfs(combined_dfs, dfs)
+        combine_dfs(combined_dfs, dfs)
 
-
-    await add_data(combined_dfs)
+        await add_data(combined_dfs, pool)
 
     end_time = time.time()
     elasped_time = end_time - start_time

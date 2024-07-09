@@ -5,6 +5,7 @@ from process.process_records import create_reference_ids_dict
 import time
 import asyncio
 import os
+import asyncpg
 
 async def main():
     start_time = time.time()
@@ -29,18 +30,22 @@ async def main():
         "teams": {},
         "maps": {},
         "agents": {}}
-    
-    await asyncio.gather(
-        *(create_reference_ids_dict(reference_ids, year) for year in years)
-    )
 
-    await process_years(csv_files_w_years, dfs, reference_ids)
-    combine_dfs(combined_dfs, dfs)
-    await process_players_stats_agents(combined_dfs, combined_dfs["players_stats.csv"]["main"], reference_ids)
-    await process_players_stats_teams(combined_dfs, combined_dfs["players_stats.csv"]["main"], reference_ids)
+    db_url = create_db_url()
+    async with asyncpg.create_pool(db_url) as pool:
+        await asyncio.gather(
+            *(create_reference_ids_dict(pool, reference_ids, year) for year in years)
+        )
 
+        await process_years(csv_files_w_years, dfs, reference_ids, pool)
+        combine_dfs(combined_dfs, dfs)
+        tasks = [
+            asyncio.create_task(process_players_stats_agents(combined_dfs, combined_dfs["players_stats.csv"]["main"], reference_ids)),
+            asyncio.create_task(process_players_stats_teams(combined_dfs, combined_dfs["players_stats.csv"]["main"], reference_ids))
+        ]
+        await asyncio.gather(*tasks)
 
-    await add_data(combined_dfs)
+        await add_data(combined_dfs, pool)
 
     end_time = time.time()
     elasped_time = end_time - start_time

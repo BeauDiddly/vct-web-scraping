@@ -2,7 +2,6 @@ from initialization.add_data import *
 from find_csv_files.find_csv_files import find_csv_files
 from process.process_df import process_years, combine_dfs, process_overview_agents, process_kills_stats_agents
 from process.process_records import create_reference_ids_dict
-from retrieve.retrieve import get_all_reference_ids
 import time
 import os
 import asyncio
@@ -16,6 +15,8 @@ async def main():
     print(csv_files)
     combined_dfs = {}
     dfs = {}
+    db_url = create_db_url()
+
     csv_files_w_years = {year: csv_files[i] for i, year in enumerate(years)}
     for path_list in csv_files:
         for file_path in path_list:
@@ -33,14 +34,20 @@ async def main():
         "maps": {},
         "agents": {}}
     
-    await asyncio.gather(
-        *(create_reference_ids_dict(reference_ids, year) for year in years)
-    )
-    await process_years(csv_files_w_years, dfs, reference_ids)
-    combine_dfs(combined_dfs, dfs)
-    await process_overview_agents(combined_dfs, combined_dfs["overview.csv"]["main"], reference_ids)
-    await process_kills_stats_agents(combined_dfs, combined_dfs["kills_stats.csv"]["main"], reference_ids)
-    await add_data(combined_dfs)
+    async with asyncpg.create_pool(db_url) as pool:
+
+        await asyncio.gather(
+            *(create_reference_ids_dict(pool, reference_ids, year) for year in years)
+        )
+        await process_years(csv_files_w_years, dfs, reference_ids, pool)
+        combine_dfs(combined_dfs, dfs)
+        tasks = [
+            asyncio.create_task(process_overview_agents(combined_dfs, combined_dfs["overview.csv"]["main"], reference_ids)),
+            asyncio.create_task(process_kills_stats_agents(combined_dfs, combined_dfs["kills_stats.csv"]["main"], reference_ids))
+        ]
+
+        await asyncio.gather(*tasks)
+        await add_data(combined_dfs, pool)
 
     end_time = time.time()
     elasped_time = end_time - start_time
