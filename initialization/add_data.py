@@ -2,7 +2,6 @@ from process.process_df import reorder_columns
 from io import StringIO
 from Connect.connect import create_db_url
 import pandas as pd
-import asyncpg
 import asyncio
 
 def add_agents(engine):
@@ -26,18 +25,19 @@ def add_maps(engine):
 def add_reference_data(df, table_name, engine):
    df.to_sql(table_name, engine, index=False, if_exists = "append")
 
+async def byte_generator(csv_data):
+   yield csv_data
+
 async def copy_df_to_db(df, pool, table):
    if len(df.index) != 0:
       async with pool.acquire() as conn:
          buffer = StringIO()
          df.to_csv(buffer, header=False, index=False)
          csv_data = buffer.getvalue().encode('utf-8')
-         async def byte_generator():
-            yield csv_data
          buffer.close() 
          await conn.copy_to_table(
                 table,
-                source=byte_generator(),
+                source=byte_generator(csv_data),
                 columns=list(df.columns),
                 delimiter=',',
                 null='',
@@ -54,9 +54,7 @@ async def add_data_helper(dfs_dict, file_name, pool):
    await copy_df_to_db(teams_df, pool, f"{table_name}_teams")
 
 
-async def add_data(combined_dfs):
-   db_url = create_db_url()
-   async with asyncpg.create_pool(db_url) as pool:
-      await asyncio.gather(
-         *(add_data_helper(dfs_dict, file_name, pool) for file_name, dfs_dict in combined_dfs.items())
-      )
+async def add_data(combined_dfs, pool):
+   await asyncio.gather(
+      *(add_data_helper(dfs_dict, file_name, pool) for file_name, dfs_dict in combined_dfs.items())
+   )
