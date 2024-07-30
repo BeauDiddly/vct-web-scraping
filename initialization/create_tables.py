@@ -69,20 +69,6 @@ def create_maps_table(curr):
    execute_query(curr, query)
 
 
-# def create_games_table(curr):
-#    query = """
-#    CREATE TABLE IF NOT EXISTS games (
-#       game_id INT PRIMARY KEY,
-#       tournament_id INT REFERENCES tournaments(tournament_id),
-#       stage_id INT REFERENCES stages(stage_id),
-#       match_type_id INT REFERENCES match_types(match_type_id),
-#       match_id INT REFERENCES matches(match_id),
-#       map_id INT REFERENCES maps(map_id),
-#       year INT
-#    );
-#    """
-#    execute_query(curr, query)
-
 def create_teams_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS teams (
@@ -185,10 +171,10 @@ def create_kills_table(curr):
 def create_kills_stats_agents_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS kills_stats_agents (
+         id SERIAL PRIMARY KEY,
          index INT REFERENCES kills_stats(index),
          agent_id INT REFERENCES agents(agent_id),
-         year INT,
-         PRIMARY KEY (index, agent_id, year)
+         year INT
       );
    """
    execute_query(curr, query)
@@ -296,10 +282,10 @@ def create_overview_table(curr):
 def create_overview_agents_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS overview_agents (
+         id SERIAL PRIMARY KEY,
          index INT REFERENCES overview(index),
          agent_id INT REFERENCES agents(agent_id),
-         year INT,
-         PRIMARY KEY (index, agent_id, year)
+         year INT
       );
    """
    execute_query(curr, query)
@@ -470,10 +456,10 @@ def create_players_stats_table(curr):
 def create_players_stats_agents_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS players_stats_agents (
+         id SERIAL PRIMARY KEY,
          index INT REFERENCES players_stats(index),
          agent_id INT REFERENCES agents(agent_id),
-         year INT,
-         PRIMARY KEY (index, agent_id, year)
+         year INT
       );
    """
    execute_query(curr, query)
@@ -481,10 +467,10 @@ def create_players_stats_agents_table(curr):
 def create_players_stats_teams_table(curr):
    query = """
       CREATE TABLE IF NOT EXISTS players_stats_teams (
+         id SERIAL PRIMARY KEY,
          index INT REFERENCES players_stats(index),
          team_id INT REFERENCES teams(team_id),
-         year INT,
-         PRIMARY KEY (index, team_id, year)
+         year INT
       );
    """
    execute_query(curr, query)
@@ -496,7 +482,6 @@ def create_all_tables(curr):
    create_stages_table(curr)
    create_match_types_table(curr)
    create_matches_table(curr)
-   # create_games_table(curr)
    create_agents_table(curr)
    create_maps_table(curr)
    create_teams_table(curr)
