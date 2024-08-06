@@ -44,6 +44,9 @@ misnamed_players = {"luk": "lukzera", "Λero": "Aero", "Playboi Joe": "velis", "
                     "BoBo": "Ender", "1000010": "01000010", "derilasong": "Fuqua", "Arquiza": "rkz", "par scofield": "parscofield", "florance": "flqrance",
                     "stev0r": "stev0rr", "unfaiR aK": "Unfair", "alulba": "aluba", "2": "002", "kETTU": "pATE", "Laika": "Wendigo", "HaoHao": "Howie"}
 
+old_to_new_names_players = {"richzin": "rich", "kAdavra" : "K4DAVRA"}
+
+old_to_new_names_teams = {"Leviatán": "LEVIATÁN", "Nightblood Converse": "Nightblood Gaming", "SDobbies": "Sdobbies"}
 
 misnamed_match_names = {"Gaming Barracks.fi vs Endavant": "Gaming Barracks.fi vs Team Endavant", "IVY vs Endavant": "IVY vs Team Endavant",
                         "Endavant vs EXEN Esports": "Team Endavant vs EXEN Esports", "Endavant vs WLGaming Esports": "Team Endavant vs WLGaming Esports",
@@ -120,16 +123,44 @@ def fixed_player_names(df):
             df[column] = df[column].map(misnamed_players).fillna(df[column])
     return df
 
-def fixed_match_names(df):
-    if "Match Name" in df:
-        df["Match Name"] = df["Match Name"].map(misnamed_match_names).fillna(df["Match Name"])
-    return df
-
 def get_missing_team(row, col):
     teams = row['Match Name'].split(' vs ')
     team = row[col]
     missing_team = teams[1] if teams[0] == team else teams[0]
     return missing_team
+
+def update_team_names(df):
+    columns = ["Team", "Team A", "Team B", "Eliminated Team", "Eliminator Team", "Player Team", "Enemy Team"]
+    for column in columns:
+        if column in df:
+            for old_name, new_name in old_to_new_names_teams.items():
+                old_name_condition = (df[column] == old_name)
+                filtered_indices = df.index[old_name_condition]
+                df.loc[filtered_indices, column] = new_name
+    
+    if "Teams" in df:
+        for old_name, new_name in old_to_new_names_teams.items():
+            filtered_indices = df["Teams"].str.contains(old_name)
+            df.loc[filtered_indices, "Teams"] = df.loc[filtered_indices, "Teams"].str.replace(old_name, new_name)
+    return df 
+
+def update_match_names(df):
+    if "Match Name" in df:
+        for old_name, new_name in old_to_new_names_teams.items():
+            filtered_indices = df["Match Name"].str.contains(old_name)
+            df.loc[filtered_indices, "Match Name"] = df.loc[filtered_indices, "Match Name"].str.replace(old_name, new_name)
+    return df
+
+
+def update_player_names(df):
+    columns = ["Player", "Enemy", "Eliminator", "Eliminated"]
+    for column in columns:
+        if column in df:
+            for old_name, new_name in old_to_new_names_players.items():
+                old_name_condition = (df[column] == old_name)
+                filtered_indices = df.index[old_name_condition]
+                df.loc[filtered_indices, column] = new_name
+    return df 
 
 def convert_nan_players_teams(df):
     if "Tournament" in df and "Stage" in df and "Match Type" in df and "Player" in df and "Team" in df or "Teams" in df:
@@ -315,6 +346,7 @@ def add_missing_player(df, year):
         df.drop_duplicates(inplace=True, subset=["Player", "Player ID"])
         df.reset_index(drop=True, inplace=True)
     return df
+
 
 def add_missing_matches_id(df, year):
     if "Match Name" in df and year == 2021:
