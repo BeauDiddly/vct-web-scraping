@@ -35,11 +35,10 @@ The tables are organized hierarchically to reflect the real-world relationships 
   - tournament: Name of the tournament
   - year: The year the tournament took place
 
-| tournament_id | tournament                                         | year |   |   |
-|---------------|----------------------------------------------------|------|---|---|
-| 560           | Champions Tour Asia-Pacific: Last Chance Qualifier | 2021 |   |   |
-| 292           | Champions Tour Brazil Stage 1: Challengers 1       | 2021 |   |   |
-|               |                                                    |      |   |   |
+| tournament_id | tournament                                         | year |
+|---------------|----------------------------------------------------|------|
+| 560           | Champions Tour Asia-Pacific: Last Chance Qualifier | 2021 | 
+| 292           | Champions Tour Brazil Stage 1: Challengers 1       | 2021 | 
 
 2. Stages
 - Columns :
@@ -48,11 +47,10 @@ The tables are organized hierarchically to reflect the real-world relationships 
   - stage: Name of the stage
   - year: The year the stage took place
 
-| stage_id | tournament_id | stage          | year |   |
-|----------|---------------|----------------|------|---|
-| 2346     | 560           | Main Event     | 2021 |   |
-| 594      | 292           | Open Qualifier | 2021 |   |
-|          |               |                |      |   |
+| stage_id | tournament_id | stage          | year |
+|----------|---------------|----------------|------|
+| 2346     | 560           | Main Event     | 2021 |
+| 594      | 292           | Open Qualifier | 2021 |
 
 3. Match Types
 - Columns :
@@ -66,7 +64,6 @@ The tables are organized hierarchically to reflect the real-world relationships 
 |---------------|---------------|----------|---------------|------|
 | 7577          | 560           | 1096     | Upper Round 1 | 2021 |
 | 2674          | 292           | 596      | Opening (A)   | 2021 |
-|               |               |          |               |      |
 
 4. Matches
 - Columns :
