@@ -13,7 +13,7 @@
 - [Built With](#built_with)
 
 ## About <a name = "about"></a>
-This README provides detailed information about the database initialization process, which involves setting up the database schema and inserting the data. This repostory is also the transformation and loading of the data to the database.
+This README provides detailed information about the database initialization process, which involves setting up the database schema and inserting the data. This is part of the Valorant Champions Tour ETL pipeline. This is the transformation and loading part.
 
 ## Tables <a name = "tables"></a>
 
