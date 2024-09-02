@@ -15,7 +15,7 @@
 
 ## About <a name = "about"></a>
 
-An asynchronous web scraper scraping the 2021 - 2024 Valorant Champions Tour data. It scrapes tournaments, players and agents data from vlr.gg.
+An asynchronous web scraper scraping the 2021 - 2024 Valorant Champions Tour data. It scrapes tournaments, players and agents data from vlr.gg. This is part of the Valorant Champions Tour ETL pipeline. This is the extraction part.
 
 ## Using the Data <a name ="using_the_data"></a>
 The data is publicly avaliable on [Kaggle](https://www.kaggle.com/datasets/ryanluong1/valorant-champion-tour-2021-2023-data).
