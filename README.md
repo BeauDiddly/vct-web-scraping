@@ -13,7 +13,7 @@
 - [Built With](#built_with)
 
 ## About <a name = "about"></a>
-This README provides detailed information about the database initialization process, which involves setting up the database schema and inserting the data. The purpose of this code is to ensure that the database is ready for use with the necessary tables and data.
+This README provides detailed information about the database initialization process, which involves setting up the database schema and inserting the data. This repostory is also the transformation and loading of the data to the database.
 
 ## Tables <a name = "tables"></a>
 
