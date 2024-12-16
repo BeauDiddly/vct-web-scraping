@@ -1,20 +1,21 @@
-import requests
-from bs4 import BeautifulSoup
-import time
+from WebScraper.fetch import scraping_matches_data
 from WebScraper.retrieve_urls import retrieve_urls
 from datetime import datetime
+from bs4 import BeautifulSoup
+import requests
+import time
+import io
+import boto3
 import pandas as pd
 import asyncio
 import aiohttp
-from WebScraper.fetch import scraping_matches_data
-
-
 
 
 async def main():
     semaphore_count = 25
     matches_semaphore = asyncio.Semaphore(semaphore_count)
-    year = input(f"Input the VCT year: ")
+    # year = input(f"Input the VCT year: ")
+    year = 2025
     start_time = time.time()
 
     now = datetime.now()
@@ -30,9 +31,26 @@ async def main():
 
     tournaments_ids = {}
 
+    s3_client = boto3.client(
+        's3'
+    )
+
     tournament_cards = soup.find("div", class_="events-container").find_all("div", class_="events-container-col")[-1].find_all("a", class_="wf-card mod-flex event-item")
 
     retrieve_urls(urls, tournaments_ids, tournament_cards, "/event/", "/event/matches/")
+
+    # if os.path.exists("all_ids/all_tournaments_stages_match_types_ids.csv"):
+    #     all_tournaments_df = pd.read_csv("all_ids/all_tournaments_stages_match_types_ids.csv")
+    #     filtered_df = all_tournaments_df[all_tournaments_df['Year'] == int(year)]
+    #     all_tournaments = set(filtered_df["Tournament"].unique())
+    #     current_tournaments = set(urls.keys())
+    #     new_tournaments = list(all_tournaments ^ current_tournaments)
+    #     if new_tournaments:
+    #         filtered_urls = {tournament: url for tournament, url in urls.items() if tournament not in all_tournaments}
+    #         urls = filtered_urls
+    #     else:
+    #         print("No new data")
+    #         sys.exit(0)
 
     matches_cards = {}
 
@@ -163,12 +181,17 @@ async def main():
     start_time = time.time()
 
     for file_name, dataframe in dataframes.items():
+        csv_buffer = io.StringIO()
+        dataframe.to_csv(csv_buffer, index=False)
         if "ids" in file_name:
-            dataframe.to_csv(f"vct_{year}/ids/{file_name}.csv", encoding="utf-8", index=False)
+            directory = f"vct_{year}/ids/{file_name}.csv"
+            # dataframe.to_csv(f"vct_{year}/ids/{file_name}.csv", encoding="utf-8", index=False)
         else:
-            dataframe.to_csv(f"vct_{year}/matches/{file_name}.csv", encoding="utf-8", index=False)
+            directory = f"vct_{year}/matches/{file_name}.csv"
+            # dataframe.to_csv(f"vct_{year}/matches/{file_name}.csv", encoding="utf-8", index=False)
         # dataframe.to_csv(f"test/{file_name}.csv", encoding="utf-8", index=False)
-
+        csv_buffer.seek(0)
+        s3_client.put_object(Bucket="raw-data-vct", Key=directory, Body=csv_buffer.getvalue())
 
     end_time = time.time()
 

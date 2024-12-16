@@ -1,18 +1,21 @@
-import requests
 from bs4 import BeautifulSoup
-import time
+from datetime import datetime
 from WebScraper.retrieve_urls import retrieve_urls
 from WebScraper.fetch import generate_urls_combination, scraping_players_stats
+import time
 import asyncio
 import aiohttp
 import pandas as pd
-from datetime import datetime
+import requests
+import boto3
+import io
 
 
 async def main():
     url_semaphore = asyncio.Semaphore(10)
     player_stats_semaphore = asyncio.Semaphore(5) 
-    year = input(f"Input the VCT year: ")
+    # year = input(f"Input the VCT year: ")
+    year = 2025
     start_time = time.time()
 
     now = datetime.now()
@@ -25,6 +28,10 @@ async def main():
     team_player_df = df[["Player", "Team", "Tournament", "Stage", "Match Type", "Match Name"]].drop_duplicates()
     team_player_df["Match Type"] = team_player_df["Match Type"].str.strip()
 
+    s3_client = boto3.client(
+        's3'
+    )
+
     url = f"https://www.vlr.gg/vct-{year}"
     page = requests.get(url)
     soup = BeautifulSoup(page.content, "html.parser")
@@ -32,6 +39,21 @@ async def main():
     urls = {}
 
     retrieve_urls(urls, tournament_ids, tournament_cards, "/event/", "/event/stats/")
+
+    # if os.path.exists("all_ids/all_tournaments_stages_match_types_ids.csv"):
+    #     all_tournaments_df = pd.read_csv("all_ids/all_tournaments_stages_match_types_ids.csv")
+    #     filtered_df = all_tournaments_df[all_tournaments_df['Year'] == int(year)]
+    #     all_tournaments = set(filtered_df["Tournament"].unique())
+    #     current_tournaments = set(urls.keys())
+    #     new_tournaments = list(all_tournaments ^ current_tournaments)
+    #     if new_tournaments:
+    #         filtered_urls = {tournament: url for tournament, url in urls.items() if tournament not in all_tournaments}
+    #         urls = filtered_urls
+    #     else:
+    #         print("No new data")
+    #         sys.exit(0)
+
+
     filtered_urls = {}
     stages_ids = {}
     match_types_ids = {}
@@ -64,8 +86,11 @@ async def main():
                                             "Average Damage Per Round", "Kills Per Round", "Assists Per Round", "First Kills Per Round",
                                             "First Deaths Per Round", "Headshot %", "Clutch Success %", "Clutches (won/played)",
                                             "Maximum Kills in a Single Map", "Kills", "Deaths", "Assists", "First Kills", "First Deaths"])
-
-    players_stats_df.to_csv(f"vct_{year}/players_stats/players_stats.csv", encoding="utf-8", index=False)
+    csv_buffer = io.StringIO()
+    players_stats_df.to_csv(csv_buffer, index=False)
+    directory =  f"vct_{year}/players_stats/players_stats.csv"
+    s3_client.put_object(Bucket="raw-data-vct", Key=directory, Body=csv_buffer.getvalue())
+    # players_stats_df.to_csv(f"vct_{year}/players_stats/players_stats.csv", encoding="utf-8", index=False)
 
     end_time = time.time()
     elasped_time = end_time - start_time
