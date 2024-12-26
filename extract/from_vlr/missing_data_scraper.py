@@ -1,8 +1,11 @@
 from bs4 import BeautifulSoup
-import requests
-from WebScraper.web_data_extraction import extract_games_id, extract_methods, extract_maps_headers, extract_overview_stats
+from io import StringIO
+from utilities.WebScraper.web_data_extraction import extract_games_id, extract_methods, extract_maps_headers, extract_overview_stats
+from utilities.data_clean.data_clean import *
+from utilities.aws_s3.s3_utilities import load_csv_to_dataframe
 import pandas as pd
-from data_clean.data_clean import *
+import requests
+import boto3
 
 def main():
     
@@ -21,6 +24,12 @@ def main():
                 "teams_ids": {"Typhone": 3464, "Beşiktaş Esports": 2036},
                 "players_ids": {},
                 "tournaments_stages_matches_games_ids": []}
+    s3_client = boto3.client(
+        's3'
+    )
+
+    bucket_name = "cleaned-data-vct"
+    
     dataframes = {}
     
     match_page = requests.get(url)
@@ -94,49 +103,62 @@ def main():
 
         
     for file_name, dataframe in dataframes.items():
+        csv_buffer = StringIO()
         if file_name == "players_ids" or file_name == "teams_ids":
-            original_df = csv_to_df(f"cleaned_data/vct_2021/ids/{file_name}.csv")
+            original_df = load_csv_to_dataframe(s3_client, bucket_name, f"vct_2021/ids/{file_name}")
+            # original_df = csv_to_df(f"cleaned_data/vct_2021/ids/{file_name}.csv")
             dataframe.reset_index(drop=True, inplace=True)
             original_df.reset_index(drop=True, inplace=True)
-            original_df = pd.concat([original_df, dataframe], ignore_index=True)
-            original_df = add_missing_player(original_df, 2021)
+            new_df = pd.concat([original_df, dataframe], ignore_index=True)
+            new_df = add_missing_player(new_df, 2021)
             if file_name == "players_ids":
-                original_df.drop_duplicates(inplace=True, subset=["Player", "Player ID"])
+                new_df.drop_duplicates(inplace=True, subset=["Player", "Player ID"])
             elif file_name == "teams_ids":
-                original_df.drop_duplicates(inplace=True, subset=["Team", "Team ID"])
-            original_df = convert_to_int(original_df)
-            original_df.reset_index(drop=True, inplace=True)
-            original_df.to_csv(f"cleaned_data/vct_2021/ids/{file_name}.csv", index=False)
+                new_df.drop_duplicates(inplace=True, subset=["Team", "Team ID"])
+            new_df = convert_to_int(new_df)
+            new_df.reset_index(drop=True, inplace=True)
+            new_df.to_csv(csv_buffer, index=False)
+            s3_client.put_object(Bucket="cleaned-data-vct", Key=f"{file_name}.csv", Body=csv_buffer.getvalue())
+            # original_df.to_csv(f"cleaned_data/vct_2021/ids/{file_name}.csv", index=False)
         elif file_name == "tournaments_stages_matches_games_ids":
-            original_df = csv_to_df(f"cleaned_data/vct_2021/ids/{file_name}.csv")
+            original_df = load_csv_to_dataframe(s3_client, bucket_name, f"vct_2021/ids/{file_name}")
+            # original_df = csv_to_df(f"cleaned_data/vct_2021/ids/{file_name}.csv")
             first_occurence_index = original_df.index[
                 (original_df["Tournament"] == dataframe.loc[0, "Tournament"]) &
                 (original_df["Stage"] == dataframe.loc[0, "Stage"]) &
                 (original_df["Match Type"] == dataframe.loc[0, "Match Type"])
             ][0]
-            original_df = pd.concat([original_df.iloc[:first_occurence_index], dataframe, original_df.iloc[first_occurence_index:]]).reset_index(drop=True)
-            original_df.drop_duplicates(inplace=True)
-            original_df = convert_to_int(original_df)
-            original_df.reset_index(drop=True, inplace=True)
-            original_df.to_csv(f"cleaned_data/vct_2021/ids/{file_name}.csv", index=False)
+            new_df = pd.concat([original_df.iloc[:first_occurence_index], dataframe, original_df.iloc[first_occurence_index:]]).reset_index(drop=True)
+            new_df.drop_duplicates(inplace=True)
+            new_df = convert_to_int(new_df)
+            new_df.reset_index(drop=True, inplace=True)
+            new_df.to_csv(csv_buffer, index=False)
+            s3_client.put_object(Bucket="cleaned-data-vct", Key=f"{file_name}.csv", Body=csv_buffer.getvalue())
+            # original_df.to_csv(f"cleaned_data/vct_2021/ids/{file_name}.csv", index=False)
         elif file_name == "team_mapping":
-            original_df = csv_to_df(f"cleaned_data/vct_2021/matches/{file_name}.csv")
-            original_df = pd.concat([original_df, dataframe], ignore_index=True)
-            original_df.drop_duplicates(inplace=True, subset=["Abbreviated", "Full Name"])
-            original_df.reset_index(drop=True, inplace=True)
-            original_df.to_csv(f"cleaned_data/vct_2021/matches/{file_name}.csv", index=False)
+            original_df = load_csv_to_dataframe(s3_client, bucket_name, f"vct_2021/matches/{file_name}")
+            # original_df = csv_to_df(f"cleaned_data/vct_2021/matches/{file_name}.csv")
+            new_df = pd.concat([original_df, dataframe], ignore_index=True)
+            new_df.drop_duplicates(inplace=True, subset=["Abbreviated", "Full Name"])
+            new_df.reset_index(drop=True, inplace=True)
+            new_df.to_csv(csv_buffer, index=False)
+            s3_client.put_object(Bucket="cleaned-data-vct", Key=f"{file_name}.csv", Body=csv_buffer.getvalue())
+            # original_df.to_csv(f"cleaned_data/vct_2021/matches/{file_name}.csv", index=False)
         else:
-            original_df = csv_to_df(f"cleaned_data/vct_2021/matches/{file_name}.csv")
+            original_df = load_csv_to_dataframe(s3_client, bucket_name, f"vct_2021/matches/{file_name}")
+            # original_df = csv_to_df(f"cleaned_data/vct_2021/matches/{file_name}.csv")
             first_occurence_index = original_df.index[
                 (original_df["Tournament"] == dataframe.loc[0, "Tournament"]) &
                 (original_df["Stage"] == dataframe.loc[0, "Stage"]) &
                 (original_df["Match Type"] == dataframe.loc[0, "Match Type"])
             ][0]
-            original_df = pd.concat([original_df.iloc[:first_occurence_index], dataframe, original_df.iloc[first_occurence_index:]]).reset_index(drop=True)
-            original_df = convert_nan_players_teams(original_df)
-            original_df = convert_to_float(original_df)
-            original_df = convert_to_int(original_df)
-            original_df.to_csv(f"cleaned_data/vct_2021/matches/{file_name}.csv", index=False)
+            new_df = pd.concat([original_df.iloc[:first_occurence_index], dataframe, original_df.iloc[first_occurence_index:]]).reset_index(drop=True)
+            new_df = convert_nan_players_teams(new_df)
+            new_df = convert_to_float(new_df)
+            new_df = convert_to_int(new_df)
+            new_df.to_csv(csv_buffer, index=False)
+            s3_client.put_object(Bucket="cleaned-data-vct", Key=f"{file_name}.csv", Body=csv_buffer.getvalue())
+            # original_df.to_csv(f"cleaned_data/vct_2021/matches/{file_name}.csv", index=False)
 
 
 

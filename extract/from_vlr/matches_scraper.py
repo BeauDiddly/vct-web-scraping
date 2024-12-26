@@ -1,5 +1,5 @@
-from WebScraper.fetch import scraping_matches_data
-from WebScraper.retrieve_urls import retrieve_urls
+from utilities.WebScraper.fetch import scraping_matches_data
+from utilities.WebScraper.retrieve_urls import retrieve_urls
 from datetime import datetime
 from bs4 import BeautifulSoup
 import requests

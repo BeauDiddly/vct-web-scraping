@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 from datetime import datetime
-from WebScraper.retrieve_urls import retrieve_urls
-from WebScraper.fetch import generate_urls_combination, scraping_players_stats
+from utilities.WebScraper.retrieve_urls import retrieve_urls
+from utilities.WebScraper.fetch import generate_urls_combination, scraping_players_stats
 import time
 import asyncio
 import aiohttp

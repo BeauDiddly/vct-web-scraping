@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup
 from datetime import datetime
 from bs4 import BeautifulSoup
-from WebScraper.fetch import generate_urls_combination, scraping_agents_data
-from WebScraper.retrieve_urls import retrieve_urls
+from utilities.WebScraper.fetch import generate_urls_combination, scraping_agents_data
+from utilities.WebScraper.retrieve_urls import retrieve_urls
 import pandas as pd
 import time
 import asyncio

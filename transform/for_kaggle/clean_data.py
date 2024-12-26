@@ -1,5 +1,6 @@
 from utilities.data_clean.data_clean import *
 from utilities.aws_s3.s3_utilities import *
+from io import StringIO
 import boto3
 
 def main():
