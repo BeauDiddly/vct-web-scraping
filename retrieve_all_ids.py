@@ -112,5 +112,7 @@ def main():
     tournaments_stages_match_types_ids.to_csv("all_ids/all_tournaments_stages_match_types_ids.csv", index = False)
     teams_mapping.to_csv("all_ids/all_teams_mapping.csv", index=False)
 
+
+
 if __name__ == "__main__":
     main()
