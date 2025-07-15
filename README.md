@@ -96,7 +96,7 @@ $ python3 player_stats_scraper.py
 If you want to clean the data and you ran the three commands above
 ```
 $ python3 clean_data.py
-$ python3 missing_data_scraper.py
+$ python3 missing_data_scraper.py #This only need to be run if you are cleaning 2021 data
 ```
 
 If you want to retrieve all the ids (it is best you perform the data clean steps)
